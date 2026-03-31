@@ -150,9 +150,9 @@ function renderTable(data) {
             </td>
             <td>
                 <div class="action-btns">
-                    <button class="btn-view" onclick="window.openViewModal('${buttonId}')">View</button>
-                    <button class="btn-edit" onclick="window.openEditModal('${buttonId}')">Edit</button>
-                    <button class="btn-notes" onclick="window.openNotesModal('${buttonId}')">Notes</button>
+                    <button class="btn-view" onclick="window.openViewModal('${buttonId}')">👁 View</button>
+                    <button class="btn-edit" onclick="window.openEditModal('${buttonId}')">✍ Edit</button>
+                    <button class="btn-notes" onclick="window.openNotesModal('${buttonId}')">📝 Notes</button>
                 </div>
             </td>
         `;

@@ -156,36 +156,52 @@
     margin-left: 6px;
   }
 
-  /* Table */
+  /* Table Grid & Separation */
   .table-wrap {
     background: white;
-    border-radius: 10px;
+    border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 10px 30px rgba(0,0,0,0.05);
+    border: 1px solid #e5e7eb;
   }
   table {
     width: 100%;
     border-collapse: collapse;
     font-size: 13px;
+    table-layout: fixed; /* Ensures perfect alignment across rows */
   }
   th {
-    background: #f8f9fa;
-    color: #374151;
-    font-weight: 600;
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 700;
     font-size: 11px;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 12px 14px;
-    text-align: left;
-    border-bottom: 2px solid #e5e7eb;
+    letter-spacing: 0.8px;
+    padding: 16px 14px;
+    text-align: center; /* Center headers */
+    border-bottom: 2px solid #e2e8f0;
   }
   td {
-    padding: 12px 14px;
-    border-bottom: 1px solid #f3f4f6;
+    padding: 16px 14px;
+    border-bottom: 1px solid #f1f5f9; /* Stronger separation lines */
     vertical-align: middle;
+    text-align: center; /* Center all cell contents */
+    color: #1e293b;
   }
-  tr:hover { background: #f8fafc; }
   tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fdfdfd; }
+
+  /* Width balancing for alignment */
+  th:nth-child(1), td:nth-child(1) { width: 50px; } /* # Column */
+  th:nth-child(6), td:nth-child(6) { font-weight: 700; } /* Solicitor */
+  th:last-child, td:last-child { width: 280px; } /* Actions Column */
+
+  /* Button Hub Alignment */
+  .action-btns { 
+    display: flex; 
+    gap: 8px; 
+    justify-content: center; /* Center buttons in their cell */
+  }
 
   /* Status dropdown in table */
   .status-select {
@@ -210,27 +226,42 @@
   .status-invoice-raised { background: #fef3c7; color: #b45309; }
   .status-paid { background: #ccfbf1; color: #0f766e; }
 
-  /* Action buttons */
-  .action-btns { display: flex; gap: 5px; }
-  .btn-view, .btn-edit {
-    padding: 5px 12px;
-    border: none;
-    border-radius: 6px;
+  /* Premium Action Buttons */
+  .action-btns { display: flex; gap: 6px; }
+  .btn-view, .btn-edit, .btn-notes {
+    padding: 6px 14px;
+    border: 1.5px solid transparent;
+    border-radius: 8px;
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
     font-family: inherit;
-    transition: all 0.2s;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
   }
   .btn-view {
-    background: #e5e7eb;
-    color: #374151;
+    background: #ffffff;
+    color: #4b5563;
+    border-color: #e5e7eb;
   }
-  .btn-view:hover { background: #d1d5db; }
-  .btn-edit { background: #dbeafe; color: #1e40af; }
-  .btn-edit:hover { background: #bfdbfe; }
-  .btn-notes { background: #fef3c7; color: #92400e; }
-  .btn-notes:hover { background: #fde68a; }
+  .btn-view:hover { background: #f9fafb; border-color: #d1d5db; transform: scale(1.03); }
+  
+  .btn-edit {
+    background: #eff6ff;
+    color: #1e40af;
+    border-color: #dbeafe;
+  }
+  .btn-edit:hover { background: #dbeafe; transform: scale(1.03); }
+
+  .btn-notes {
+    background: #f5f3ff;
+    color: #5b21b6;
+    border-color: #ede9fe;
+  }
+  .btn-notes:hover { background: #ede9fe; transform: scale(1.03); }
 
   /* Modal */
   .modal-overlay {
