@@ -191,27 +191,65 @@
   .status-rejected { background: #ffebee; color: #c62828; border-color: #ef9a9a; }
   .status-not-yet-invoiced { background: #f3e5f5; color: #6a1b9a; border-color: #ce93d8; }
   .status-invoice-raised { background: #fff8e1; color: #f57f17; border-color: #ffe082; }
-  .status-paid { background: #e0f2f1; color: #00695c; border-color: #80cbc4; }
-
-  /* Toast notification */
-  .toast {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    padding: 14px 24px;
+  /* Filter toolbar */
+  .filter-toolbar {
+    display: flex;
+    gap: 12px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+    align-items: center;
+    background: #fff;
+    padding: 16px 20px;
     border-radius: 8px;
-    color: white;
-    font-weight: 600;
-    font-size: 14px;
-    z-index: 2000;
-    animation: toastIn 0.4s ease;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   }
-  .toast.success { background: #28a745; }
-  .toast.error { background: #dc3545; }
-  @keyframes toastIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+  .filter-toolbar input,
+  .filter-toolbar select {
+    padding: 10px 14px;
+    border: 2px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.3s;
+    margin: 0;
+  }
+  .filter-toolbar input:focus,
+  .filter-toolbar select:focus {
+    border-color: #0066cc;
+    outline: none;
+    background: #f0f7ff;
+  }
+  .filter-toolbar input {
+    flex: 1;
+    min-width: 200px;
+  }
+  .filter-toolbar select {
+    min-width: 170px;
+  }
+  .filter-toolbar .filter-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1a3a52;
+    margin: 0;
+    white-space: nowrap;
+  }
+  .filter-count {
+    font-size: 13px;
+    color: #666;
+    margin-left: auto;
+    white-space: nowrap;
+    font-weight: 600;
+  }
+  .btn-clear-filters {
+    padding: 10px 16px !important;
+    font-size: 12px !important;
+    width: auto !important;
+    background: linear-gradient(135deg, #6c757d, #555) !important;
+    box-shadow: 0 2px 8px rgba(108,117,125,0.3) !important;
+    white-space: nowrap;
+  }
+  .btn-clear-filters:hover {
+    background: linear-gradient(135deg, #5a6268, #444) !important;
   }
 </style>
 </head>
@@ -219,6 +257,27 @@
 <h1>Admin Dashboard</h1>
 
 <button id="downloadCsvBtn" class="button">Download All Submissions (CSV)</button>
+
+<!-- Filter Toolbar -->
+<div class="filter-toolbar">
+  <input type="text" id="searchInput" placeholder="🔍 Search by name, phone, or address...">
+  <select id="filterSolicitor">
+    <option value="">All Solicitors</option>
+  </select>
+  <select id="filterStatus">
+    <option value="">All Statuses</option>
+    <option value="New Lead">New Lead</option>
+    <option value="Transferred">Transferred</option>
+    <option value="Accepted">Accepted</option>
+    <option value="Rejected">Rejected</option>
+    <option value="Not Yet Invoiced">Not Yet Invoiced</option>
+    <option value="Invoice Raised">Invoice Raised</option>
+    <option value="Paid">Paid</option>
+  </select>
+  <button class="btn-clear-filters" onclick="clearFilters()">Clear Filters</button>
+  <span class="filter-count" id="filterCount"></span>
+</div>
+
 <table id="submissionTable">
     <thead>
         <tr>

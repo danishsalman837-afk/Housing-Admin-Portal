@@ -238,7 +238,6 @@ function buildStatusDropdown(item) {
     const selected = (item.leadStatus === status) ? 'selected' : '';
     html += `<option value="${status}" ${selected}>${status}</option>`;
   });
-  // Default to New Lead if not set
   if (!item.leadStatus) {
     html = html.replace('value="New Lead"', 'value="New Lead" selected');
   }
@@ -250,75 +249,183 @@ function buildStatusDropdown(item) {
 async function handleStatusChange(selectEl) {
   const id = selectEl.getAttribute('data-id');
   const newStatus = selectEl.value;
-
-  // Update the dropdown color immediately
   selectEl.className = `status-select ${getStatusClass(newStatus)}`;
 
   const success = await updateField(id, 'leadStatus', newStatus);
   if (!success) {
-    // Revert on failure
     const item = submissionsData.find(s => s.id === id);
     selectEl.value = item?.leadStatus || 'New Lead';
     selectEl.className = `status-select ${getStatusClass(selectEl.value)}`;
   }
 }
 
-// Load and render submissions
+// ======== FILTERING & SEARCH ========
+
+function getFilteredData() {
+  const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+  const solicitorFilter = document.getElementById('filterSolicitor').value;
+  const statusFilter = document.getElementById('filterStatus').value;
+
+  return submissionsData.filter(item => {
+    // Search filter: match name, phone, or address
+    if (searchTerm) {
+      const name = (item.name || '').toLowerCase();
+      const phone = (item.phone || '').toLowerCase();
+      const address = (item.address || '').toLowerCase();
+      if (!name.includes(searchTerm) && !phone.includes(searchTerm) && !address.includes(searchTerm)) {
+        return false;
+      }
+    }
+
+    // Solicitor filter
+    if (solicitorFilter) {
+      if (solicitorFilter === '__unassigned__') {
+        if (item.solicitorName) return false;
+      } else {
+        if (item.solicitorName !== solicitorFilter) return false;
+      }
+    }
+
+    // Status filter
+    if (statusFilter) {
+      const itemStatus = item.leadStatus || 'New Lead';
+      if (itemStatus !== statusFilter) return false;
+    }
+
+    return true;
+  });
+}
+
+function renderTable(filteredData) {
+  const tbody = document.querySelector("#submissionTable tbody");
+  tbody.innerHTML = '';
+
+  if (filteredData.length === 0) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td colspan="8" style="text-align:center; color:#888; font-style:italic;">No submissions match your filters</td>`;
+    tbody.appendChild(tr);
+    updateFilterCount(0);
+    return;
+  }
+
+  filteredData.forEach((item, index) => {
+    const tr = document.createElement("tr");
+    const ts = item.timestamp ? new Date(item.timestamp).toLocaleString() : "N/A";
+    const solicitorHtml = item.solicitorName 
+      ? `<span style="color: #28a745; font-weight: bold;">${item.solicitorName}</span>` 
+      : `<span style="color: #888; font-style: italic;">Unassigned</span>`;
+    
+    // Find the original index in submissionsData for View/Edit
+    const originalIndex = submissionsData.indexOf(item);
+
+    tr.innerHTML = `
+      <td>${index + 1}</td>
+      <td>${item.name || "N/A"}</td>
+      <td>${item.phone || "N/A"}</td>
+      <td>${item.tenantType || "N/A"}</td>
+      <td>${ts}</td>
+      <td>${solicitorHtml}</td>
+      <td>${buildStatusDropdown(item)}</td>
+      <td>
+        <div class="action-btns">
+          <button class="view-btn" data-index="${originalIndex}">View</button>
+          <button class="edit-btn" data-index="${originalIndex}">Edit</button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Attach button handlers
+  document.querySelectorAll(".view-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      const idx = e.target.getAttribute("data-index");
+      openViewModal(submissionsData[idx]);
+    });
+  });
+  document.querySelectorAll(".edit-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      const idx = e.target.getAttribute("data-index");
+      openEditModal(submissionsData[idx]);
+    });
+  });
+
+  updateFilterCount(filteredData.length);
+}
+
+function updateFilterCount(count) {
+  const total = submissionsData.length;
+  const el = document.getElementById('filterCount');
+  if (count === total) {
+    el.textContent = `Showing all ${total} submissions`;
+  } else {
+    el.textContent = `Showing ${count} of ${total} submissions`;
+  }
+}
+
+function populateSolicitorFilter() {
+  const select = document.getElementById('filterSolicitor');
+  // Keep the "All Solicitors" option
+  select.innerHTML = '<option value="">All Solicitors</option>';
+  
+  // Get unique solicitor names
+  const solicitors = new Set();
+  let hasUnassigned = false;
+  submissionsData.forEach(item => {
+    if (item.solicitorName) {
+      solicitors.add(item.solicitorName);
+    } else {
+      hasUnassigned = true;
+    }
+  });
+
+  if (hasUnassigned) {
+    select.innerHTML += `<option value="__unassigned__">Unassigned</option>`;
+  }
+  Array.from(solicitors).sort().forEach(name => {
+    select.innerHTML += `<option value="${name}">${name}</option>`;
+  });
+}
+
+function applyFilters() {
+  const filtered = getFilteredData();
+  renderTable(filtered);
+}
+
+function clearFilters() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('filterSolicitor').value = '';
+  document.getElementById('filterStatus').value = '';
+  applyFilters();
+}
+
+// Attach filter event listeners
+document.getElementById('searchInput').addEventListener('input', applyFilters);
+document.getElementById('filterSolicitor').addEventListener('change', applyFilters);
+document.getElementById('filterStatus').addEventListener('change', applyFilters);
+
+// ======== LOAD DATA ========
+
 (async function() {
   try {
     const response = await fetch('/api/submissions');
     if (!response.ok) throw new Error("Failed to fetch submissions");
     
     submissionsData = await response.json();
-    const tbody = document.querySelector("#submissionTable tbody");
 
     if (submissionsData.length === 0) {
+      const tbody = document.querySelector("#submissionTable tbody");
       const tr = document.createElement("tr");
       tr.innerHTML = `<td colspan="8" style="text-align:center;">No submissions found</td>`;
       tbody.appendChild(tr);
       return;
     }
 
-    submissionsData.forEach((item, index) => {
-      const tr = document.createElement("tr");
-      const ts = item.timestamp ? new Date(item.timestamp).toLocaleString() : "N/A";
-      const solicitorHtml = item.solicitorName 
-        ? `<span style="color: #28a745; font-weight: bold;">${item.solicitorName}</span>` 
-        : `<span style="color: #888; font-style: italic;">Unassigned</span>`;
-      
-      tr.innerHTML = `
-        <td>${index + 1}</td>
-        <td>${item.name || "N/A"}</td>
-        <td>${item.phone || "N/A"}</td>
-        <td>${item.tenantType || "N/A"}</td>
-        <td>${ts}</td>
-        <td>${solicitorHtml}</td>
-        <td>${buildStatusDropdown(item)}</td>
-        <td>
-          <div class="action-btns">
-            <button class="view-btn" data-index="${index}">View</button>
-            <button class="edit-btn" data-index="${index}">Edit</button>
-          </div>
-        </td>
-      `;
-      tbody.appendChild(tr);
-    });
+    // Populate solicitor filter dropdown
+    populateSolicitorFilter();
 
-    // View button handlers
-    document.querySelectorAll(".view-btn").forEach(btn => {
-      btn.addEventListener("click", (e) => {
-        const idx = e.target.getAttribute("data-index");
-        openViewModal(submissionsData[idx]);
-      });
-    });
-
-    // Edit button handlers
-    document.querySelectorAll(".edit-btn").forEach(btn => {
-      btn.addEventListener("click", (e) => {
-        const idx = e.target.getAttribute("data-index");
-        openEditModal(submissionsData[idx]);
-      });
-    });
+    // Initial render
+    renderTable(submissionsData);
 
   } catch(err) {
     console.error("Error loading submissions:", err);
