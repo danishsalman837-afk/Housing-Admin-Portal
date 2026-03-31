@@ -481,17 +481,45 @@
     .modal-body { padding: 15px; }
   }
 
-  /* Specific Landscape Fix */
-  @media (max-height: 500px) {
-    .modal-box { height: 98vh; width: 98vw; margin: 1vh auto; }
-    .modal-body { padding: 15px; }
-    .header { display: none; } /* Hide header to save space in landscape */
+  /* CUSTOM LANDSCAPE FIX (FOR SMARTPHONES ROTATED SIDEWAYS) */
+  @media (orientation: landscape) and (max-height: 500px) {
+    .header { display: none !important; } /* Kill the header to save space */
+    
+    .container { padding: 5px; }
+    
+    .toolbar { 
+      flex-direction: row !important; /* Force icons/filters into one line */
+      flex-wrap: nowrap !important;
+      padding: 6px 10px;
+      margin-bottom: 8px;
+    }
+    
+    .search-box { width: 40% !important; }
+    .filter-group { flex-direction: row !important; width: 50% !important; gap: 4px; }
+    .filter-select { padding: 6px; font-size: 11px; }
+    .btn-download, .filter-count { display: none !important; } /* Hide non-essentials in landscape */
+
+    .modal-box { 
+      height: 98vh; 
+      width: 95vw; 
+      margin: 1vh auto; 
+      position: fixed;
+      top: 0; left: 2.5vw;
+    }
+    .modal-body { 
+      padding: 10px 20px; 
+      overflow-y: auto;
+    }
+    .modal-header, .modal-footer { padding: 8px 20px; }
+    
+    table { min-width: 900px; } /* Allow scrolling without overlap */
   }
-  /* Notes & Activity Log */
+
+  /* Notes & Activity Log Timeline */
   .notes-section {
-    margin-top: 25px;
-    padding-top: 15px;
-    border-top: 2px solid #e5e7eb;
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 2px solid #f1f5f9;
   }
   .notes-title {
     font-size: 14px;
