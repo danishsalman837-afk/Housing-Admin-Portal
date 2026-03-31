@@ -27,25 +27,30 @@ function getStatusClass(status) {
   return map[status] || 'status-new';
 }
 
-const readonlyFields = ['id', 'timestamp', 'created_at'];
+const readonlyFields = ['id', 'timestamp', 'created_at', 'solicitorName', 'leadStatus'];
 
-function showToast(message, type = 'success') {
+// Make functions global for HTML buttons
+window.showToast = function(message, type = 'success') {
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
   toast.textContent = message;
   document.body.appendChild(toast);
   setTimeout(() => { toast.remove(); }, 3000);
-}
+};
 
-function closeModal() {
+window.closeModal = function() {
   document.getElementById('modalOverlay').classList.remove('active');
-}
+};
 
 // Update count stats in header
 function updateStats() {
-    document.getElementById('statTotal').textContent = submissionsData.length;
-    const unassigned = submissionsData.filter(s => !s.solicitorName).length;
-    document.getElementById('statUnassigned').textContent = unassigned;
+    const statTotal = document.getElementById('statTotal');
+    const statUnassigned = document.getElementById('statUnassigned');
+    if (statTotal) statTotal.textContent = submissionsData.length;
+    if (statUnassigned) {
+        const unassigned = submissionsData.filter(s => !s.solicitorName).length;
+        statUnassigned.textContent = unassigned;
+    }
 }
 
 // ======== FILTERING LOGIC ========
@@ -54,33 +59,35 @@ const filterBy = document.getElementById('filterBy');
 const filterValue = document.getElementById('filterValue');
 const searchInput = document.getElementById('searchInput');
 
-filterBy.addEventListener('change', () => {
-    const type = filterBy.value;
-    filterValue.innerHTML = '<option value="">Select...</option>';
-    
-    if (!type) {
-        filterValue.classList.remove('visible');
-    } else {
-        filterValue.classList.add('visible');
-        if (type === 'status') {
-            leadStatuses.forEach(s => {
-                filterValue.innerHTML += `<option value="${s}">${s}</option>`;
-            });
-        } else if (type === 'solicitor') {
-            const solicitors = [...new Set(submissionsData.map(s => s.solicitorName).filter(Boolean))].sort();
-            filterValue.innerHTML += `<option value="__unassigned__">Unassigned</option>`;
-            solicitors.forEach(s => {
-                filterValue.innerHTML += `<option value="${s}">${s}</option>`;
-            });
+if (filterBy) {
+    filterBy.addEventListener('change', () => {
+        const type = filterBy.value;
+        filterValue.innerHTML = '<option value="">Select...</option>';
+        
+        if (!type) {
+            filterValue.classList.remove('visible');
+        } else {
+            filterValue.classList.add('visible');
+            if (type === 'status') {
+                leadStatuses.forEach(s => {
+                    filterValue.innerHTML += `<option value="${s}">${s}</option>`;
+                });
+            } else if (type === 'solicitor') {
+                const solicitors = [...new Set(submissionsData.map(s => s.solicitorName).filter(Boolean))].sort();
+                filterValue.innerHTML += `<option value="__unassigned__">Unassigned</option>`;
+                solicitors.forEach(s => {
+                    filterValue.innerHTML += `<option value="${s}">${s}</option>`;
+                });
+            }
         }
-    }
-    applyFilters();
-});
+        applyFilters();
+    });
+}
 
 function applyFilters() {
-    const search = searchInput.value.toLowerCase().trim();
-    const type = filterBy.value;
-    const val = filterValue.value;
+    const search = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    const type = filterBy ? filterBy.value : '';
+    const val = filterValue ? filterValue.value : '';
 
     const filtered = submissionsData.filter(item => {
         // Search
@@ -109,24 +116,28 @@ function applyFilters() {
     renderTable(filtered);
 }
 
-searchInput.addEventListener('input', applyFilters);
-filterValue.addEventListener('change', applyFilters);
+if (searchInput) searchInput.addEventListener('input', applyFilters);
+if (filterValue) filterValue.addEventListener('change', applyFilters);
 
-function clearFilters() {
-    searchInput.value = '';
-    filterBy.value = '';
-    filterValue.value = '';
-    filterValue.classList.remove('visible');
+window.clearFilters = function() {
+    if (searchInput) searchInput.value = '';
+    if (filterBy) filterBy.value = '';
+    if (filterValue) {
+        filterValue.value = '';
+        filterValue.classList.remove('visible');
+    }
     applyFilters();
-}
+};
 
 // ======== RENDER TABLE ========
 
 function renderTable(data) {
     const tbody = document.querySelector("#submissionTable tbody");
+    if (!tbody) return;
     tbody.innerHTML = '';
     
-    document.getElementById('filterCount').textContent = `Showing ${data.length} of ${submissionsData.length}`;
+    const countEl = document.getElementById('filterCount');
+    if (countEl) countEl.textContent = `Showing ${data.length} of ${submissionsData.length}`;
 
     data.forEach((item, index) => {
         const tr = document.createElement("tr");
@@ -141,14 +152,14 @@ function renderTable(data) {
             <td>${ts}</td>
             <td>${solicitor}</td>
             <td>
-                <select class="status-select ${getStatusClass(item.leadStatus)}" onchange="handleStatusUpdate('${item.id}', this)">
+                <select class="status-select ${getStatusClass(item.leadStatus)}" onchange="window.handleStatusUpdate('${item.id}', this)">
                     ${leadStatuses.map(s => `<option value="${s}" ${ (item.leadStatus || 'New Lead') === s ? 'selected' : '' }>${s}</option>`).join('')}
                 </select>
             </td>
             <td>
                 <div class="action-btns">
-                    <button class="btn-view" onclick="openViewModal('${item.id}')">View</button>
-                    <button class="btn-edit" onclick="openEditModal('${item.id}')">Edit</button>
+                    <button class="btn-view" onclick="window.openViewModal('${item.id}')">View</button>
+                    <button class="btn-edit" onclick="window.openEditModal('${item.id}')">Edit</button>
                 </div>
             </td>
         `;
@@ -156,7 +167,7 @@ function renderTable(data) {
     });
 }
 
-async function handleStatusUpdate(id, el) {
+window.handleStatusUpdate = async function(id, el) {
     const newStatus = el.value;
     el.className = `status-select ${getStatusClass(newStatus)}`;
     
@@ -167,24 +178,31 @@ async function handleStatusUpdate(id, el) {
             body: JSON.stringify({ id, leadStatus: newStatus })
         });
         if (res.ok) {
-            showToast("Status updated");
+            window.showToast("Status updated");
             const item = submissionsData.find(s => s.id === id);
             if (item) item.leadStatus = newStatus;
             updateStats();
         }
     } catch (e) {
-        showToast("Error updating status", "error");
+        window.showToast("Error updating status", "error");
     }
-}
+};
 
 // ======== MODALS ========
 
 window.openViewModal = function(id) {
     const item = submissionsData.find(s => s.id === id);
+    if (!item) return;
     const modal = document.getElementById('modalBox');
+    if (!modal) return;
     
     let fieldsHtml = '';
-    Object.keys(item).forEach(key => {
+    // Custom order: show main fields first
+    const mainKeys = ['name', 'phone', 'email', 'tenantType', 'solicitorName', 'leadStatus'];
+    const otherKeys = Object.keys(item).filter(k => !mainKeys.includes(k));
+    
+    [...mainKeys, ...otherKeys].forEach(key => {
+        if (!item.hasOwnProperty(key)) return;
         let val = item[key];
         if (Array.isArray(val)) val = val.join(", ");
         const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
@@ -194,11 +212,11 @@ window.openViewModal = function(id) {
     modal.innerHTML = `
         <div class="modal-header">
             <h2>Lead Details</h2>
-            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <button class="modal-close" onclick="window.closeModal()">&times;</button>
         </div>
         <div class="modal-body">${fieldsHtml}</div>
         <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+            <button class="btn btn-secondary" onclick="window.closeModal()">Close</button>
         </div>
     `;
     document.getElementById('modalOverlay').classList.add('active');
@@ -206,10 +224,32 @@ window.openViewModal = function(id) {
 
 window.openEditModal = function(id) {
     const item = submissionsData.find(s => s.id === id);
+    if (!item) return;
     const modal = document.getElementById('modalBox');
+    if (!modal) return;
     
     let fieldsHtml = '';
+    
+    // Core selection fields
+    fieldsHtml += `
+        <div class="solicitor-section">
+            <div class="modal-field">
+                <label>Assigned Solicitor</label>
+                <input type="text" name="solicitorName" value="${item.solicitorName || ''}" placeholder="Enter name...">
+            </div>
+            <div class="modal-field">
+                <label>Lead Status</label>
+                <select name="leadStatus" class="filter-select" style="width:100%">
+                    ${leadStatuses.map(s => `<option value="${s}" ${ (item.leadStatus || 'New Lead') === s ? 'selected' : '' }>${s}</option>`).join('')}
+                </select>
+            </div>
+        </div>
+    `;
+
+    // Rest of fields
     Object.keys(item).forEach(key => {
+        if (key === 'solicitorName' || key === 'leadStatus') return;
+        
         if (readonlyFields.includes(key)) {
             fieldsHtml += `<div class="modal-field readonly"><label>${key}</label><input type="text" value="${item[key] || ''}" readonly></div>`;
         } else {
@@ -220,12 +260,12 @@ window.openEditModal = function(id) {
     modal.innerHTML = `
         <div class="modal-header">
             <h2>Edit Lead</h2>
-            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <button class="modal-close" onclick="window.closeModal()">&times;</button>
         </div>
         <div class="modal-body"><form id="editForm">${fieldsHtml}</form></div>
         <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-            <button class="btn btn-primary" onclick="saveEdit('${id}')">Save Changes</button>
+            <button class="btn btn-secondary" onclick="window.closeModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="window.saveEdit('${id}')">Save Changes</button>
         </div>
     `;
     document.getElementById('modalOverlay').classList.add('active');
@@ -244,13 +284,21 @@ window.saveEdit = async function(id) {
             body: JSON.stringify(updates)
         });
         if (res.ok) {
-            showToast("Saved successfully");
-            location.reload();
+            window.showToast("Saved successfully");
+            setTimeout(() => location.reload(), 1000);
         }
     } catch (e) {
-        showToast("Error saving", "error");
+        window.showToast("Error saving", "error");
     }
 };
+
+// Close modal when clicking overlay background
+const overlay = document.getElementById('modalOverlay');
+if (overlay) {
+    overlay.addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) window.closeModal();
+    });
+}
 
 // ======== INIT ========
 
@@ -262,17 +310,23 @@ window.saveEdit = async function(id) {
         renderTable(submissionsData);
     } catch (e) {
         console.error(e);
+        const tbody = document.querySelector("#submissionTable tbody");
+        if (tbody) tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:red;">Error loading data</td></tr>';
     }
 })();
 
 // CSV Logic
-document.getElementById('downloadCsvBtn').addEventListener('click', () => {
-    const headers = Object.keys(submissionsData[0]).join(',');
-    const rows = submissionsData.map(s => Object.values(s).map(v => `"${v}"`).join(',')).join('\n');
-    const blob = new Blob([headers + '\n' + rows], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'Leads_Report.csv';
-    a.click();
-});
+const downloadBtn = document.getElementById('downloadCsvBtn');
+if (downloadBtn) {
+    downloadBtn.addEventListener('click', () => {
+        if (!submissionsData.length) return;
+        const headers = Object.keys(submissionsData[0]).join(',');
+        const rows = submissionsData.map(s => Object.values(s).map(v => `"${v}"`).join(',')).join('\n');
+        const blob = new Blob([headers + '\n' + rows], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'Leads_Report.csv';
+        a.click();
+    });
+}
