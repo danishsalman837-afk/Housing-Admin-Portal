@@ -404,100 +404,126 @@
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
   }
-
-  /* Aggressive Width-First Mobile Fixes */
-  @media (max-width: 1024px) {
-    .container { padding: 8px; width: 100%; }
-    .search-box { width: 100% !important; max-width: none; }
-    .toolbar { gap: 8px; flex-direction: column; align-items: stretch; }
+  
+  /* ========== UNIVERSAL FLUID RESPONSIVENESS ========== */
+  
+  /* Container & Toolbar Flow */
+  .container {
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: clamp(10px, 3vw, 30px); /* Fluid padding */
   }
 
-  @media (max-width: 768px) {
-    .header { 
-      padding: 10px; 
-      flex-direction: column; 
-      align-items: center; 
-      width: 100%;
-    }
-    .header h1 { font-size: 14px; margin-bottom: 8px; }
-    .header-stats { 
-      flex-direction: row; 
-      width: 100%; 
-      justify-content: center; 
-      gap: 5px; 
-    }
-    .header-stat { font-size: 9px; padding: 4px 6px; min-width: 0; }
-
-    .toolbar { 
-      padding: 10px;
-      margin: 10px 0;
-      width: 100%;
-    }
-    
-    .filter-group { 
-      width: 100%; 
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    /* ENFORCE 100% WIDTH - REMOVE MIN-WIDTHS */
-    .filter-select, .filter-value, .search-box input { 
-      width: 100% !important; 
-      min-width: 0 !important; 
-      margin: 0; 
-      box-sizing: border-box;
-    }
-
-    .btn-download { 
-      width: 100% !important; 
-      margin: 5px 0 0 0; 
-    }
-
-    .table-wrap { 
-      width: 100%;
-      overflow-x: auto; 
-      -webkit-overflow-scrolling: touch;
-    }
-    
-    table { 
-      min-width: 800px; /* Force scroll instead of overlap */
-      table-layout: auto; 
-    }
-    
-    th, td { 
-      padding: 10px 5px; 
-      font-size: 11px; 
-    }
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap; /* AUTOMATIC WRAPPING */
+    gap: 15px;
+    align-items: center;
+    background: white;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
   }
 
-  /* Full Width Modals */
-  @media (max-width: 650px) {
-    .modal-box { 
-      width: 100% !important; 
-      margin: 0; 
-      border-radius: 0; 
-      height: 100%; 
-    }
-    .modal-body { padding: 15px; }
+  .search-box {
+    flex: 2 1 250px; /* Expands to fill, but wraps at 250px */
   }
 
-  /* CUSTOM LANDSCAPE FIX (FOR SMARTPHONES ROTATED SIDEWAYS) */
+  .filter-group {
+    flex: 1 1 300px; /* Logic grouping that wraps automatically */
+    display: flex;
+    gap: 10px;
+  }
+
+  .filter-select {
+    flex: 1; /* Both filters take half the width automatically */
+    min-width: 0; 
+  }
+
+  /* Table Horizontal Scrolling Logic */
+  .table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 900px; /* Minimum comfort width for desktop-style columns */
+    table-layout: auto;
+  }
+
+  th, td {
+    padding: clamp(12px, 1.5vw, 18px); /* Fluid padding */
+    white-space: nowrap; /* Prevent messy text-wrapping */
+    text-align: center;
+    border-bottom: 1px solid #f1f5f9;
+    border-right: 1px solid #f1f5f9;
+  }
+
+  /* Header Responsiveness */
+  .header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px clamp(15px, 5vw, 40px);
+    gap: 15px;
+  }
+
+  /* Mobile-Specific Cleanup (Phones Only) */
+  @media (max-width: 600px) {
+    .header { justify-content: center; text-align: center; }
+    .header-stats { width: 100%; justify-content: center; }
+    
+    table { min-width: 850px; } /* Slightly tighter min-width for phone-landscape */
+    
+    th, td { padding: 12px 8px; font-size: 12px; }
+    
+    .modal-box { width: 100%; height: 100%; border-radius: 0; }
+  }
+
+  /* Specific Landscape / Short Screen Fix */
   @media (orientation: landscape) and (max-height: 500px) {
-    .header { display: none !important; } /* Kill the header to save space */
+    .header { display: none !important; }
     
-    .container { padding: 5px; }
-    
-    .toolbar { 
-      flex-direction: row !important; /* Force icons/filters into one line */
+    .toolbar {
+      flex-direction: row !important;
       flex-wrap: nowrap !important;
       padding: 6px 10px;
       margin-bottom: 8px;
     }
     
-    .search-box { width: 40% !important; }
-    .filter-group { flex-direction: row !important; width: 50% !important; gap: 4px; }
-    .filter-select { padding: 6px; font-size: 11px; }
-    .btn-download, .filter-count { display: none !important; } /* Hide non-essentials in landscape */
+    .search-box { width: 35% !important; min-width: 150px !important; }
+    .filter-group { flex-direction: row !important; width: 60% !important; gap: 4px; }
+    .filter-select { padding: 6px; font-size: 11px; width: 150px !important; }
+    .btn-download, .filter-count { display: none !important; } 
+
+    .table-wrap { 
+      width: 100%;
+      overflow-x: auto; /* Essential: This allows the swipe! */
+      -webkit-overflow-scrolling: touch;
+      border-radius: 0;
+    }
+    
+    table { 
+      min-width: 1150px !important; /* Force a wide table so nothing squeezes */
+      table-layout: auto !important; 
+    }
+    
+    th, td { 
+      padding: 10px 8px !important; 
+      white-space: nowrap !important; /* NO WRAPPING NAMES! */
+    }
+
+    th:nth-child(2), td:nth-child(2) { min-width: 180px; } /* Name Column */
+    th:last-child, td:last-child { min-width: 250px; } /* Actions Column */
 
     .modal-box { 
       height: 98vh; 
@@ -506,13 +532,8 @@
       position: fixed;
       top: 0; left: 2.5vw;
     }
-    .modal-body { 
-      padding: 10px 20px; 
-      overflow-y: auto;
-    }
+    .modal-body { padding: 10px 20px; overflow-y: auto; }
     .modal-header, .modal-footer { padding: 8px 20px; }
-    
-    table { min-width: 900px; } /* Allow scrolling without overlap */
   }
 
   /* Notes & Activity Log Timeline */
