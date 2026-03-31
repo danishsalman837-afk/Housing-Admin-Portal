@@ -312,33 +312,38 @@ window.downloadLead = function(id) {
     const item = findItem(id);
     if (!item) return;
 
-    const ts = item.timestamp ? new Date(item.timestamp).toLocaleString() : "N/A";
-    let content = `HOUSING LEAD PROFILE: ${item.name || 'UNKNOWN'}\n`;
-    content += `========================================================\n`;
-    content += `SUBMITTED: ${ts}\n`;
-    content += `STATUS: ${item.leadStatus || 'New Lead'}\n`;
-    content += `SOLICITOR: ${item.solicitorName || 'Unassigned'}\n\n`;
+    let content = `PROPERTY DISREPAIR REPORT: ${item.name || 'UNKNOWN'}\n`;
+    content += `========================================================\n\n`;
 
-    content += `CLIENT DATA\n`;
+    content += `CLIENT INFORMATION\n`;
     content += `--------------------------------------------------------\n`;
-    Object.keys(item).forEach(key => {
-        if (key === 'notes' || key === 'id' || key === 'timestamp') return;
-        const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
-        content += `${label}: ${item[key] || 'N/A'}\n`;
-    });
+    content += `NAME: ${item.name || 'N/A'}\n`;
+    content += `ADDRESS: ${item.address || 'N/A'}\n`;
+    content += `TENANCY TYPE: ${item.tenantType || 'N/A'}\n\n`;
 
-    content += `\nACTIVITY LOG / NOTES\n`;
+    content += `DISREPAIR DETAILS\n`;
     content += `--------------------------------------------------------\n`;
-    if (item.notes && Array.isArray(item.notes)) {
-        item.notes.forEach(n => {
-            content += `[${n.time}] ${n.text}\n`;
-        });
-    } else {
-        content += `No notes available.\n`;
+    
+    // Core Disrepair Logic
+    if (item.damp === "Yes") {
+        content += `[DAMP/MOULD]: Yes\n- Location: ${item.dampLocation || 'N/A'}\n- Rooms: ${item.dampRooms || 'N/A'}\n- Health: ${item.dampHealth || 'N/A'}\n\n`;
+    }
+    if (item.leak === "Yes") {
+        content += `[LEAKS]: Yes\n- Source: ${item.leakSource || 'N/A'}\n- Started: ${item.leakStart || 'N/A'}\n\n`;
+    }
+    if (item.issues === "Yes") {
+        content += `[OTHER ISSUES]: ${Array.isArray(item.issueType) ? item.issueType.join(", ") : (item.issueType || 'Yes')}\n`;
+        if (item.electricsMainIssue) content += `- Electrics: ${item.electricsMainIssue}\n`;
+        if (item.heatingMainIssue) content += `- Heating/Boiler: ${item.heatingMainIssue}\n`;
+        if (item.structuralLocation) content += `- Structural: ${item.structuralLocation}\n`;
+        content += `\n`;
     }
 
+    content += `LANDLORD REPORTED: ${item.reported || 'N/A'}\n`;
+    if (item.reportCount) content += `- Frequency: ${item.reportCount}\n`;
+    
     content += `\n========================================================\n`;
-    content += `Generated via Admin Portal on ${new Date().toLocaleString()}\n`;
+    content += `Generated on ${new Date().toLocaleDateString()}\n`;
 
     const blob = new Blob([content], { type: 'application/msword' });
     const a = document.createElement('a');
