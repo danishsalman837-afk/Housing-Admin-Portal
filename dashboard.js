@@ -3,7 +3,7 @@ let submissionsData = [];
 
 const leadStatuses = [
   'New Lead', 'Transferred', 'Accepted', 'Rejected', 
-  'Not Yet Invoiced', 'Invoice Raised', 'Paid'
+  'Not Yet Invoiced', 'Invoice Raised', 'Paid', 'Test Lead'
 ];
 
 function getStatusClass(status) {
@@ -15,7 +15,8 @@ function getStatusClass(status) {
     'Rejected': 'status-rejected',
     'Not Yet Invoiced': 'status-not-yet-invoiced',
     'Invoice Raised': 'status-invoice-raised',
-    'Paid': 'status-paid'
+    'Paid': 'status-paid',
+    'Test Lead': 'status-test'
   };
   return map[status] || 'status-new';
 }
