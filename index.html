@@ -199,7 +199,7 @@
   /* Width balancing for alignment */
   th:nth-child(1), td:nth-child(1) { width: 50px; } /* # Column */
   th:nth-child(6), td:nth-child(6) { font-weight: 700; } /* Solicitor */
-  th:last-child, td:last-child { min-width: 380px; } /* Expand for 4 buttons */
+  th:last-child, td:last-child { min-width: 440px; } /* High-end layout needs space */
 
   /* Button Hub Alignment */
   .action-btns { 
@@ -233,53 +233,49 @@
   .status-test { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
 
   /* Fluid Action Buttons */
-  .action-btns { 
-    display: flex; 
-    gap: 6px; 
-    justify-content: center; 
-    flex-wrap: nowrap; /* Keep them together */
-  }
-  .btn-view, .btn-edit, .btn-notes {
-    padding: 6px 10px;
-    border: 1.5px solid transparent;
-    border-radius: 6px;
-    font-size: 10px;
+  .btn-view, .btn-edit, .btn-notes, .btn-download-single {
+    padding: 8px 16px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    font-size: 11.5px;
     font-weight: 700;
     cursor: pointer;
     font-family: inherit;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     align-items: center;
-    gap: 4px;
-    white-space: nowrap;
+    gap: 6px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+    text-shadow: 0 0.5px 0.5px rgba(0,0,0,0.05); /* Soft premium look */
   }
+
   .btn-view {
-    background: #ffffff;
-    color: #4b5563;
-    border-color: #e5e7eb;
+    background: #f8fafc;
+    color: #334155;
+    border-color: #e2e8f0;
   }
-  .btn-view:hover { background: #f9fafb; border-color: #d1d5db; transform: scale(1.03); }
+  .btn-view:hover { background: #f1f5f9; transform: translateY(-1.5px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
   
   .btn-edit {
-    background: #eff6ff;
-    color: #1e40af;
-    border-color: #dbeafe;
+    background: #e0f2fe;
+    color: #0369a1;
+    border-color: #bae6fd;
   }
-  .btn-edit:hover { background: #dbeafe; transform: scale(1.03); }
+  .btn-edit:hover { background: #bae6fd; transform: translateY(-1.5px); box-shadow: 0 4px 12px rgba(3,105,161,0.15); }
 
   .btn-notes {
-    background: #f5f3ff;
-    color: #5b21b6;
-    border-color: #ede9fe;
+    background: #eef2ff;
+    color: #4338ca;
+    border-color: #e0e7ff;
   }
-  .btn-notes:hover { background: #ede9fe; transform: scale(1.03); }
+  .btn-notes:hover { background: #e0e7ff; transform: translateY(-1.5px); box-shadow: 0 4px 12px rgba(67,56,202,0.15); }
 
   .btn-download-single {
     background: #ecfdf5;
     color: #065f46;
     border-color: #d1fae5;
   }
-  .btn-download-single:hover { background: #d1fae5; transform: scale(1.03); }
+  .btn-download-single:hover { background: #d1fae5; transform: translateY(-1.5px); box-shadow: 0 4px 12px rgba(6,95,70,0.15); }
 
   /* Modal */
   .modal-overlay {
