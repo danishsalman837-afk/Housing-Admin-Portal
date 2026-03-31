@@ -1,26 +1,166 @@
-// Dashboard script with error handling
+// Dashboard script with View & Edit functionality
 let submissionsData = [];
 
-// Expose update function to the popup window
-window.updateSolicitor = async function(id, solicitorName) {
+// Fields that should not be editable
+const readonlyFields = ['id', 'timestamp', 'created_at'];
+
+// Show a toast notification
+function showToast(message, type = 'success') {
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  setTimeout(() => { toast.remove(); }, 3000);
+}
+
+// Close the modal
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('active');
+}
+
+// Open View modal (read-only)
+function openViewModal(item) {
+  const modal = document.getElementById('modalBox');
+  let html = `
+    <div class="modal-header">
+      <h2>Submission Details</h2>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>`;
+
+  // Solicitor section at the top
+  html += `<div class="solicitor-section">
+    <label>Assigned Solicitor</label>
+    <p style="margin:5px 0; font-size:16px; font-weight:600; color: ${item.solicitorName ? '#28a745' : '#888'};">
+      ${item.solicitorName || 'Unassigned'}
+    </p>
+  </div>`;
+
+  // All fields as read-only display
+  for (const key in item) {
+    if (key === 'solicitorName') continue;
+    let val = item[key];
+    if (Array.isArray(val)) val = val.join(", ");
+    else if (typeof val === "object" && val !== null) val = JSON.stringify(val);
+    if (val === undefined || val === null) val = "";
+
+    // Format the label nicely
+    const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
+
+    html += `<div class="modal-field readonly">
+      <label>${label}</label>
+      <input type="text" value="${String(val).replace(/"/g, '&quot;')}" readonly>
+    </div>`;
+  }
+
+  html += `<div class="modal-actions">
+    <button class="btn-cancel" onclick="closeModal()">Close</button>
+    <button class="btn-save" onclick="closeModal(); openEditModal(submissionsData.find(s => s.id === '${item.id}'));">Edit This Submission</button>
+  </div>`;
+
+  modal.innerHTML = html;
+  document.getElementById('modalOverlay').classList.add('active');
+}
+
+// Open Edit modal (editable fields)
+function openEditModal(item) {
+  const modal = document.getElementById('modalBox');
+  let html = `
+    <div class="modal-header">
+      <h2>Edit Submission</h2>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <form id="editForm">`;
+
+  // Solicitor section at the top (editable)
+  html += `<div class="solicitor-section">
+    <label>Assign Solicitor</label>
+    <input type="text" name="solicitorName" value="${(item.solicitorName || '').replace(/"/g, '&quot;')}" placeholder="Enter solicitor name...">
+  </div>`;
+
+  // All other fields
+  for (const key in item) {
+    if (key === 'solicitorName') continue;
+    let val = item[key];
+    if (Array.isArray(val)) val = val.join(", ");
+    else if (typeof val === "object" && val !== null) val = JSON.stringify(val);
+    if (val === undefined || val === null) val = "";
+
+    const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
+    const isReadonly = readonlyFields.includes(key);
+
+    if (isReadonly) {
+      html += `<div class="modal-field readonly">
+        <label>${label}</label>
+        <input type="text" value="${String(val).replace(/"/g, '&quot;')}" readonly>
+      </div>`;
+    } else {
+      // Use textarea for long text fields
+      const isLong = String(val).length > 80;
+      if (isLong) {
+        html += `<div class="modal-field">
+          <label>${label}</label>
+          <textarea name="${key}">${String(val).replace(/</g, '&lt;')}</textarea>
+        </div>`;
+      } else {
+        html += `<div class="modal-field">
+          <label>${label}</label>
+          <input type="text" name="${key}" value="${String(val).replace(/"/g, '&quot;')}">
+        </div>`;
+      }
+    }
+  }
+
+  html += `</form>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveEdit('${item.id}')">Save Changes</button>
+    </div>`;
+
+  modal.innerHTML = html;
+  document.getElementById('modalOverlay').classList.add('active');
+}
+
+// Save edits to Supabase
+async function saveEdit(id) {
+  const form = document.getElementById('editForm');
+  const formData = new FormData(form);
+  const updates = { id };
+
+  for (const [key, value] of formData.entries()) {
+    updates[key] = value;
+  }
+
   try {
     const res = await fetch('/api/update', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, solicitorName })
+      body: JSON.stringify(updates)
     });
+
     if (res.ok) {
-      alert("Solicitor assigned successfully!");
-      location.reload(); // Refresh the table to show updates
+      closeModal();
+      showToast("Submission updated successfully!");
+      setTimeout(() => location.reload(), 800);
     } else {
       const err = await res.json();
-      alert("Error saving: " + (err.error || "Unknown error"));
+      showToast("Error: " + (err.error || "Unknown error"), 'error');
     }
   } catch (err) {
-    alert("Network error: " + err.message);
+    showToast("Network error: " + err.message, 'error');
   }
-};
+}
 
+// Close modal when clicking overlay background
+document.getElementById('modalOverlay').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+// Close modal with Escape key
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeModal();
+});
+
+// Load and render submissions
 (async function() {
   try {
     const response = await fetch('/api/submissions');
@@ -38,11 +178,9 @@ window.updateSolicitor = async function(id, solicitorName) {
 
     submissionsData.forEach((item, index) => {
       const tr = document.createElement("tr");
-      
-      // Handle timestamp formatting safely
       const ts = item.timestamp ? new Date(item.timestamp).toLocaleString() : "N/A";
       const solicitorHtml = item.solicitorName 
-        ? `<span style="color: green; font-weight: bold;">${item.solicitorName}</span>` 
+        ? `<span style="color: #28a745; font-weight: bold;">${item.solicitorName}</span>` 
         : `<span style="color: #888; font-style: italic;">Unassigned</span>`;
       
       tr.innerHTML = `
@@ -52,43 +190,29 @@ window.updateSolicitor = async function(id, solicitorName) {
         <td>${item.tenantType || "N/A"}</td>
         <td>${ts}</td>
         <td>${solicitorHtml}</td>
-        <td><button class="view-btn" data-index="${index}">View</button></td>
+        <td>
+          <div class="action-btns">
+            <button class="view-btn" data-index="${index}">View</button>
+            <button class="edit-btn" data-index="${index}">Edit</button>
+          </div>
+        </td>
       `;
       tbody.appendChild(tr);
     });
 
-    // View Details Button
+    // View button handlers
     document.querySelectorAll(".view-btn").forEach(btn => {
       btn.addEventListener("click", (e) => {
         const idx = e.target.getAttribute("data-index");
-        const item = submissionsData[idx];
-        let html = "<h2>Submission Details</h2><div style='font-family: sans-serif; padding: 20px;'>";
-        
-        // Add the Solicitor Assignment box at the top
-        html += `<div style="background-color: #f0f7ff; padding: 15px; border: 1px solid #cce0ff; border-radius: 6px; margin-bottom: 20px;">
-          <h3 style="margin-top: 0; color: #0066cc;">Assign Solicitor</h3>
-          <div style="display: flex; gap: 10px;">
-            <input type="text" id="solicitorInput" placeholder="Enter Solicitor Name..." value="${item.solicitorName || ''}" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
-            <button onclick="window.opener.updateSolicitor('${item.id}', document.getElementById('solicitorInput').value); window.close();" style="padding: 8px 15px; background: #0066cc; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Save & Close</button>
-          </div>
-        </div>`;
+        openViewModal(submissionsData[idx]);
+      });
+    });
 
-        // Render all other fields safely
-        for (const key in item) {
-          if (key === 'solicitorName') continue; // Skip rendering here since it's at the top
-
-          let val = item[key];
-          if (Array.isArray(val)) {
-             val = val.join(", ");
-          } else if (typeof val === "object" && val !== null) {
-             val = JSON.stringify(val);
-          }
-          if (val === undefined || val === null) val = "";
-          html += `<p style='margin:5px 0'><strong>${key}:</strong> ${val}</p>`;
-        }
-        html += "</div>";
-        const win = window.open("", "_blank", "width=600,height=700");
-        win.document.write(html);
+    // Edit button handlers
+    document.querySelectorAll(".edit-btn").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        const idx = e.target.getAttribute("data-index");
+        openEditModal(submissionsData[idx]);
       });
     });
 
@@ -106,14 +230,12 @@ document.getElementById('downloadCsvBtn')?.addEventListener('click', () => {
         return;
     }
 
-    // Get all unique headers
     const headers = new Set();
     submissionsData.forEach(item => Object.keys(item).forEach(key => headers.add(key)));
     const headerArr = Array.from(headers);
     
-    // Construct CSV String
     const csvRows = [];
-    csvRows.push(headerArr.join(',')); // Add header row
+    csvRows.push(headerArr.join(','));
 
     submissionsData.forEach(item => {
         const row = headerArr.map(header => {
@@ -122,8 +244,6 @@ document.getElementById('downloadCsvBtn')?.addEventListener('click', () => {
             else if (Array.isArray(val)) val = val.join("; ");
             else if (typeof val === "object") val = JSON.stringify(val);
             else val = String(val);
-
-            // Escape quotes and wrap in quotes for CSV safety
             val = val.replace(/"/g, '""');
             return `"${val}"`;
         });

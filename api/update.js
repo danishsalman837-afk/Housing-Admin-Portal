@@ -1,13 +1,11 @@
 const { createClient } = require("@supabase/supabase-js");
 
-// Vercel serverless function to handle specific updates (like assigned solicitor)
+// Vercel serverless function to handle updates to any submission fields
 module.exports = async function handler(req, res) {
-  // Only allow POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  // Ensure env variables are configured in Vercel
   const supabaseUrl = process.env.SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
@@ -19,17 +17,19 @@ module.exports = async function handler(req, res) {
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   try {
-    const { id, solicitorName } = req.body;
-    
-    // We need both the row ID and the new value to update
-    if (!id || typeof solicitorName === "undefined") {
-        return res.status(400).json({ success: false, error: "Missing required fields (id, solicitorName)" });
+    const { id, ...fieldsToUpdate } = req.body;
+
+    if (!id) {
+      return res.status(400).json({ success: false, error: "Missing required field: id" });
     }
-    
-    // Update the 'submissions' table
+
+    if (Object.keys(fieldsToUpdate).length === 0) {
+      return res.status(400).json({ success: false, error: "No fields provided to update" });
+    }
+
     const { error } = await supabase
       .from('submissions')
-      .update({ solicitorName: solicitorName })
+      .update(fieldsToUpdate)
       .eq('id', id);
 
     if (error) {
@@ -37,7 +37,6 @@ module.exports = async function handler(req, res) {
       return res.status(500).json({ success: false, error: error.message });
     }
 
-    // Success response
     return res.status(200).json({ success: true, message: "Submission updated successfully" });
   } catch (err) {
     console.error("Unexpected error:", err);
