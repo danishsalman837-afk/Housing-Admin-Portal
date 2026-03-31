@@ -1,4 +1,4 @@
-// Professional Dashboard Script with Advanced Filtering
+// Professional Dashboard Script with Advanced Filtering & Debugging
 let submissionsData = [];
 
 // Lead status options
@@ -12,7 +12,6 @@ const leadStatuses = [
   'Paid'
 ];
 
-// Map status to CSS class
 function getStatusClass(status) {
   if (!status) return 'status-new';
   const map = {
@@ -27,10 +26,10 @@ function getStatusClass(status) {
   return map[status] || 'status-new';
 }
 
-const readonlyFields = ['id', 'timestamp', 'created_at', 'solicitorName', 'leadStatus'];
+const readonlyFields = ['id', 'timestamp', 'created_at'];
 
-// Make functions global for HTML buttons
 window.showToast = function(message, type = 'success') {
+  console.log(`[Toast] ${type}: ${message}`);
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
   toast.textContent = message;
@@ -39,10 +38,11 @@ window.showToast = function(message, type = 'success') {
 };
 
 window.closeModal = function() {
-  document.getElementById('modalOverlay').classList.remove('active');
+  console.log("Closing modal...");
+  const overlay = document.getElementById('modalOverlay');
+  if (overlay) overlay.classList.remove('active');
 };
 
-// Update count stats in header
 function updateStats() {
     const statTotal = document.getElementById('statTotal');
     const statUnassigned = document.getElementById('statUnassigned');
@@ -63,7 +63,6 @@ if (filterBy) {
     filterBy.addEventListener('change', () => {
         const type = filterBy.value;
         filterValue.innerHTML = '<option value="">Select...</option>';
-        
         if (!type) {
             filterValue.classList.remove('visible');
         } else {
@@ -90,14 +89,10 @@ function applyFilters() {
     const val = filterValue ? filterValue.value : '';
 
     const filtered = submissionsData.filter(item => {
-        // Search
         const matchesSearch = !search || 
             (item.name || '').toLowerCase().includes(search) || 
             (item.phone || '').toLowerCase().includes(search);
-        
         if (!matchesSearch) return false;
-
-        // Dropdown Filter
         if (type === 'status' && val) {
             const currentStatus = item.leadStatus || 'New Lead';
             if (currentStatus !== val) return false;
@@ -109,10 +104,8 @@ function applyFilters() {
                 return false;
             }
         }
-
         return true;
     });
-
     renderTable(filtered);
 }
 
@@ -144,6 +137,9 @@ function renderTable(data) {
         const ts = item.timestamp ? new Date(item.timestamp).toLocaleString() : "N/A";
         const solicitor = item.solicitorName ? `<strong>${item.solicitorName}</strong>` : `<span style="color:#999">Unassigned</span>`;
         
+        // Use ID for buttons, fall back to index if missing
+        const buttonId = item.id || index;
+
         tr.innerHTML = `
             <td>${index + 1}</td>
             <td>${item.name || "N/A"}</td>
@@ -152,14 +148,14 @@ function renderTable(data) {
             <td>${ts}</td>
             <td>${solicitor}</td>
             <td>
-                <select class="status-select ${getStatusClass(item.leadStatus)}" onchange="window.handleStatusUpdate('${item.id}', this)">
+                <select class="status-select ${getStatusClass(item.leadStatus)}" onchange="window.handleStatusUpdate('${buttonId}', this)">
                     ${leadStatuses.map(s => `<option value="${s}" ${ (item.leadStatus || 'New Lead') === s ? 'selected' : '' }>${s}</option>`).join('')}
                 </select>
             </td>
             <td>
                 <div class="action-btns">
-                    <button class="btn-view" onclick="window.openViewModal('${item.id}')">View</button>
-                    <button class="btn-edit" onclick="window.openEditModal('${item.id}')">Edit</button>
+                    <button class="btn-view" onclick="window.openViewModal('${buttonId}')">View</button>
+                    <button class="btn-edit" onclick="window.openEditModal('${buttonId}')">Edit</button>
                 </div>
             </td>
         `;
@@ -170,7 +166,6 @@ function renderTable(data) {
 window.handleStatusUpdate = async function(id, el) {
     const newStatus = el.value;
     el.className = `status-select ${getStatusClass(newStatus)}`;
-    
     try {
         const res = await fetch('/api/update', {
             method: 'POST',
@@ -179,7 +174,7 @@ window.handleStatusUpdate = async function(id, el) {
         });
         if (res.ok) {
             window.showToast("Status updated");
-            const item = submissionsData.find(s => s.id === id);
+            const item = submissionsData.find(s => (s.id || submissionsData.indexOf(s).toString()) === id.toString());
             if (item) item.leadStatus = newStatus;
             updateStats();
         }
@@ -191,13 +186,21 @@ window.handleStatusUpdate = async function(id, el) {
 // ======== MODALS ========
 
 window.openViewModal = function(id) {
-    const item = submissionsData.find(s => s.id === id);
-    if (!item) return;
+    console.log("Attempting to open View modal for ID:", id);
+    const item = submissionsData.find(s => (s.id || submissionsData.indexOf(s).toString()) === id.toString());
+    
+    if (!item) {
+        console.error("Could not find lead with ID:", id);
+        return;
+    }
+    
     const modal = document.getElementById('modalBox');
-    if (!modal) return;
+    if (!modal) {
+        console.error("Modal box element missing!");
+        return;
+    }
     
     let fieldsHtml = '';
-    // Custom order: show main fields first
     const mainKeys = ['name', 'phone', 'email', 'tenantType', 'solicitorName', 'leadStatus'];
     const otherKeys = Object.keys(item).filter(k => !mainKeys.includes(k));
     
@@ -223,33 +226,25 @@ window.openViewModal = function(id) {
 };
 
 window.openEditModal = function(id) {
-    const item = submissionsData.find(s => s.id === id);
+    console.log("Attempting to open Edit modal for ID:", id);
+    const item = submissionsData.find(s => (s.id || submissionsData.indexOf(s).toString()) === id.toString());
     if (!item) return;
+    
     const modal = document.getElementById('modalBox');
     if (!modal) return;
     
-    let fieldsHtml = '';
-    
-    // Core selection fields
-    fieldsHtml += `
-        <div class="solicitor-section">
-            <div class="modal-field">
-                <label>Assigned Solicitor</label>
-                <input type="text" name="solicitorName" value="${item.solicitorName || ''}" placeholder="Enter name...">
-            </div>
-            <div class="modal-field">
-                <label>Lead Status</label>
-                <select name="leadStatus" class="filter-select" style="width:100%">
-                    ${leadStatuses.map(s => `<option value="${s}" ${ (item.leadStatus || 'New Lead') === s ? 'selected' : '' }>${s}</option>`).join('')}
-                </select>
-            </div>
+    let fieldsHtml = `<div class="solicitor-section">
+        <label>Status & Solicitor</label>
+        <div class="modal-field">
+            <select name="leadStatus" class="filter-select" style="width:100%; margin-bottom:8px;">
+                ${leadStatuses.map(s => `<option value="${s}" ${ (item.leadStatus || 'New Lead') === s ? 'selected' : '' }>${s}</option>`).join('')}
+            </select>
+            <input type="text" name="solicitorName" value="${item.solicitorName || ''}" placeholder="Solicitor Name">
         </div>
-    `;
+    </div>`;
 
-    // Rest of fields
     Object.keys(item).forEach(key => {
         if (key === 'solicitorName' || key === 'leadStatus') return;
-        
         if (readonlyFields.includes(key)) {
             fieldsHtml += `<div class="modal-field readonly"><label>${key}</label><input type="text" value="${item[key] || ''}" readonly></div>`;
         } else {
@@ -292,7 +287,6 @@ window.saveEdit = async function(id) {
     }
 };
 
-// Close modal when clicking overlay background
 const overlay = document.getElementById('modalOverlay');
 if (overlay) {
     overlay.addEventListener('click', (e) => {
@@ -304,14 +298,19 @@ if (overlay) {
 
 (async function init() {
     try {
+        console.log("Fetching submissions from /api/submissions...");
         const res = await fetch('/api/submissions');
+        if (!res.ok) throw new Error(`Fetch failed with status: ${res.status}`);
+        
         submissionsData = await res.json();
+        console.log("Loaded data:", submissionsData);
+        
         updateStats();
         renderTable(submissionsData);
     } catch (e) {
-        console.error(e);
+        console.error("Initialization Error:", e);
         const tbody = document.querySelector("#submissionTable tbody");
-        if (tbody) tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:red;">Error loading data</td></tr>';
+        if (tbody) tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:red;">Error: ${e.message}. Open console for details.</td></tr>`;
     }
 })();
 
