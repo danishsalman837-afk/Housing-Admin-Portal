@@ -405,60 +405,87 @@
     to { opacity: 1; transform: translateY(0); }
   }
 
-  /* Rotation & Fluid Responsiveness */
+  /* Aggressive Width-First Mobile Fixes */
   @media (max-width: 1024px) {
-    .container { padding: 15px; }
-    .search-box { width: 100%; max-width: 400px; }
-    .toolbar { gap: 15px; }
+    .container { padding: 8px; width: 100%; }
+    .search-box { width: 100% !important; max-width: none; }
+    .toolbar { gap: 8px; flex-direction: column; align-items: stretch; }
   }
 
   @media (max-width: 768px) {
-    .header { flex-direction: column; text-align: center; gap: 12px; padding: 15px; }
-    .header-stats { width: 100%; justify-content: center; flex-wrap: wrap; }
-    
-    .toolbar { 
+    .header { 
+      padding: 10px; 
       flex-direction: column; 
-      align-items: stretch; 
-      gap: 12px; 
-      background: rgba(255,255,255,0.7);
-      backdrop-filter: blur(10px);
-      padding: 15px;
+      align-items: center; 
+      width: 100%;
     }
-    .search-box { width: 100% !important; max-width: none; }
+    .header h1 { font-size: 14px; margin-bottom: 8px; }
+    .header-stats { 
+      flex-direction: row; 
+      width: 100%; 
+      justify-content: center; 
+      gap: 5px; 
+    }
+    .header-stat { font-size: 9px; padding: 4px 6px; min-width: 0; }
+
+    .toolbar { 
+      padding: 10px;
+      margin: 10px 0;
+      width: 100%;
+    }
     
     .filter-group { 
-      flex-direction: column; 
-      align-items: stretch; 
-      gap: 8px;
-    }
-    .filter-select { width: 100%; }
-    .btn-download { width: 100%; margin-top: 5px; }
-    
-    .modal-box { 
-      width: 95%; 
-      max-height: 90vh; /* Don't be taller than the screen */
+      width: 100%; 
       display: flex;
       flex-direction: column;
+      gap: 6px;
     }
-    .modal-body { 
-      flex: 1;
-      max-height: none; /* Let the box manage the height */
-      overflow-y: auto;
+    /* ENFORCE 100% WIDTH - REMOVE MIN-WIDTHS */
+    .filter-select, .filter-value, .search-box input { 
+      width: 100% !important; 
+      min-width: 0 !important; 
+      margin: 0; 
+      box-sizing: border-box;
+    }
+
+    .btn-download { 
+      width: 100% !important; 
+      margin: 5px 0 0 0; 
+    }
+
+    .table-wrap { 
+      width: 100%;
+      overflow-x: auto; 
+      -webkit-overflow-scrolling: touch;
     }
     
-    .table-wrap { 
-      overflow-x: auto; 
-      border-radius: 8px;
+    table { 
+      min-width: 800px; /* Force scroll instead of overlap */
+      table-layout: auto; 
     }
-    table { min-width: 1000px; table-layout: auto; } /* Auto layout on mobile to prevent overlapping */
+    
+    th, td { 
+      padding: 10px 5px; 
+      font-size: 11px; 
+    }
   }
 
-  /* Specific Landscape Fix (Short Screens) */
+  /* Full Width Modals */
+  @media (max-width: 650px) {
+    .modal-box { 
+      width: 100% !important; 
+      margin: 0; 
+      border-radius: 0; 
+      height: 100%; 
+    }
+    .modal-body { padding: 15px; }
+  }
+
+  /* Specific Landscape Fix */
   @media (max-height: 500px) {
-    .modal-box { margin-top: 5px; margin-bottom: 5px; height: 95vh; }
-    .modal-header, .modal-footer { padding: 10px 20px; }
-    .header { padding: 8px 20px; }
-    h1 { font-size: 16px; }
+    .modal-box { height: 98vh; width: 98vw; margin: 1vh auto; }
+    .modal-body { padding: 15px; }
+    .header { display: none; } /* Hide header to save space in landscape */
   }
   /* Notes & Activity Log */
   .notes-section {
