@@ -312,38 +312,33 @@ window.downloadLead = function(id) {
     const item = findItem(id);
     if (!item) return;
 
-    let content = `PROPERTY DISREPAIR REPORT: ${item.name || 'UNKNOWN'}\n`;
+    let content = `FULL LEAD PROFILE: ${item.name || 'UNKNOWN'}\n`;
     content += `========================================================\n\n`;
 
-    content += `CLIENT INFORMATION\n`;
-    content += `--------------------------------------------------------\n`;
-    content += `NAME: ${item.name || 'N/A'}\n`;
-    content += `ADDRESS: ${item.address || 'N/A'}\n`;
-    content += `TENANCY TYPE: ${item.tenantType || 'N/A'}\n\n`;
-
-    content += `DISREPAIR DETAILS\n`;
-    content += `--------------------------------------------------------\n`;
+    const skipKeys = ['id', 'timestamp', 'leadStatus', 'solicitorName', 'notes'];
     
-    // Core Disrepair Logic
-    if (item.damp === "Yes") {
-        content += `[DAMP/MOULD]: Yes\n- Location: ${item.dampLocation || 'N/A'}\n- Rooms: ${item.dampRooms || 'N/A'}\n- Health: ${item.dampHealth || 'N/A'}\n\n`;
-    }
-    if (item.leak === "Yes") {
-        content += `[LEAKS]: Yes\n- Source: ${item.leakSource || 'N/A'}\n- Started: ${item.leakStart || 'N/A'}\n\n`;
-    }
-    if (item.issues === "Yes") {
-        content += `[OTHER ISSUES]: ${Array.isArray(item.issueType) ? item.issueType.join(", ") : (item.issueType || 'Yes')}\n`;
-        if (item.electricsMainIssue) content += `- Electrics: ${item.electricsMainIssue}\n`;
-        if (item.heatingMainIssue) content += `- Heating/Boiler: ${item.heatingMainIssue}\n`;
-        if (item.structuralLocation) content += `- Structural: ${item.structuralLocation}\n`;
-        content += `\n`;
-    }
+    // Sort keys to keep Name/Address at top
+    const allKeys = Object.keys(item).sort((a,b) => {
+        if (a === 'name') return -1;
+        if (b === 'name') return 1;
+        return 0;
+    });
 
-    content += `LANDLORD REPORTED: ${item.reported || 'N/A'}\n`;
-    if (item.reportCount) content += `- Frequency: ${item.reportCount}\n`;
-    
+    allKeys.forEach(key => {
+        if (skipKeys.includes(key)) return;
+        
+        // Make the label readable (e.g. tenantType -> Tenant Type)
+        const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
+        let val = item[key];
+        
+        // Format arrays (like issueType)
+        if (Array.isArray(val)) val = val.join(", ");
+        
+        content += `${label}: ${val || '---'}\n`;
+    });
+
     content += `\n========================================================\n`;
-    content += `Generated on ${new Date().toLocaleDateString()}\n`;
+    content += `Generated on ${new Date().toLocaleString()}\n`;
 
     const blob = new Blob([content], { type: 'application/msword' });
     const a = document.createElement('a');
