@@ -29,7 +29,6 @@ function getStatusClass(status) {
 const readonlyFields = ['id', 'timestamp', 'created_at'];
 
 window.showToast = function(message, type = 'success') {
-  console.log(`[Toast] ${type}: ${message}`);
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
   toast.textContent = message;
@@ -38,7 +37,6 @@ window.showToast = function(message, type = 'success') {
 };
 
 window.closeModal = function() {
-  console.log("Closing modal...");
   const overlay = document.getElementById('modalOverlay');
   if (overlay) overlay.classList.remove('active');
 };
@@ -137,8 +135,8 @@ function renderTable(data) {
         const ts = item.timestamp ? new Date(item.timestamp).toLocaleString() : "N/A";
         const solicitor = item.solicitorName ? `<strong>${item.solicitorName}</strong>` : `<span style="color:#999">Unassigned</span>`;
         
-        // Use ID for buttons, fall back to index if missing
-        const buttonId = item.id || index;
+        // Use unique ID or fallback to index if missing
+        const buttonId = (item.id !== undefined && item.id !== null) ? item.id : index;
 
         tr.innerHTML = `
             <td>${index + 1}</td>
@@ -163,6 +161,14 @@ function renderTable(data) {
     });
 }
 
+// Find item safely by ID or index
+function findItem(id) {
+    return submissionsData.find((s, idx) => {
+        const sId = (s.id !== undefined && s.id !== null) ? String(s.id) : String(idx);
+        return sId === String(id);
+    });
+}
+
 window.handleStatusUpdate = async function(id, el) {
     const newStatus = el.value;
     el.className = `status-select ${getStatusClass(newStatus)}`;
@@ -174,7 +180,7 @@ window.handleStatusUpdate = async function(id, el) {
         });
         if (res.ok) {
             window.showToast("Status updated");
-            const item = submissionsData.find(s => (s.id || submissionsData.indexOf(s).toString()) === id.toString());
+            const item = findItem(id);
             if (item) item.leadStatus = newStatus;
             updateStats();
         }
@@ -186,19 +192,11 @@ window.handleStatusUpdate = async function(id, el) {
 // ======== MODALS ========
 
 window.openViewModal = function(id) {
-    console.log("Attempting to open View modal for ID:", id);
-    const item = submissionsData.find(s => (s.id || submissionsData.indexOf(s).toString()) === id.toString());
-    
-    if (!item) {
-        console.error("Could not find lead with ID:", id);
-        return;
-    }
+    const item = findItem(id);
+    if (!item) return;
     
     const modal = document.getElementById('modalBox');
-    if (!modal) {
-        console.error("Modal box element missing!");
-        return;
-    }
+    if (!modal) return;
     
     let fieldsHtml = '';
     const mainKeys = ['name', 'phone', 'email', 'tenantType', 'solicitorName', 'leadStatus'];
@@ -226,8 +224,7 @@ window.openViewModal = function(id) {
 };
 
 window.openEditModal = function(id) {
-    console.log("Attempting to open Edit modal for ID:", id);
-    const item = submissionsData.find(s => (s.id || submissionsData.indexOf(s).toString()) === id.toString());
+    const item = findItem(id);
     if (!item) return;
     
     const modal = document.getElementById('modalBox');
@@ -298,19 +295,13 @@ if (overlay) {
 
 (async function init() {
     try {
-        console.log("Fetching submissions from /api/submissions...");
         const res = await fetch('/api/submissions');
-        if (!res.ok) throw new Error(`Fetch failed with status: ${res.status}`);
-        
+        if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
         submissionsData = await res.json();
-        console.log("Loaded data:", submissionsData);
-        
         updateStats();
         renderTable(submissionsData);
     } catch (e) {
-        console.error("Initialization Error:", e);
-        const tbody = document.querySelector("#submissionTable tbody");
-        if (tbody) tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:red;">Error: ${e.message}. Open console for details.</td></tr>`;
+        console.error("Init Error:", e);
     }
 })();
 
