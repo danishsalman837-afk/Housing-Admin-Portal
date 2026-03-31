@@ -9,7 +9,7 @@ const leadStatuses = [
   'Rejected',
   'Not Yet Invoiced',
   'Invoice Raised',
-  'Invoiced'
+  'Paid'
 ];
 
 // Map status to CSS class
@@ -22,7 +22,7 @@ function getStatusClass(status) {
     'Rejected': 'status-rejected',
     'Not Yet Invoiced': 'status-not-yet-invoiced',
     'Invoice Raised': 'status-invoice-raised',
-    'Invoiced': 'status-invoiced'
+    'Paid': 'status-paid'
   };
   return map[status] || 'status-new';
 }
