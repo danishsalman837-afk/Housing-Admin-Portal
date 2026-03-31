@@ -231,13 +231,18 @@
   .status-invoice-raised { background: #fef3c7; color: #b45309; }
   .status-paid { background: #ccfbf1; color: #0f766e; }
 
-  /* Premium Action Buttons */
-  .action-btns { display: flex; gap: 6px; }
+  /* Fluid Action Buttons */
+  .action-btns { 
+    display: flex; 
+    gap: 6px; 
+    justify-content: center; 
+    flex-wrap: nowrap; /* Keep them together */
+  }
   .btn-view, .btn-edit, .btn-notes {
-    padding: 6px 14px;
+    padding: 6px 10px;
     border: 1.5px solid transparent;
-    border-radius: 8px;
-    font-size: 11px;
+    border-radius: 6px;
+    font-size: 10px;
     font-weight: 700;
     cursor: pointer;
     font-family: inherit;
@@ -245,7 +250,7 @@
     display: flex;
     align-items: center;
     gap: 4px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    white-space: nowrap;
   }
   .btn-view {
     background: #ffffff;
@@ -400,38 +405,60 @@
     to { opacity: 1; transform: translateY(0); }
   }
 
-  /* Mobile & Laptop Responsiveness */
+  /* Rotation & Fluid Responsiveness */
   @media (max-width: 1024px) {
     .container { padding: 15px; }
-    .search-box { width: 180px; }
+    .search-box { width: 100%; max-width: 400px; }
+    .toolbar { gap: 15px; }
   }
 
   @media (max-width: 768px) {
-    .header { flex-direction: column; text-align: center; gap: 12px; }
-    .header-stats { width: 100%; justify-content: center; }
+    .header { flex-direction: column; text-align: center; gap: 12px; padding: 15px; }
+    .header-stats { width: 100%; justify-content: center; flex-wrap: wrap; }
     
-    .toolbar { flex-direction: column; align-items: stretch; gap: 12px; }
-    .search-box { width: 100% !important; }
+    .toolbar { 
+      flex-direction: column; 
+      align-items: stretch; 
+      gap: 12px; 
+      background: rgba(255,255,255,0.7);
+      backdrop-filter: blur(10px);
+      padding: 15px;
+    }
+    .search-box { width: 100% !important; max-width: none; }
     
-    .filter-group { flex-direction: column; align-items: stretch; }
-    .filter-select { width: 100%; min-width: unset; }
-    .btn-download { margin-left: 0; width: 100%; text-align: center; }
+    .filter-group { 
+      flex-direction: column; 
+      align-items: stretch; 
+      gap: 8px;
+    }
+    .filter-select { width: 100%; }
+    .btn-download { width: 100%; margin-top: 5px; }
     
     .modal-box { 
       width: 95%; 
-      margin: 10px auto; 
+      max-height: 90vh; /* Don't be taller than the screen */
+      display: flex;
+      flex-direction: column;
     }
-    .modal-body { max-height: 75vh; }
+    .modal-body { 
+      flex: 1;
+      max-height: none; /* Let the box manage the height */
+      overflow-y: auto;
+    }
     
-    /* Ensure table scrolls on small screens */
-    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    table { min-width: 900px; } /* Prevent table from squishing too much */
+    .table-wrap { 
+      overflow-x: auto; 
+      border-radius: 8px;
+    }
+    table { min-width: 1000px; table-layout: auto; } /* Auto layout on mobile to prevent overlapping */
   }
 
-  @media (max-width: 480px) {
-    .header h1 { font-size: 16px; }
-    .header-stat { padding: 4px 10px; font-size: 11px; }
-    .btn { width: 100%; }
+  /* Specific Landscape Fix (Short Screens) */
+  @media (max-height: 500px) {
+    .modal-box { margin-top: 5px; margin-bottom: 5px; height: 95vh; }
+    .modal-header, .modal-footer { padding: 10px 20px; }
+    .header { padding: 8px 20px; }
+    h1 { font-size: 16px; }
   }
   /* Notes & Activity Log */
   .notes-section {
