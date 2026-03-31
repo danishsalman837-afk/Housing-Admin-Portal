@@ -178,16 +178,21 @@
     text-transform: uppercase;
     letter-spacing: 0.8px;
     padding: 16px 14px;
-    text-align: center; /* Center headers */
+    text-align: center;
     border-bottom: 2px solid #e2e8f0;
+    border-right: 1px solid #e2e8f0; /* Vertical header line */
   }
+  th:last-child { border-right: none; }
+
   td {
     padding: 16px 14px;
-    border-bottom: 1px solid #f1f5f9; /* Stronger separation lines */
+    border-bottom: 1px solid #f1f5f9;
+    border-right: 1px solid #f1f5f9; /* Vertical cell line */
     vertical-align: middle;
-    text-align: center; /* Center all cell contents */
+    text-align: center;
     color: #1e293b;
   }
+  td:last-child { border-right: none; }
   tr:last-child td { border-bottom: none; }
   tr:hover td { background: #fdfdfd; }
 
