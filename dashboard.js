@@ -1,15 +1,9 @@
-// Professional Dashboard Script with Advanced Filtering & Debugging
+// Professional Dashboard Script with Advanced Filtering, Debugging & Activity Notes
 let submissionsData = [];
 
-// Lead status options
 const leadStatuses = [
-  'New Lead',
-  'Transferred',
-  'Accepted',
-  'Rejected',
-  'Not Yet Invoiced',
-  'Invoice Raised',
-  'Paid'
+  'New Lead', 'Transferred', 'Accepted', 'Rejected', 
+  'Not Yet Invoiced', 'Invoice Raised', 'Paid'
 ];
 
 function getStatusClass(status) {
@@ -26,7 +20,7 @@ function getStatusClass(status) {
   return map[status] || 'status-new';
 }
 
-const readonlyFields = ['id', 'timestamp', 'created_at'];
+const readonlyFields = ['id', 'timestamp', 'created_at', 'notes'];
 
 window.showToast = function(message, type = 'success') {
   const toast = document.createElement('div');
@@ -51,7 +45,7 @@ function updateStats() {
     }
 }
 
-// ======== FILTERING LOGIC ========
+// ======== FILTERING ========
 
 const filterBy = document.getElementById('filterBy');
 const filterValue = document.getElementById('filterValue');
@@ -120,7 +114,14 @@ window.clearFilters = function() {
     applyFilters();
 };
 
-// ======== RENDER TABLE ========
+// ======== RENDER HELPER ========
+
+function findItem(id) {
+    return submissionsData.find((s, idx) => {
+        const sId = (s.id !== undefined && s.id !== null) ? String(s.id) : String(idx);
+        return sId === String(id);
+    });
+}
 
 function renderTable(data) {
     const tbody = document.querySelector("#submissionTable tbody");
@@ -134,8 +135,6 @@ function renderTable(data) {
         const tr = document.createElement("tr");
         const ts = item.timestamp ? new Date(item.timestamp).toLocaleString() : "N/A";
         const solicitor = item.solicitorName ? `<strong>${item.solicitorName}</strong>` : `<span style="color:#999">Unassigned</span>`;
-        
-        // Use unique ID or fallback to index if missing
         const buttonId = (item.id !== undefined && item.id !== null) ? item.id : index;
 
         tr.innerHTML = `
@@ -161,14 +160,6 @@ function renderTable(data) {
     });
 }
 
-// Find item safely by ID or index
-function findItem(id) {
-    return submissionsData.find((s, idx) => {
-        const sId = (s.id !== undefined && s.id !== null) ? String(s.id) : String(idx);
-        return sId === String(id);
-    });
-}
-
 window.handleStatusUpdate = async function(id, el) {
     const newStatus = el.value;
     el.className = `status-select ${getStatusClass(newStatus)}`;
@@ -189,18 +180,29 @@ window.handleStatusUpdate = async function(id, el) {
     }
 };
 
+// ======== NOTES ENGINE ========
+
+function buildNotesHtml(notes) {
+    if (!notes || !Array.isArray(notes)) return '';
+    return notes.map(note => `
+        <div class="note-item">
+            <p class="note-text">${note.text}</p>
+            <span class="note-meta">${note.time}</span>
+        </div>
+    `).join('');
+}
+
 // ======== MODALS ========
 
 window.openViewModal = function(id) {
     const item = findItem(id);
     if (!item) return;
-    
     const modal = document.getElementById('modalBox');
     if (!modal) return;
     
     let fieldsHtml = '';
     const mainKeys = ['name', 'phone', 'email', 'tenantType', 'solicitorName', 'leadStatus'];
-    const otherKeys = Object.keys(item).filter(k => !mainKeys.includes(k));
+    const otherKeys = Object.keys(item).filter(k => !mainKeys.includes(k) && k !== 'notes');
     
     [...mainKeys, ...otherKeys].forEach(key => {
         if (!item.hasOwnProperty(key)) return;
@@ -215,7 +217,13 @@ window.openViewModal = function(id) {
             <h2>Lead Details</h2>
             <button class="modal-close" onclick="window.closeModal()">&times;</button>
         </div>
-        <div class="modal-body">${fieldsHtml}</div>
+        <div class="modal-body">
+            ${fieldsHtml}
+            <div class="notes-section">
+                <div class="notes-title">Activity Log</div>
+                <div class="notes-history">${buildNotesHtml(item.notes)}</div>
+            </div>
+        </div>
         <div class="modal-footer">
             <button class="btn btn-secondary" onclick="window.closeModal()">Close</button>
         </div>
@@ -226,12 +234,11 @@ window.openViewModal = function(id) {
 window.openEditModal = function(id) {
     const item = findItem(id);
     if (!item) return;
-    
     const modal = document.getElementById('modalBox');
     if (!modal) return;
     
     let fieldsHtml = `<div class="solicitor-section">
-        <label>Status & Solicitor</label>
+        <label>Settings</label>
         <div class="modal-field">
             <select name="leadStatus" class="filter-select" style="width:100%; margin-bottom:8px;">
                 ${leadStatuses.map(s => `<option value="${s}" ${ (item.leadStatus || 'New Lead') === s ? 'selected' : '' }>${s}</option>`).join('')}
@@ -241,7 +248,7 @@ window.openEditModal = function(id) {
     </div>`;
 
     Object.keys(item).forEach(key => {
-        if (key === 'solicitorName' || key === 'leadStatus') return;
+        if (key === 'solicitorName' || key === 'leadStatus' || key === 'notes') return;
         if (readonlyFields.includes(key)) {
             fieldsHtml += `<div class="modal-field readonly"><label>${key}</label><input type="text" value="${item[key] || ''}" readonly></div>`;
         } else {
@@ -254,7 +261,16 @@ window.openEditModal = function(id) {
             <h2>Edit Lead</h2>
             <button class="modal-close" onclick="window.closeModal()">&times;</button>
         </div>
-        <div class="modal-body"><form id="editForm">${fieldsHtml}</form></div>
+        <div class="modal-body">
+            <form id="editForm">${fieldsHtml}</form>
+            <div class="notes-section">
+                <div class="notes-title">Notes & Updates</div>
+                <div class="add-note-box">
+                    <textarea id="newNoteInput" placeholder="Add an update for this lead..." class="modal-field"></textarea>
+                </div>
+                <div class="notes-history">${buildNotesHtml(item.notes)}</div>
+            </div>
+        </div>
         <div class="modal-footer">
             <button class="btn btn-secondary" onclick="window.closeModal()">Cancel</button>
             <button class="btn btn-primary" onclick="window.saveEdit('${id}')">Save Changes</button>
@@ -269,6 +285,19 @@ window.saveEdit = async function(id) {
     const updates = { id };
     formData.forEach((value, key) => updates[key] = value);
 
+    // Handle Note Appending
+    const noteEl = document.getElementById('newNoteInput');
+    const item = findItem(id);
+    if (noteEl && noteEl.value.trim()) {
+        const currentNotes = Array.isArray(item.notes) ? [...item.notes] : [];
+        const newNote = {
+            text: noteEl.value.trim(),
+            time: new Date().toLocaleString('en-GB')
+        };
+        currentNotes.unshift(newNote); // Put newest notes at the top
+        updates.notes = currentNotes;
+    }
+
     try {
         const res = await fetch('/api/update', {
             method: 'POST',
@@ -276,11 +305,11 @@ window.saveEdit = async function(id) {
             body: JSON.stringify(updates)
         });
         if (res.ok) {
-            window.showToast("Saved successfully");
-            setTimeout(() => location.reload(), 1000);
+            window.showToast("Changes saved successfully!");
+            setTimeout(() => location.reload(), 800);
         }
     } catch (e) {
-        window.showToast("Error saving", "error");
+        window.showToast("Error saving changes", "error");
     }
 };
 
@@ -296,12 +325,11 @@ if (overlay) {
 (async function init() {
     try {
         const res = await fetch('/api/submissions');
-        if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
         submissionsData = await res.json();
         updateStats();
         renderTable(submissionsData);
     } catch (e) {
-        console.error("Init Error:", e);
+        console.error(e);
     }
 })();
 
@@ -310,13 +338,21 @@ const downloadBtn = document.getElementById('downloadCsvBtn');
 if (downloadBtn) {
     downloadBtn.addEventListener('click', () => {
         if (!submissionsData.length) return;
-        const headers = Object.keys(submissionsData[0]).join(',');
-        const rows = submissionsData.map(s => Object.values(s).map(v => `"${v}"`).join(',')).join('\n');
-        const blob = new Blob([headers + '\n' + rows], { type: 'text/csv' });
+        const headers = Object.keys(submissionsData[0]);
+        const csvContent = [
+            headers.join(','),
+            ...submissionsData.map(s => headers.map(h => {
+                let v = s[h];
+                if (h === 'notes' && Array.isArray(v)) v = v.map(n => `[${n.time}] ${n.text}`).join(' | ');
+                return `"${String(v || '').replace(/"/g, '""')}"`;
+            }).join(','))
+        ].join('\n');
+        
+        const blob = new Blob([csvContent], { type: 'text/csv' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'Leads_Report.csv';
+        a.download = `Leads_Report_${new Date().toISOString().split('T')[0]}.csv`;
         a.click();
     });
 }
