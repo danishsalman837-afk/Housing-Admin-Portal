@@ -154,6 +154,7 @@ function renderTable(data) {
                     <button class="btn-view" onclick="window.openViewModal('${buttonId}')">👁 View</button>
                     <button class="btn-edit" onclick="window.openEditModal('${buttonId}')">✍ Edit</button>
                     <button class="btn-notes" onclick="window.openNotesModal('${buttonId}')">📝 Notes</button>
+                    <button class="btn-download-single" onclick="window.downloadLead('${buttonId}')">📥 Doc</button>
                 </div>
             </td>
         `;
@@ -202,7 +203,10 @@ window.openViewModal = function(id) {
     modal.innerHTML = `
         <div class="modal-header"><h2>Lead Details</h2><button class="modal-close" onclick="window.closeModal()">&times;</button></div>
         <div class="modal-body">${fieldsHtml}</div>
-        <div class="modal-footer"><button class="btn btn-secondary" onclick="window.closeModal()">Close</button></div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="window.closeModal()">Close</button>
+            <button class="btn btn-primary" onclick="window.downloadLead('${id}')">📥 Download Profile</button>
+        </div>
     `;
     document.getElementById('modalOverlay').classList.add('active');
 };
@@ -300,6 +304,47 @@ window.saveNote = async function(id) {
     } catch (e) {
         window.showToast("Error saving note", "error");
     }
+};
+
+// ======== LEAD EXPORT ENGINE ========
+
+window.downloadLead = function(id) {
+    const item = findItem(id);
+    if (!item) return;
+
+    const ts = item.timestamp ? new Date(item.timestamp).toLocaleString() : "N/A";
+    let content = `HOUSING LEAD PROFILE: ${item.name || 'UNKNOWN'}\n`;
+    content += `========================================================\n`;
+    content += `SUBMITTED: ${ts}\n`;
+    content += `STATUS: ${item.leadStatus || 'New Lead'}\n`;
+    content += `SOLICITOR: ${item.solicitorName || 'Unassigned'}\n\n`;
+
+    content += `CLIENT DATA\n`;
+    content += `--------------------------------------------------------\n`;
+    Object.keys(item).forEach(key => {
+        if (key === 'notes' || key === 'id' || key === 'timestamp') return;
+        const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
+        content += `${label}: ${item[key] || 'N/A'}\n`;
+    });
+
+    content += `\nACTIVITY LOG / NOTES\n`;
+    content += `--------------------------------------------------------\n`;
+    if (item.notes && Array.isArray(item.notes)) {
+        item.notes.forEach(n => {
+            content += `[${n.time}] ${n.text}\n`;
+        });
+    } else {
+        content += `No notes available.\n`;
+    }
+
+    content += `\n========================================================\n`;
+    content += `Generated via Admin Portal on ${new Date().toLocaleString()}\n`;
+
+    const blob = new Blob([content], { type: 'application/msword' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `Lead_Profile_${(item.name || 'Unknown').replace(/\s+/g,'_')}.doc`;
+    a.click();
 };
 
 window.saveEdit = async function(id) {

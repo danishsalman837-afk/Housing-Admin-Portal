@@ -199,7 +199,7 @@
   /* Width balancing for alignment */
   th:nth-child(1), td:nth-child(1) { width: 50px; } /* # Column */
   th:nth-child(6), td:nth-child(6) { font-weight: 700; } /* Solicitor */
-  th:last-child, td:last-child { width: 280px; } /* Actions Column */
+  th:last-child, td:last-child { min-width: 380px; } /* Expand for 4 buttons */
 
   /* Button Hub Alignment */
   .action-btns { 
@@ -273,6 +273,13 @@
     border-color: #ede9fe;
   }
   .btn-notes:hover { background: #ede9fe; transform: scale(1.03); }
+
+  .btn-download-single {
+    background: #ecfdf5;
+    color: #065f46;
+    border-color: #d1fae5;
+  }
+  .btn-download-single:hover { background: #d1fae5; transform: scale(1.03); }
 
   /* Modal */
   .modal-overlay {
