@@ -1,5 +1,31 @@
-// Dashboard script with View & Edit functionality
+// Dashboard script with View, Edit & Lead Status functionality
 let submissionsData = [];
+
+// Lead status options
+const leadStatuses = [
+  'New Lead',
+  'Transferred',
+  'Accepted',
+  'Rejected',
+  'Not Yet Invoiced',
+  'Invoice Raised',
+  'Invoiced'
+];
+
+// Map status to CSS class
+function getStatusClass(status) {
+  if (!status) return 'status-new';
+  const map = {
+    'New Lead': 'status-new',
+    'Transferred': 'status-transferred',
+    'Accepted': 'status-accepted',
+    'Rejected': 'status-rejected',
+    'Not Yet Invoiced': 'status-not-yet-invoiced',
+    'Invoice Raised': 'status-invoice-raised',
+    'Invoiced': 'status-invoiced'
+  };
+  return map[status] || 'status-new';
+}
 
 // Fields that should not be editable
 const readonlyFields = ['id', 'timestamp', 'created_at'];
@@ -18,6 +44,31 @@ function closeModal() {
   document.getElementById('modalOverlay').classList.remove('active');
 }
 
+// Update a single field in Supabase
+async function updateField(id, fieldName, fieldValue) {
+  try {
+    const res = await fetch('/api/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, [fieldName]: fieldValue })
+    });
+    if (res.ok) {
+      showToast(`${fieldName === 'leadStatus' ? 'Lead status' : fieldName} updated!`);
+      // Update local data too
+      const item = submissionsData.find(s => s.id === id);
+      if (item) item[fieldName] = fieldValue;
+      return true;
+    } else {
+      const err = await res.json();
+      showToast("Error: " + (err.error || "Unknown error"), 'error');
+      return false;
+    }
+  } catch (err) {
+    showToast("Network error: " + err.message, 'error');
+    return false;
+  }
+}
+
 // Open View modal (read-only)
 function openViewModal(item) {
   const modal = document.getElementById('modalBox');
@@ -27,7 +78,7 @@ function openViewModal(item) {
       <button class="modal-close" onclick="closeModal()">&times;</button>
     </div>`;
 
-  // Solicitor section at the top
+  // Solicitor section
   html += `<div class="solicitor-section">
     <label>Assigned Solicitor</label>
     <p style="margin:5px 0; font-size:16px; font-weight:600; color: ${item.solicitorName ? '#28a745' : '#888'};">
@@ -35,15 +86,22 @@ function openViewModal(item) {
     </p>
   </div>`;
 
-  // All fields as read-only display
+  // Lead status display
+  html += `<div style="margin-bottom:16px;">
+    <label style="font-weight:600; color:#1a3a52; font-size:13px;">Lead Status</label>
+    <p style="margin:5px 0;"><span class="status-select ${getStatusClass(item.leadStatus)}" style="display:inline-block; padding:6px 14px; border-radius:20px;">
+      ${item.leadStatus || 'New Lead'}
+    </span></p>
+  </div>`;
+
+  // All fields as read-only
   for (const key in item) {
-    if (key === 'solicitorName') continue;
+    if (key === 'solicitorName' || key === 'leadStatus') continue;
     let val = item[key];
     if (Array.isArray(val)) val = val.join(", ");
     else if (typeof val === "object" && val !== null) val = JSON.stringify(val);
     if (val === undefined || val === null) val = "";
 
-    // Format the label nicely
     const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
 
     html += `<div class="modal-field readonly">
@@ -71,15 +129,29 @@ function openEditModal(item) {
     </div>
     <form id="editForm">`;
 
-  // Solicitor section at the top (editable)
+  // Solicitor section (editable)
   html += `<div class="solicitor-section">
     <label>Assign Solicitor</label>
     <input type="text" name="solicitorName" value="${(item.solicitorName || '').replace(/"/g, '&quot;')}" placeholder="Enter solicitor name...">
   </div>`;
 
+  // Lead status dropdown in edit modal
+  html += `<div class="modal-field">
+    <label>Lead Status</label>
+    <select name="leadStatus" class="status-select ${getStatusClass(item.leadStatus)}" style="margin:6px 0;">`;
+  leadStatuses.forEach(status => {
+    const selected = (item.leadStatus === status) ? 'selected' : '';
+    html += `<option value="${status}" ${selected}>${status}</option>`;
+  });
+  // Default to New Lead if no status set
+  if (!item.leadStatus) {
+    html = html.replace('value="New Lead"', 'value="New Lead" selected');
+  }
+  html += `</select></div>`;
+
   // All other fields
   for (const key in item) {
-    if (key === 'solicitorName') continue;
+    if (key === 'solicitorName' || key === 'leadStatus') continue;
     let val = item[key];
     if (Array.isArray(val)) val = val.join(", ");
     else if (typeof val === "object" && val !== null) val = JSON.stringify(val);
@@ -94,7 +166,6 @@ function openEditModal(item) {
         <input type="text" value="${String(val).replace(/"/g, '&quot;')}" readonly>
       </div>`;
     } else {
-      // Use textarea for long text fields
       const isLong = String(val).length > 80;
       if (isLong) {
         html += `<div class="modal-field">
@@ -160,6 +231,38 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') closeModal();
 });
 
+// Build status dropdown HTML for table row
+function buildStatusDropdown(item) {
+  let html = `<select class="status-select ${getStatusClass(item.leadStatus)}" data-id="${item.id}" onchange="handleStatusChange(this)">`;
+  leadStatuses.forEach(status => {
+    const selected = (item.leadStatus === status) ? 'selected' : '';
+    html += `<option value="${status}" ${selected}>${status}</option>`;
+  });
+  // Default to New Lead if not set
+  if (!item.leadStatus) {
+    html = html.replace('value="New Lead"', 'value="New Lead" selected');
+  }
+  html += '</select>';
+  return html;
+}
+
+// Handle status change directly from table dropdown
+async function handleStatusChange(selectEl) {
+  const id = selectEl.getAttribute('data-id');
+  const newStatus = selectEl.value;
+
+  // Update the dropdown color immediately
+  selectEl.className = `status-select ${getStatusClass(newStatus)}`;
+
+  const success = await updateField(id, 'leadStatus', newStatus);
+  if (!success) {
+    // Revert on failure
+    const item = submissionsData.find(s => s.id === id);
+    selectEl.value = item?.leadStatus || 'New Lead';
+    selectEl.className = `status-select ${getStatusClass(selectEl.value)}`;
+  }
+}
+
 // Load and render submissions
 (async function() {
   try {
@@ -171,7 +274,7 @@ document.addEventListener('keydown', (e) => {
 
     if (submissionsData.length === 0) {
       const tr = document.createElement("tr");
-      tr.innerHTML = `<td colspan="7" style="text-align:center;">No submissions found</td>`;
+      tr.innerHTML = `<td colspan="8" style="text-align:center;">No submissions found</td>`;
       tbody.appendChild(tr);
       return;
     }
@@ -190,6 +293,7 @@ document.addEventListener('keydown', (e) => {
         <td>${item.tenantType || "N/A"}</td>
         <td>${ts}</td>
         <td>${solicitorHtml}</td>
+        <td>${buildStatusDropdown(item)}</td>
         <td>
           <div class="action-btns">
             <button class="view-btn" data-index="${index}">View</button>
@@ -219,7 +323,7 @@ document.addEventListener('keydown', (e) => {
   } catch(err) {
     console.error("Error loading submissions:", err);
     const tbody = document.querySelector("#submissionTable tbody");
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:red;">Could not load submissions. Make sure the server is configured.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:red;">Could not load submissions. Make sure the server is configured.</td></tr>`;
   }
 })();
 

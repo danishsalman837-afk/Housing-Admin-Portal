@@ -169,6 +169,30 @@
     background: linear-gradient(135deg, #218838, #1a6b2d) !important;
   }
 
+  /* Status dropdown in table */
+  .status-select {
+    padding: 6px 10px;
+    border: 2px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    width: 100%;
+    min-width: 140px;
+  }
+  .status-select:focus {
+    border-color: #0066cc;
+    outline: none;
+  }
+  .status-new { background: #e3f2fd; color: #1565c0; border-color: #90caf9; }
+  .status-transferred { background: #fff3e0; color: #e65100; border-color: #ffcc80; }
+  .status-accepted { background: #e8f5e9; color: #2e7d32; border-color: #a5d6a7; }
+  .status-rejected { background: #ffebee; color: #c62828; border-color: #ef9a9a; }
+  .status-not-yet-invoiced { background: #f3e5f5; color: #6a1b9a; border-color: #ce93d8; }
+  .status-invoice-raised { background: #fff8e1; color: #f57f17; border-color: #ffe082; }
+  .status-invoiced { background: #e0f2f1; color: #00695c; border-color: #80cbc4; }
+
   /* Toast notification */
   .toast {
     position: fixed;
@@ -204,6 +228,7 @@
             <th>Tenant Type</th>
             <th>Submitted At</th>
             <th>Solicitor</th>
+            <th>Lead Status</th>
             <th>Actions</th>
         </tr>
     </thead>
