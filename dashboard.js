@@ -74,35 +74,29 @@ function initCharts(data, acceptedCount, totalCount) {
         data.forEach(item => {
             if (item.timestamp) { const date = new Date(item.timestamp); if(!isNaN(date)) monthlyCounts[date.getMonth()]++; }
         });
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         charts.flow = new Chart(ctxFlow, {
-            type: 'bar',
-            data: { labels: months, datasets: [{ label: 'Leads Received', data: monthlyCounts, backgroundColor: isDark ? '#6366F1' : '#4F46E5', borderRadius: 6 }] },
+            type: 'bar', // Highlevel "Funnel" / Opportunity Value style
+            data: { labels: months, datasets: [{ label: 'Leads Received', data: monthlyCounts, backgroundColor: '#3B82F6', borderRadius: 4 }] },
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
-                scales: { 
-                    x: { grid: { display: false }, ticks: { color: isDark ? '#94A3B8' : '#64748B' } }, 
-                    y: { beginAtZero: true, grid: { color: isDark ? '#334155' : '#E2E8F0' }, ticks: { color: isDark ? '#94A3B8' : '#64748B' } } 
-                }
+                scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: '#F2F3F5' } } }
             }
         });
     }
 
     if (ctxStatus) {
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         charts.status = new Chart(ctxStatus, {
             type: 'doughnut',
-            data: { labels: leadStatuses, datasets: [{ data: leadStatuses.map(s => data.filter(x => x.leadStatus === s).length), backgroundColor: ['#3B82F6', '#6D28D9', '#10B981', '#F53F3F', '#F59E0B', '#F59E0B', '#00B42A', '#9CA3AF'], borderWidth: isDark ? 2 : 0, borderColor: isDark ? '#1E293B' : '#FFFFFF' }] },
+            data: { labels: leadStatuses, datasets: [{ data: leadStatuses.map(s => data.filter(x => x.leadStatus === s).length), backgroundColor: ['#3B82F6', '#6D28D9', '#10B981', '#F53F3F', '#F59E0B', '#F59E0B', '#00B42A', '#9CA3AF'], borderWidth: 0 }] },
             options: { responsive: true, maintainAspectRatio: false, cutout: '80%', plugins: { legend: { display: false } } }
         });
     }
 
     if (ctxConv) {
         let remainder = totalCount - acceptedCount;
-        if(totalCount === 0) remainder = 1; 
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        if(totalCount === 0) remainder = 1; // So we can show a grey circle when empty
         charts.conv = new Chart(ctxConv, {
             type: 'doughnut',
-            data: { datasets: [{ data: [acceptedCount, remainder], backgroundColor: ['#10B981', isDark ? '#334155' : '#E2E8F0'], borderWidth: isDark ? 2 : 0, borderColor: isDark ? '#1E293B' : '#FFFFFF' }] },
+            data: { datasets: [{ data: [acceptedCount, remainder], backgroundColor: ['#10B981', '#E5E6EB'], borderWidth: 0 }] },
             options: { responsive: true, maintainAspectRatio: false, cutout: '80%', plugins: { legend: { display: false }, tooltip: { enabled: false } } }
         });
     }
@@ -182,16 +176,16 @@ function renderTable(data) {
             </td>
             <td>
                 <div class="action-group">
-                    <button class="btn-action-icon view" onclick="window.openViewModal('${item.id}')" title="View Profile">
+                    <button class="act-btn view" onclick="window.openViewModal('${item.id}')" title="View Profile">
                         <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg> View
                     </button>
-                    <button class="btn-action-icon edit" onclick="window.openEditLeadModal('${item.id}')" title="Edit Data">
+                    <button class="act-btn edit" onclick="window.openEditLeadModal('${item.id}')" title="Edit Data">
                         <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg> Edit
                     </button>
-                    <button class="btn-action-icon notes" onclick="window.openNotesModal('${item.id}')" title="Internal Notes">
+                    <button class="act-btn notes" onclick="window.openNotesModal('${item.id}')" title="Internal Notes">
                         <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg> Notes
                     </button>
-                    <button class="btn-action-icon dl" onclick="window.exportDocx('${item.id}')" title="Download Word Doc">
+                    <button class="act-btn dl" onclick="window.exportDocx('${item.id}')" title="Download Word Doc">
                         <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg> Download
                     </button>
                 </div>
@@ -238,10 +232,10 @@ window.renderCompanies = function() {
         tr.innerHTML = `<td><strong>${nameDisp}</strong></td><td>${c.type || '--'}</td><td>${c.main_contact || '--'}</td><td>${c.postcode || '--'}</td><td>${c.website || '--'}</td>
             <td>
                 <div class="action-group">
-                    <button class="btn-action-icon edit" onclick="window.viewCompanyEditModal('${c.id}')" title="Edit Company">
+                    <button class="act-btn edit" onclick="window.viewCompanyEditModal('${c.id}')" title="Edit Company">
                         <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg> Edit
                     </button>
-                    <button class="btn-action-icon view" onclick="window.viewCompanyMembers('${c.id}')">
+                    <button class="act-btn view" onclick="window.viewCompanyMembers('${c.id}')">
                         <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg> Members
                     </button>
                 </div>
@@ -276,7 +270,7 @@ window.openAddCompanyModal = function(existingCompany = null) {
             <div class="form-group"><label>County</label><input type="text" id="cCounty" class="modern-input" value="${c.county || ''}"></div>
             <div class="form-group"><label>Postcode</label><input type="text" id="cPostcode" class="modern-input" value="${c.postcode || ''}"></div>
         </div>
-        <button class="btn btn-primary" style="margin-top:24px; width:100%;" onclick="window.saveNewCompany('${c.id || ''}')">Save Company</button>
+        <button class="btn-action" style="margin-top:20px; width:100%; justify-content:center;" onclick="window.saveNewCompany('${c.id || ''}')">Save Company</button>
     `;
     document.getElementById('modalOverlay').style.display = 'flex';
 };
@@ -337,10 +331,10 @@ window.viewCompanyMembers = function(companyId) {
         tbody.innerHTML += `<tr><td><strong>${mName}</strong></td><td>${m.job_title || '--'}</td><td>${m.email || '--'}</td><td>${m.mobile || '--'}</td><td>${m.landline || '--'}</td>
             <td>
                 <div class="action-group">
-                    <button class="btn-action-icon edit" title="Edit Member" onclick="window.openAddMemberModal('${m.id}')">
+                    <button class="act-btn edit" title="Edit Member" onclick="window.openAddMemberModal('${m.id}')">
                         <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg> Edit
                     </button>
-                    <button class="btn-action-icon view" title="Delete Member" onclick="window.deleteMember('${m.id}')">
+                    <button class="act-btn" style="background:rgba(255,69,58,.10);color:#CC3328;border-color:rgba(255,69,58,.20);" title="Delete Member" onclick="window.deleteMember('${m.id}')">
                         <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg> Delete
                     </button>
                 </div>
@@ -362,7 +356,7 @@ window.openAddMemberModal = function(editId = null) {
             <div class="form-group"><label>Mobile Base</label><input type="text" id="mMobile" class="modern-input" value="${m.mobile || ''}"></div>
             <div class="form-group"><label>Landline</label><input type="text" id="mLandline" class="modern-input" value="${m.landline || ''}"></div>
         </div>
-        <button class="btn btn-primary" style="margin-top:24px; width:100%;" onclick="window.saveNewMember('${m.id || ''}')">Save Member</button>
+        <button class="btn-action" style="margin-top:24px; width:100%; justify-content:center; padding:12px;" onclick="window.saveNewMember('${m.id || ''}')">Save Member</button>
     `;
     document.getElementById('modalOverlay').style.display = 'flex';
 }
@@ -466,9 +460,9 @@ window.openEditLeadModal = function(id) {
     });
     
     html += `</div>
-             <div style="margin-top:24px; display:flex; justify-content:flex-end; gap:12px;">
-                <button class="btn btn-secondary" onclick="document.getElementById('modalOverlay').style.display='none'">Cancel</button>
-                <button class="btn btn-primary" onclick="window.saveLeadEdits('${s.id}')">Save Changes</button>
+             <div style="margin-top:24px; display:flex; justify-content:flex-end; gap:10px;">
+                <button class="btn-outline" style="padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:600;" onclick="document.getElementById('modalOverlay').style.display='none'">Cancel</button>
+                <button class="btn-action" onclick="window.saveLeadEdits('${s.id}')">Save Changes</button>
              </div>`;
 
     document.getElementById('modalBox').innerHTML = `<div class="modal-header"><h2>Edit Lead Data</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>${html}`;
@@ -512,12 +506,12 @@ window.openNotesModal = function(id) {
     document.getElementById('modalBox').innerHTML = `
         <div class="modal-header"><h2>Internal Notes: ${s.name || s.first_name || 'Client'}</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>
         <div style="display:flex; flex-direction:column; gap:16px;">
-            <div style="max-height: 350px; overflow-y:auto; background:var(--bg-elevated); border:1px solid var(--border-light); padding:16px; border-radius:var(--radius-md);">
+            <div style="max-height: 350px; overflow-y:auto; background:#FFF; border:1px solid #E2E8F0; padding:16px; border-radius:8px;">
                 ${notesHtml}
             </div>
             <div>
-                <textarea id="newNoteEditor" class="modern-input" placeholder="Type a new internal note..." style="width:100%; height:100px; resize:vertical;"></textarea>
-                <button class="btn btn-primary" style="margin-top:12px; width:100%;" onclick="window.saveNewNote('${s.id}')">Add Note</button>
+                <textarea id="newNoteEditor" placeholder="Type a new internal note..." style="width:100%; height:100px; padding:12px; border-radius:8px; border:1px solid #E2E8F0; outline:none; font-family:inherit; resize:vertical; background:#F8FAFC;"></textarea>
+                <button class="btn-action" style="margin-top:12px; width:100%; justify-content:center;" onclick="window.saveNewNote('${s.id}')">Add Note</button>
             </div>
         </div>
     `;
