@@ -40,19 +40,31 @@ window.switchView = function(view) {
 
 function calculateDashboardStats() {
     const total = submissionsData.length;
+    const acceptedCount = submissionsData.filter(s => s.leadStatus === 'Accepted').length;
+    const rejectedCount = submissionsData.filter(s => s.leadStatus === 'Rejected').length;
+    
+    // Update text references
     if (document.getElementById('dashboardTotal')) document.getElementById('dashboardTotal').innerText = total;
     if (document.getElementById('dashboardActive')) document.getElementById('dashboardActive').innerText = companiesData.length;
     if (document.getElementById('dashboardSolicitorsCount')) document.getElementById('dashboardSolicitorsCount').innerText = membersData.length;
     
-    initCharts(submissionsData);
+    if (document.getElementById('dashboardAccepted')) document.getElementById('dashboardAccepted').innerText = acceptedCount;
+    if (document.getElementById('dashboardRejected')) document.getElementById('dashboardRejected').innerText = rejectedCount;
+
+    let convRate = total > 0 ? ((acceptedCount / total) * 100).toFixed(1) : '0';
+    if (document.getElementById('dashboardConvRate')) document.getElementById('dashboardConvRate').innerText = convRate + '%';
+    
+    initCharts(submissionsData, acceptedCount, total);
 }
 
-function initCharts(data) {
+function initCharts(data, acceptedCount, totalCount) {
     const ctxFlow = document.getElementById('leadsFlowChart');
     const ctxStatus = document.getElementById('statusDonutChart');
+    const ctxConv = document.getElementById('conversionDonutChart');
 
     if (charts.flow) charts.flow.destroy();
     if (charts.status) charts.status.destroy();
+    if (charts.conv) charts.conv.destroy();
 
     if (ctxFlow) {
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -61,17 +73,29 @@ function initCharts(data) {
             if (item.timestamp) { const date = new Date(item.timestamp); if(!isNaN(date)) monthlyCounts[date.getMonth()]++; }
         });
         charts.flow = new Chart(ctxFlow, {
-            type: 'line',
-            data: { labels: months, datasets: [{ label: 'Leads Received', data: monthlyCounts, borderColor: '#4F46E5', backgroundColor: 'rgba(79, 70, 229, 0.1)', fill: true, tension: 0.4 }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            type: 'bar', // Highlevel "Funnel" / Opportunity Value style
+            data: { labels: months, datasets: [{ label: 'Leads Received', data: monthlyCounts, backgroundColor: '#3B82F6', borderRadius: 4 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+                scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: '#F2F3F5' } } }
+            }
         });
     }
 
     if (ctxStatus) {
         charts.status = new Chart(ctxStatus, {
             type: 'doughnut',
-            data: { labels: leadStatuses, datasets: [{ data: leadStatuses.map(s => data.filter(x => x.leadStatus === s).length), backgroundColor: ['#3B82F6', '#6D28D9', '#10B981', '#EF4444', '#F59E0B', '#F59E0B', '#10B981', '#9CA3AF'], borderWidth: 0 }] },
-            options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'right' } } }
+            data: { labels: leadStatuses, datasets: [{ data: leadStatuses.map(s => data.filter(x => x.leadStatus === s).length), backgroundColor: ['#3B82F6', '#6D28D9', '#10B981', '#F53F3F', '#F59E0B', '#F59E0B', '#00B42A', '#9CA3AF'], borderWidth: 0 }] },
+            options: { responsive: true, maintainAspectRatio: false, cutout: '80%', plugins: { legend: { display: false } } }
+        });
+    }
+
+    if (ctxConv) {
+        let remainder = totalCount - acceptedCount;
+        if(totalCount === 0) remainder = 1; // So we can show a grey circle when empty
+        charts.conv = new Chart(ctxConv, {
+            type: 'doughnut',
+            data: { datasets: [{ data: [acceptedCount, remainder], backgroundColor: ['#10B981', '#E5E6EB'], borderWidth: 0 }] },
+            options: { responsive: true, maintainAspectRatio: false, cutout: '80%', plugins: { legend: { display: false }, tooltip: { enabled: false } } }
         });
     }
 }
