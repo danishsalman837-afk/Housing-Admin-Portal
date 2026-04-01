@@ -23,21 +23,55 @@ window.switchView = function(view) {
     }
 };
 
-// Calculate & Display Dashboard Stats
+// Calculate & Display Authentic Dashboard Stats
 function calculateDashboardStats() {
     if (!submissionsData.length) return;
 
     const total = submissionsData.length;
-    const accepted = submissionsData.filter(s => s.leadStatus === 'Accepted').length;
-    const paid = submissionsData.filter(s => s.leadStatus === 'Paid').length;
+    const acceptedArr = submissionsData.filter(s => s.leadStatus === 'Accepted');
+    const accepted = acceptedArr.length;
     const rejected = submissionsData.filter(s => s.leadStatus === 'Rejected').length;
     const uniqueSolicitors = [...new Set(submissionsData.map(s => s.solicitorName).filter(Boolean))].length;
+
+    // --- Month-over-Month Comparison ---
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+    const prevYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+
+    const thisMonthLeads = submissionsData.filter(s => {
+        const d = new Date(s.timestamp);
+        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+    }).length;
+
+    const lastMonthLeads = submissionsData.filter(s => {
+        const d = new Date(s.timestamp);
+        return d.getMonth() === prevMonth && d.getFullYear() === prevYear;
+    }).length;
+
+    // Calculate Leads Trend
+    let leadTrendHtml = '';
+    if (lastMonthLeads > 0) {
+        const diff = ((thisMonthLeads - lastMonthLeads) / lastMonthLeads) * 100;
+        const colorClass = diff >= 0 ? 'plus' : 'minus';
+        const arrow = diff >= 0 ? '↑' : '↓';
+        leadTrendHtml = `<span class="trend ${colorClass}">${arrow} ${Math.abs(diff).toFixed(1)}% from last month</span>`;
+    } else {
+        leadTrendHtml = `<span class="trend plus">New growth this month</span>`;
+    }
 
     // Display basic stats
     document.getElementById('dashboardTotal').innerText = total;
     document.getElementById('dashboardConvRate').innerText = total > 0 ? ((accepted / total) * 100).toFixed(1) + '%' : '0%';
     document.getElementById('dashboardRejected').innerText = rejected;
     document.getElementById('dashboardSolicitors').innerText = uniqueSolicitors;
+
+    // Update Trend UI in Dashboard Cards
+    const trendContainers = document.querySelectorAll('.stat-card .trend');
+    if (trendContainers[0]) trendContainers[0].innerHTML = leadTrendHtml;
+    // (You can add more specific trend logic for conversion/rejection if desired)
 
     initCharts(submissionsData);
 }
