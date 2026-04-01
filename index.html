@@ -315,70 +315,122 @@
     
     .btn-action i { font-style: normal; font-size: 12px; }
 
-    /* ========== PROFESSIONAL MOBILE HEADER BAR ========== */
+    /* ========== PROFESSIONAL MOBILE SIDEBAR DRAWER ========== */
 
     /* Mobile Header (Hidden on Desktop) */
     .mobile-header {
         display: none;
         position: fixed;
-        top: 0; left: 0; width: 100%; height: 60px;
-        background: white; border-bottom: 1px solid #e2e8f0;
-        z-index: 1001; /* Above main, below sidebar */
-        align-items: center; padding: 0 20px; gap: 15px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        top: 0; left: 0; width: 100%; height: 64px;
+        background: white; border-bottom: 1px solid #eef2f5;
+        z-index: 999; 
+        align-items: center; padding: 0 18px; gap: 12px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.02);
     }
 
     #mobileMenuBtn {
-        background: none; border: none; cursor: pointer;
-        padding: 5px; color: var(--primary); display: flex;
+        background: #f8fafc; border: 1px solid #e2e8f0; cursor: pointer;
+        padding: 8px; border-radius: 10px; color: var(--primary); display: flex;
     }
 
     .mobile-brand {
-        font-size: 14px; font-weight: 800; color: var(--primary);
-        letter-spacing: -0.3px;
+        font-size: 14px; font-weight: 700; color: var(--primary);
     }
 
     @media (max-width: 1024px) {
         .mobile-header { display: flex; }
+        
         .sidebar {
-            left: -300px;
-            z-index: 10000;
-            width: 280px;
-            position: fixed;
-            transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            background: #ffffff;
-            height: 100% !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: -320px !important;
+            width: 280px !important;
+            height: 100vh !important;
+            z-index: 10000 !important;
+            transition: left 0.3s ease-in-out !important;
+            background: white !important;
+            box-shadow: 10px 0 40px rgba(0,0,0,0.1) !important;
+            display: flex !important;
+            flex-shrink: 0;
+            padding-top: 20px !important;
         }
-        .sidebar.active { left: 0; }
+
+        .sidebar.active { left: 0 !important; }
 
         .main-wrapper {
+            flex: 1 !important;
             margin-left: 0 !important;
-            padding: 85px 15px 40px !important; /* Content below the 60px header */
-            width: 100vw !important;
-            max-width: 100vw;
+            padding: 85px 15px 40px !important; 
+            width: 100% !important;
+            max-width: 100% !important;
             overflow-x: hidden !important;
+            display: block !important;
         }
 
-        .stats-grid { grid-template-columns: 1fr 1fr !important; gap: 15px !important; }
-        .charts-row { grid-template-columns: 1fr !important; }
+        .stats-grid { grid-template-columns: 1fr 1fr !important; gap: 15px !important; width: 100% !important; }
+        .charts-row { grid-template-columns: 1fr !important; width: 100% !important; }
+        .chart-box { width: 100% !important; margin-bottom: 15px !important; }
     }
 
     @media (max-width: 768px) {
         .stats-grid { grid-template-columns: 1fr !important; }
-        .header-bar { flex-direction: column; align-items: stretch; gap: 10px; }
-        .toolbar { flex-direction: column; align-items: stretch; gap: 12px; }
-        .filter-select, .search-box input { width: 100% !important; }
+        .header-bar { flex-direction: column; align-items: stretch; gap: 12px; }
+        .toolbar { flex-direction: column; align-items: stretch; gap: 10px; }
+
+        /* THE MOBILE CARD TRANSFORMATION (VERTICAL VIEW) */
+        table, thead, tbody, th, td, tr { display: block !important; }
+        thead tr { position: absolute !important; top: -9999px; left: -9999px; } /* Hide headers */
         
-        .table-card { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        table { min-width: 950px; }
+        tr { 
+            margin-bottom: 15px !important; 
+            border: 1px solid #e2e8f0 !important; 
+            border-radius: 16px !important; 
+            background: #ffffff !important; 
+            padding: 15px !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03) !important;
+        }
+
+        td { 
+            border: none !important; 
+            border-bottom: 1px solid #f1f5f9 !important; 
+            position: relative !important; 
+            padding-left: 40% !important; 
+            padding-top: 12px !important; 
+            padding-bottom: 12px !important;
+            text-align: right !important;
+            min-height: 45px !important;
+            font-size: 13px !important;
+        }
+
+        td:last-child { border-bottom: none !important; margin-top: 10px !important; padding-left: 0 !important; text-align: center !important; }
+
+        td:before { 
+            position: absolute !important; top: 12px; left: 15px; 
+            width: 35% !important; padding-right: 10px !important; 
+            white-space: nowrap !important; font-weight: 800 !important; 
+            color: #94a3b8 !important; text-transform: uppercase !important;
+            font-size: 10px !important; text-align: left !important;
+        }
+
+        /* Responsive Row Labels */
+        td:nth-of-type(1):before { content: "LEAD ID"; }
+        td:nth-of-type(2):before { content: "FULL NAME"; }
+        td:nth-of-type(3):before { content: "PHONE"; }
+        td:nth-of-type(4):before { content: "SOLICITOR"; }
+        td:nth-of-type(5):before { content: "RECEIVED"; }
+        td:nth-of-type(6):before { content: "LEAD STATUS"; }
+        td:nth-of-type(7):before { content: "ACTIONS"; }
+
+        .status-select { width: 100% !important; height: 38px !important; }
+        .action-btn-group { display: grid !important; grid-template-columns: 1fr 1fr 1fr !important; gap: 8px !important; margin-top: 10px !important; }
+        .btn-action { justify-content: center !important; padding: 10px !important; font-size: 10px !important; }
     }
 
     #sidebarOverlay {
         display: none;
         position: fixed;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(15, 23, 42, 0.5);
-        backdrop-filter: blur(3px);
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(0,0,0,0.4);
         z-index: 9999;
     }
     #sidebarOverlay.active { display: block; }
