@@ -52,27 +52,16 @@ module.exports = async function handler(req, res) {
       leakCracks: incoming.leakCracks || "",
       leakBelongings: incoming.leakBelongings || "",
 
-      // --- ELECTRICS / HEATING / STRUCTURAL ---
-      issues: incoming.issues || "No",
-      issueType: incoming.issueType || incoming.issue_type || "",
-      electricsMainIssue: incoming.electricsMainIssue || "",
-      electricsLights: incoming.electricsLights || "",
-      electricsSockets: incoming.electricsSockets || "",
-      electricsExposed: incoming.electricsExposed || "",
-      electricsFuseBox: incoming.electricsFuseBox || "",
-      electricsDanger: incoming.electricsDanger || "",
+      // --- ELECTRICS / HEATING / STRUCTURAL (SIMPLIFIED YES/NO) ---
+      issues: (incoming.issues_electrics === 'Yes' || incoming.issues_heating === 'Yes' || incoming.issues_structural === 'Yes') ? 'Yes' : 'No',
+      issues_electrics: incoming.issues_electrics || "No",
+      issues_heating: incoming.issues_heating || "No",
+      issues_structural: incoming.issues_structural || "No",
       
-      heatingMainIssue: incoming.heatingMainIssue || "",
-      heatingType: incoming.heatingType || "",
-      heatingFrequency: incoming.heatingFrequency || "",
-      heatingDuration: incoming.heatingDuration || "",
-      heatingDaily: incoming.heatingDaily || "",
-      heatingHealth: incoming.heatingHealth || "",
-
-      structuralLocation: incoming.structuralLocation || "",
-      structuralSeverity: incoming.structuralSeverity || "",
-      structuralWhen: incoming.structuralWhen || "",
-      structuralWorsening: incoming.structuralWorsening || "",
+      // Keep legacy fields for dashboard compatibility if needed
+      electricsMainIssue: incoming.issues_electrics || "",
+      heatingMainIssue: incoming.issues_heating || "",
+      structuralLocation: incoming.issues_structural || "",
 
       // --- REPORTING & ARREARS ---
       reported: incoming.reported || "No",
