@@ -302,9 +302,15 @@ window.openViewModal = function(id) {
     const item = submissionsData.find(s => String(s.id) === String(id));
     if (!item) return;
     
+    const legacyIgnore = [
+        'electricsLights', 'electricsSockets', 'electricsExposed', 'electricsFuseBox', 'electricsDanger',
+        'heatingType', 'heatingFrequency', 'heatingDuration', 'heatingDaily', 'heatingHealth',
+        'structuralSeverity', 'structuralWhen', 'structuralWorsening', 'issueType'
+    ];
+    
     let fieldsHtml = '';
     const mainKeys = ['name', 'phone', 'email', 'tenantType', 'solicitorName', 'leadStatus'];
-    const otherKeys = Object.keys(item).filter(k => !mainKeys.includes(k) && k !== 'notes');
+    const otherKeys = Object.keys(item).filter(k => !mainKeys.includes(k) && !legacyIgnore.includes(k) && k !== 'notes' && k !== 'id' && k !== 'timestamp');
     
     [...mainKeys, ...otherKeys].forEach(key => {
         if (!item.hasOwnProperty(key)) return;
@@ -333,7 +339,12 @@ window.openEditModal = function(id) {
     if (!item) return;
 
     let formHtml = '';
-    const ignore = ['id', 'notes', 'timestamp', 'solicitorName', 'leadStatus'];
+    const ignore = [
+        'id', 'notes', 'timestamp', 'solicitorName', 'leadStatus',
+        'electricsLights', 'electricsSockets', 'electricsExposed', 'electricsFuseBox', 'electricsDanger',
+        'heatingType', 'heatingFrequency', 'heatingDuration', 'heatingDaily', 'heatingHealth',
+        'structuralSeverity', 'structuralWhen', 'structuralWorsening', 'issueType'
+    ];
     
     // First: Important Fields
     const priority = ['name', 'phone', 'email', 'tenantType', 'solicitorName'];
