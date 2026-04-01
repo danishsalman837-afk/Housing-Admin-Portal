@@ -133,16 +133,19 @@
         .btn-action:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 4px 6px rgba(24, 144, 255, 0.2); }
         .btn-outline { background: white; border: 1px solid #E2E8F0; color: #334155; }
         .btn-outline:hover { background: #F8FAFC; border-color: #CBD5E1; color: #0F172A; transform: none; box-shadow: none; }
+        .btn-small { padding: 6px 12px; font-size: 13px; font-weight: 500; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
+        .btn-small.danger { color: #DC2626; border-color: #FECACA; }
+        .btn-small.danger:hover { background: #FEF2F2; color: #B91C1C; }
 
         .table-responsive { overflow-x: auto; width: 100%; }
         table { width: 100%; border-collapse: separate; border-spacing: 0; white-space: nowrap; }
-        th { text-align: left; padding: 16px 24px; color: #64748B; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #E2E8F0; background: #F8FAFC; }
+        th { text-align: left; padding: 16px 24px; color: #64748B; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #E2E8F0; background: #FFF; }
         td { padding: 18px 24px; border-bottom: 1px solid #F1F5F9; font-size: 14px; color: #334155; }
         tr:last-child td { border-bottom: none; }
         tr:hover td { background: #F8FAFC; }
 
         .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; outline: none; }
-        select.status-badge { padding-right: 28px; background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 10px center; background-size: 10px; -webkit-appearance: none; }
+        select.status-badge { padding-right: 28px; background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 10px center; background-size: 10px; appearance: none; -webkit-appearance: none; }
         /* Same colors */
         .status-badge[data-color="new"] { background-color: #E0F2FE; color: #0284C7; }
         .status-badge[data-color="warning"] { background-color: #FEF3C7; color: #D97706; }
@@ -151,14 +154,9 @@
         .status-badge[data-color="purple"] { background-color: #F3E8FF; color: #9333EA; }
         .status-badge[data-color="gray"] { background-color: #F1F5F9; color: #475569; }
 
-        .icon-btn { background: #F8FAFC; border: 1px solid #E2E8F0; cursor: pointer; width: 32px; height: 32px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; color: #64748B; transition: all 0.2s; }
-        .icon-btn:hover { background: #FFFFFF; color: var(--primary); border-color: var(--primary); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .icon-btn.danger:hover { color: var(--danger); border-color: var(--danger); }
-        .icon-btn svg { width: 16px; height: 16px; fill: currentColor; }
-
         /* Modals */
         #modalOverlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
-        #modalBox { background: white; width: 100%; max-width: 600px; border-radius: 20px; padding: 32px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1); max-height: 90vh; overflow-y: auto; }
+        #modalBox { background: white; width: 100%; max-width: 600px; border-radius: 12px; padding: 32px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1); max-height: 90vh; overflow-y: auto; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
         .modal-header h2 { font-size: 20px; font-weight: 700; color: #0F172A; }
         .close-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: #94A3B8; transition: 0.2s; }
@@ -168,22 +166,23 @@
         .form-group { display: flex; flex-direction: column; gap: 8px; }
         .form-group.full { grid-column: span 2; }
         .form-group label { font-size: 13px; font-weight: 600; color: #334155; }
-        .form-group input, .form-group textarea, .form-group select { width: 100%; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid #E2E8F0; font-size: 14px; outline: none; background: #FFF; transition: border-color 0.2s; }
+        .form-group input:focus, .form-group select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.15); }
 
     </style>
 </head>
 <body onload="initDashboard()">
     
-    <div id="sidebar">
-        <div class="sidebar-header">
-            <div class="logo-box" style="font-weight: 800; color: #1E2532;">HDR CRM</div>
+    <div id="sidebar" style="background: #111827; border-right: none;">
+        <div class="sidebar-header" style="background: #111827; border-bottom: 1px solid rgba(255,255,255,0.05);">
+            <div class="logo-box" style="font-weight: 800; color: #111827;">HDR CRM</div>
         </div>
         <div class="nav-items" style="margin-top:20px;">
             <div class="nav-item active" onclick="switchView('dashboard')">
                 <svg viewBox="0 0 24 24"><path d="M4 13h6v8H4v-8zm0-9h6v6H4V4zm8 11h8v6h-8v-6zm0-11h8v9h-8V4z"/></svg> Dashboard
             </div>
             <div class="nav-item" onclick="switchView('companies')">
-                <svg viewBox="0 0 24 24"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg> Company CRM
+                <svg viewBox="0 0 24 24"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg> Company
             </div>
             <div class="nav-item" onclick="switchView('leads')">
                 <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg> Leads Management
@@ -202,7 +201,7 @@
             <div class="dashboard-grid">
                 <!-- Card 1: Donut -->
                 <div class="dashboard-card" style="grid-column: span 1;">
-                    <div class="card-header"><span class="card-title">Conversion Rate</span><svg class="card-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"/></svg></div>
+                    <div class="card-header"><span class="card-title">Conversion Rate</span></div>
                     <div class="circle-chart-wrapper">
                         <canvas id="conversionDonutChart"></canvas>
                         <div class="circle-inner-text">
@@ -217,7 +216,7 @@
 
                 <!-- Card 2: Funnel -->
                 <div class="dashboard-card" style="grid-column: span 2;">
-                    <div class="card-header"><span class="card-title">Lead Volume Trend</span><svg class="card-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"/></svg></div>
+                    <div class="card-header"><span class="card-title">Lead Volume Trend</span></div>
                     <div class="bar-chart-container">
                         <canvas id="leadsFlowChart"></canvas>
                     </div>
@@ -230,7 +229,7 @@
                         <canvas id="statusDonutChart"></canvas>
                         <div class="circle-inner-text">
                             <span class="circle-value" id="dashboardTotal">0</span>
-                            <span class="circle-label">Total</span>
+                            <span class="circle-label">Total Leads</span>
                         </div>
                     </div>
                     <div class="card-footer">
@@ -242,15 +241,15 @@
                 <!-- Card 4: Solicitor Analytics -->
                 <div class="dashboard-card" style="grid-column: span 2;">
                     <div class="card-header"><span class="card-title">Company / Solicitor Metrics</span></div>
-                    <div class="bar-chart-container" style="display:flex; gap:30px; align-items:center; justify-content:center;">
+                    <div class="bar-chart-container" style="display:flex; gap:50px; align-items:center; justify-content:center;">
                         <div style="text-align:center;">
-                            <div style="font-size:48px; font-weight:700; color:var(--primary);" id="dashboardActive">0</div>
-                            <div style="font-size:14px; color:var(--text-muted); font-weight:500;">Registered Firms</div>
+                            <div style="font-size:56px; font-weight:800; color:var(--primary); letter-spacing:-2px;" id="dashboardActive">0</div>
+                            <div style="font-size:15px; color:#64748B; font-weight:600; margin-top:8px;">Registered Firms</div>
                         </div>
-                        <div style="height:80px; width:1px; background:var(--border);"></div>
+                        <div style="height:100px; width:1px; background:#E2E8F0;"></div>
                         <div style="text-align:center;">
-                            <div style="font-size:48px; font-weight:700; color:var(--success);" id="dashboardSolicitorsCount">0</div>
-                            <div style="font-size:14px; color:var(--text-muted); font-weight:500;">Active Solicitors</div>
+                            <div style="font-size:56px; font-weight:800; color:var(--success); letter-spacing:-2px;" id="dashboardSolicitorsCount">0</div>
+                            <div style="font-size:15px; color:#64748B; font-weight:600; margin-top:8px;">Active Solicitors</div>
                         </div>
                     </div>
                 </div>
@@ -260,7 +259,7 @@
         <!-- Companies View -->
         <div id="companiesView" class="view-container">
             <div class="page-header">
-                <h1>Company CRM</h1>
+                <h1>Company</h1>
                 <button class="btn-action" onclick="window.openAddCompanyModal()">+ Add Firm</button>
             </div>
             

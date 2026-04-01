@@ -325,6 +325,11 @@ window.saveNewCompany = async function(id) {
         const res = await fetch('/api/companies', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
         const saved = await res.json();
         
+        if (!res.ok || saved.error) {
+            alert("Database Error: " + (saved.error || "Failed to save to Supabase. Make sure columns exist."));
+            return;
+        }
+        
         if (id) {
             const index = companiesData.findIndex(x => String(x.id) === String(id));
             if(index > -1) companiesData[index] = saved;
@@ -334,7 +339,7 @@ window.saveNewCompany = async function(id) {
         
         document.getElementById('modalOverlay').style.display='none';
         renderCompanies();
-    } catch(e) { console.error(e); }
+    } catch(e) { console.error(e); alert("Network Error: " + e.message); }
 };
 
 window.viewCompanyMembers = function(companyId) {
@@ -351,7 +356,7 @@ window.viewCompanyMembers = function(companyId) {
     
     const relatedMembers = membersData.filter(m => String(m.company_id) === String(companyId));
     if(relatedMembers.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#94A3B8;">No members assigned to this company yet.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 30px; color:#94A3B8;">No members assigned to this company yet.</td></tr>';
         return;
     }
     
@@ -359,10 +364,14 @@ window.viewCompanyMembers = function(companyId) {
         let mName = m.name || ((m.first_name || '') + ' ' + (m.last_name || '')).trim();
         if (!mName || mName === 'undefined undefined' || mName.includes('undefined')) mName = 'Unknown Member';
         
-        tbody.innerHTML += `<tr><td><strong>${mName}</strong></td><td>${m.email || '--'}</td><td>${m.phone || '--'}</td><td>${m.role || 'Member'}</td>
+        tbody.innerHTML += `<tr><td><strong>${mName}</strong></td><td>${m.email || '--'}</td><td>${m.phone || '--'}</td><td><span class="status-badge" style="background:#F1F5F9; color:#475569;">${m.role || 'Member'}</span></td>
             <td style="display:flex; gap: 8px;">
-                <button class="icon-btn" title="Edit Member" onclick="window.openAddMemberModal('${m.id}')"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>
-                <button class="icon-btn danger" title="Delete Member" onclick="window.deleteMember('${m.id}')"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>
+                <button class="btn-outline btn-small" title="Edit Member" onclick="window.openAddMemberModal('${m.id}')">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="margin-right:4px;"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg> Edit
+                </button>
+                <button class="btn-outline btn-small danger" title="Delete Member" onclick="window.deleteMember('${m.id}')">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="margin-right:4px;"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg> Delete
+                </button>
             </td></tr>`;
     });
 };
@@ -374,13 +383,13 @@ window.openAddMemberModal = function(editId = null) {
     document.getElementById('modalBox').innerHTML = `
         <div class="modal-header"><h2>${editId ? 'Edit Member' : 'Add Member'}</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>
         <div class="form-grid">
-            <div class="form-group"><label>First Name</label><input type="text" id="mFirstName" class="search-input" value="${m.first_name || ''}"></div>
-            <div class="form-group"><label>Last Name</label><input type="text" id="mLastName" class="search-input" value="${m.last_name || ''}"></div>
-            <div class="form-group"><label>Email Address</label><input type="text" id="mEmail" class="search-input" value="${m.email || ''}"></div>
-            <div class="form-group"><label>Phone Number</label><input type="text" id="mPhone" class="search-input" value="${m.phone || ''}"></div>
-            <div class="form-group full"><label>Role / Title</label><input type="text" id="mRole" class="search-input" value="${m.role || 'Member'}"></div>
+            <div class="form-group"><label>First Name</label><input type="text" id="mFirstName" class="modern-input" value="${m.first_name || ''}"></div>
+            <div class="form-group"><label>Last Name</label><input type="text" id="mLastName" class="modern-input" value="${m.last_name || ''}"></div>
+            <div class="form-group"><label>Email Address</label><input type="text" id="mEmail" class="modern-input" value="${m.email || ''}"></div>
+            <div class="form-group"><label>Phone Number</label><input type="text" id="mPhone" class="modern-input" value="${m.phone || ''}"></div>
+            <div class="form-group full"><label>Role / Title</label><input type="text" id="mRole" class="modern-input" value="${m.role || 'Member'}"></div>
         </div>
-        <button class="btn-action" style="margin-top:20px; width:100%; justify-content:center;" onclick="window.saveNewMember('${m.id || ''}')">Save Member</button>
+        <button class="btn-action" style="margin-top:24px; width:100%; justify-content:center; padding:12px;" onclick="window.saveNewMember('${m.id || ''}')">Save Member</button>
     `;
     document.getElementById('modalOverlay').style.display = 'flex';
 }
@@ -401,6 +410,11 @@ window.saveNewMember = async function(id) {
         const res = await fetch('/api/members', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
         const saved = await res.json();
         
+        if (!res.ok || saved.error) {
+            alert("Database Error: " + (saved.error || "Failed to save member. Check database schema."));
+            return;
+        }
+
         if (id) {
             const index = membersData.findIndex(x => String(x.id) === String(id));
             if(index > -1) membersData[index] = saved;
@@ -412,7 +426,7 @@ window.saveNewMember = async function(id) {
         initFilters();
         viewCompanyMembers(selectedCompanyId);
         if(document.getElementById('leadsView').classList.contains('active')) renderFilteredLeads();
-    } catch(e) { console.error(e); }
+    } catch(e) { console.error(e); alert("Network Error: " + e.message); }
 };
 
 window.deleteMember = async function(id) {
