@@ -419,13 +419,29 @@ window.openEditLeadModal = function(id) {
     const s = submissionsData.find(x => String(x.id) === String(id));
     if(!s) return;
 
-    // Filter basic editable fields
-    const editableFields = ['name', 'first_name', 'last_name', 'phone', 'mobile_number', 'email', 'address', 'postcode'];
+    // Show all data fields except for system/internal elements
+    const ignoreKeys = ['id', 'created_at', 'notes', 'leadStatus', 'assigned_company_id', 'assigned_solicitor_id', 'timestamp'];
     let html = '<div class="form-grid" id="editLeadForm">';
     
-    Object.keys(s).filter(k => editableFields.includes(k)).forEach(k => {
-        html += `<div class="form-group"><label>${k.replace(/_/g, ' ')}</label>
-                 <input type="text" class="modern-input edit-inp" data-field="${k}" value="${s[k] || ''}"></div>`;
+    Object.keys(s).forEach(k => {
+        if(ignoreKeys.includes(k)) return;
+        
+        let displayValue = s[k] === null || s[k] === undefined ? '' : s[k];
+        if(typeof displayValue === 'object') {
+            displayValue = JSON.stringify(displayValue);
+        }
+        
+        // Escape characters for HTML
+        displayValue = String(displayValue).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        
+        // If text is long, use an auto-scaling text area
+        if (displayValue.length > 50 || k.length > 30) {
+            html += `<div class="form-group full"><label>${k.replace(/_/g, ' ')}</label>
+                     <textarea class="modern-input edit-inp" data-field="${k}" rows="3">${displayValue}</textarea></div>`;
+        } else {
+            html += `<div class="form-group"><label>${k.replace(/_/g, ' ')}</label>
+                     <input type="text" class="modern-input edit-inp" data-field="${k}" value="${displayValue}"></div>`;
+        }
     });
     
     html += `</div>
@@ -434,7 +450,7 @@ window.openEditLeadModal = function(id) {
                 <button class="btn-action" onclick="window.saveLeadEdits('${s.id}')">Save Changes</button>
              </div>`;
 
-    document.getElementById('modalBox').innerHTML = `<div class="modal-header"><h2>Edit Basic Details</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>${html}`;
+    document.getElementById('modalBox').innerHTML = `<div class="modal-header"><h2>Edit Lead Data</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>${html}`;
     document.getElementById('modalOverlay').style.display = 'flex';
 };
 
