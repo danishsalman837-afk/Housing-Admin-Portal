@@ -442,26 +442,76 @@ window.saveNote = async function(id) {
     } catch (e) { console.error(e); }
 };
 
-// Lead Document Engine
+// Professional .docx Document Engine
 window.downloadLead = function(id) {
     const item = submissionsData.find(s => String(s.id) === String(id));
     if (!item) return;
 
-    let content = `LEAD PROFILE: ${item.name || 'UNKNOWN'}\n`;
-    content += `Generated: ${new Date().toLocaleString()}\n`;
-    content += `------------------------------------------------\n\n`;
+    const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } = docx;
 
-    Object.keys(item).forEach(key => {
-        if (['id', 'notes'].includes(key)) return;
+    const children = [
+        new Paragraph({
+            text: `LEAD PROFILE: ${item.name || 'UNKNOWN'}`,
+            heading: HeadingLevel.HEADING_1,
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 400 }
+        }),
+        new Paragraph({
+            children: [
+                new TextRun({ text: "Generated on: ", bold: true }),
+                new TextRun(new Date().toLocaleString('en-GB')),
+            ],
+            spacing: { after: 400 }
+        })
+    ];
+
+    // --- Dynamic Q&A Injection ---
+    const mainKeys = ['name', 'phone', 'email', 'tenantType', 'solicitorName', 'leadStatus'];
+    const otherFields = Object.keys(item).filter(k => !mainKeys.includes(k) && !['id', 'notes', 'timestamp'].includes(k));
+
+    [...mainKeys, ...otherFields].forEach(key => {
+        if (!item.hasOwnProperty(key)) return;
+        const val = item[key] || '---';
         const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
-        content += `${label}: ${item[key] || '---'}\n`;
+        
+        children.push(new Paragraph({
+            children: [
+                new TextRun({ text: `${label}: `, bold: true }),
+                new TextRun(val),
+            ],
+            spacing: { before: 100 }
+        }));
     });
 
-    const blob = new Blob([content], { type: 'text/plain' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `Lead_${(item.name || 'Unknown').replace(/\s+/g,'_')}.txt`;
-    a.click();
+    // --- Activity Log Section ---
+    if (item.notes && item.notes.length > 0) {
+        children.push(new Paragraph({
+            text: "ACTIVITY LOG / CASE NOTES",
+            heading: HeadingLevel.HEADING_2,
+            spacing: { before: 600, after: 200 }
+        }));
+
+        item.notes.forEach(n => {
+            children.push(new Paragraph({
+                children: [
+                    new TextRun({ text: `[${n.time}] `, bold: true, color: "666666", size: 18 }),
+                    new TextRun({ text: n.text, size: 20 }),
+                ],
+                spacing: { after: 100 }
+            }));
+        });
+    }
+
+    const doc = new Document({
+        sections: [{ properties: {}, children }]
+    });
+
+    Packer.toBlob(doc).then(blob => {
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `Lead_${(item.name || 'Unknown').replace(/\s+/g,'_')}.docx`;
+        a.click();
+    });
 };
 
 window.exportData = function() {
