@@ -305,11 +305,18 @@ window.openViewModal = function(id) {
     const legacyIgnore = [
         'electricsLights', 'electricsSockets', 'electricsExposed', 'electricsFuseBox', 'electricsDanger',
         'heatingType', 'heatingFrequency', 'heatingDuration', 'heatingDaily', 'heatingHealth',
-        'structuralSeverity', 'structuralWhen', 'structuralWorsening', 'issueType'
+        'structuralSeverity', 'structuralWhen', 'structuralWorsening', 'issueType',
+        'electricsMainIssue', 'heatingMainIssue', 'structuralLocation', 'issues'
     ];
     
     let fieldsHtml = '';
-    const mainKeys = ['name', 'phone', 'email', 'tenantType', 'solicitorName', 'leadStatus'];
+    const mainKeys = [
+        'name', 'phone', 'email', 'tenantType', 'livingDuration', 
+        'damp', 'leak', 
+        'issues_electrics', 'issues_heating', 'issues_structural', 
+        'reported', 'arrears', 'solicitorName', 'leadStatus'
+    ];
+    // Filter out keys already in mainKeys to avoid duplicates
     const otherKeys = Object.keys(item).filter(k => !mainKeys.includes(k) && !legacyIgnore.includes(k) && k !== 'notes' && k !== 'id' && k !== 'timestamp');
     
     [...mainKeys, ...otherKeys].forEach(key => {
@@ -343,11 +350,17 @@ window.openEditModal = function(id) {
         'id', 'notes', 'timestamp', 'solicitorName', 'leadStatus',
         'electricsLights', 'electricsSockets', 'electricsExposed', 'electricsFuseBox', 'electricsDanger',
         'heatingType', 'heatingFrequency', 'heatingDuration', 'heatingDaily', 'heatingHealth',
-        'structuralSeverity', 'structuralWhen', 'structuralWorsening', 'issueType'
+        'structuralSeverity', 'structuralWhen', 'structuralWorsening', 'issueType',
+        'electricsMainIssue', 'heatingMainIssue', 'structuralLocation', 'issues'
     ];
     
-    // First: Important Fields
-    const priority = ['name', 'phone', 'email', 'tenantType', 'solicitorName'];
+    // First: Important Fields in Logical Order
+    const priority = [
+        'name', 'phone', 'email', 'tenantType', 'livingDuration', 
+        'damp', 'leak', 
+        'issues_electrics', 'issues_heating', 'issues_structural', 
+        'reported', 'arrears', 'solicitorName', 'leadStatus'
+    ];
     const otherFields = Object.keys(item).filter(k => !priority.includes(k) && !ignore.includes(k));
 
     [...priority, ...otherFields].forEach(key => {
