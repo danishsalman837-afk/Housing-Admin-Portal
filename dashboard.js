@@ -257,38 +257,60 @@ window.exportExcel = function() {
 
 
 // 🏢 COMPANY CRM
+window.viewCompanyEditModal = function(id) {
+    const c = companiesData.find(x => String(x.id) === String(id));
+    if(!c) return;
+    openAddCompanyModal(c);
+};
+
 window.renderCompanies = function() {
     const tbody = document.querySelector("#companyTable tbody");
     if (!tbody) return;
     tbody.innerHTML = '';
     companiesData.forEach((c) => {
-        tr = document.createElement('tr');
-        tr.innerHTML = `<td><strong>${c.name}</strong></td><td>${c.type || 'Firm'}</td><td>${c.main_contact || '--'}</td><td>${c.email || '--'}</td><td>${c.contact || '--'}</td>
-            <td>
-                <button class="btn-action btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="window.viewCompanyMembers('${c.id}')">Manage Solicitors</button>
+        let nameDisp = c.name || c.company_name || 'Unnamed Company';
+        if (nameDisp === 'undefined' || nameDisp.includes('undefined')) nameDisp = 'Unnamed Company';
+        
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td><strong>${nameDisp}</strong></td><td>${c.type || '--'}</td><td>${c.main_contact || '--'}</td><td>${c.email || '--'}</td><td>${c.contact || '--'}</td>
+            <td style="display:flex; gap:8px;">
+                <button class="icon-btn" onclick="window.viewCompanyEditModal('${c.id}')" title="Edit Company"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>
+                <button class="btn-action btn-outline" style="padding: 6px 12px; font-size: 12px;" onclick="window.viewCompanyMembers('${c.id}')">View Members</button>
             </td>`;
         tbody.appendChild(tr);
     });
     document.getElementById('companyMembersSection').style.display = 'none';
 };
 
-window.openAddCompanyModal = function() {
+window.openAddCompanyModal = function(existingCompany = null) {
+    const isEdit = !!existingCompany;
+    const c = existingCompany || {};
+    
      document.getElementById('modalBox').innerHTML = `
-        <div class="modal-header"><h2>Add Firm</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>
+        <div class="modal-header"><h2>${isEdit ? 'Edit Company' : 'Add Company'}</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>
         <div class="form-grid">
-            <div class="form-group full"><label>Company Name</label><input type="text" id="cName" class="search-input"></div>
-            <div class="form-group"><label>Company Type</label><input type="text" id="cType" class="search-input" value="Solicitors"></div>
-            <div class="form-group"><label>Main Contact Name</label><input type="text" id="cMainContact" class="search-input"></div>
-            <div class="form-group"><label>Email Address</label><input type="text" id="cEmail" class="search-input"></div>
-            <div class="form-group"><label>Phone Number</label><input type="text" id="cPhone" class="search-input"></div>
-            <div class="form-group full"><label>Office Address</label><input type="text" id="cAddress" class="search-input"></div>
+            <div class="form-group full"><label>Company Name</label><input type="text" id="cName" class="search-input" value="${c.name || ''}" placeholder="Enter company name"></div>
+            <div class="form-group">
+                <label>Company Type</label>
+                <select id="cType" class="modern-select">
+                    <option value="" disabled ${!c.type ? 'selected' : ''}>Select a type...</option>
+                    <option value="Solicitor" ${c.type === 'Solicitor' ? 'selected' : ''}>Solicitor</option>
+                    <option value="Surveyor" ${c.type === 'Surveyor' ? 'selected' : ''}>Surveyor</option>
+                    <option value="Claims Management" ${c.type === 'Claims Management' ? 'selected' : ''}>Claims Management</option>
+                    <option value="Other" ${c.type === 'Other' ? 'selected' : ''}>Other</option>
+                </select>
+            </div>
+            <div class="form-group"><label>Main Contact Name</label><input type="text" id="cMainContact" class="search-input" value="${c.main_contact || ''}"></div>
+            <div class="form-group"><label>Email Address</label><input type="text" id="cEmail" class="search-input" value="${c.email || ''}"></div>
+            <div class="form-group"><label>Phone Number</label><input type="text" id="cPhone" class="search-input" value="${c.contact || c.phone || ''}"></div>
+            <div class="form-group full"><label>Office Address</label><input type="text" id="cAddress" class="search-input" value="${c.address || ''}"></div>
         </div>
-        <button class="btn-action" style="margin-top:20px; width:100%; justify-content:center;" onclick="window.saveNewCompany()">Save Company</button>
+        <button class="btn-action" style="margin-top:20px; width:100%; justify-content:center;" onclick="window.saveNewCompany('${c.id || ''}')">Save Company</button>
     `;
     document.getElementById('modalOverlay').style.display = 'flex';
 };
 
-window.saveNewCompany = async function() {
+window.saveNewCompany = async function(id) {
     const payload = {
         name: document.getElementById('cName').value,
         type: document.getElementById('cType').value,
@@ -297,10 +319,19 @@ window.saveNewCompany = async function() {
         contact: document.getElementById('cPhone').value,
         address: document.getElementById('cAddress').value
     };
+    if (id) payload.id = id;
+
     try {
         const res = await fetch('/api/companies', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
         const saved = await res.json();
-        companiesData.push(saved);
+        
+        if (id) {
+            const index = companiesData.findIndex(x => String(x.id) === String(id));
+            if(index > -1) companiesData[index] = saved;
+        } else {
+            companiesData.push(saved);
+        }
+        
         document.getElementById('modalOverlay').style.display='none';
         renderCompanies();
     } catch(e) { console.error(e); }
@@ -310,61 +341,87 @@ window.viewCompanyMembers = function(companyId) {
     selectedCompanyId = companyId;
     const company = companiesData.find(c => String(c.id) === String(companyId));
     document.getElementById('companyMembersSection').style.display = 'block';
-    document.getElementById('membersSectionTitle').innerText = 'Solicitors for ' + (company?.name || 'Company');
+    
+    let compName = company?.name || 'Unknown Company';
+    if(compName.includes('undefined')) compName = 'Unknown Company';
+    document.getElementById('membersSectionTitle').innerText = 'Members for ' + compName;
     
     const tbody = document.querySelector("#membersTable tbody");
     tbody.innerHTML = '';
     
     const relatedMembers = membersData.filter(m => String(m.company_id) === String(companyId));
     if(relatedMembers.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#6B7280;">No solicitors assigned to this firm yet.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#94A3B8;">No members assigned to this company yet.</td></tr>';
         return;
     }
     
     relatedMembers.forEach(m => {
-        const mName = m.name || (m.first_name + ' ' + m.last_name);
-        tbody.innerHTML += `<tr><td><strong>${mName}</strong></td><td>${m.email || '--'}</td><td>${m.phone || '--'}</td><td>${m.role || 'Solicitor'}</td>
-            <td><button class="icon-btn"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button></td></tr>`;
+        let mName = m.name || ((m.first_name || '') + ' ' + (m.last_name || '')).trim();
+        if (!mName || mName === 'undefined undefined' || mName.includes('undefined')) mName = 'Unknown Member';
+        
+        tbody.innerHTML += `<tr><td><strong>${mName}</strong></td><td>${m.email || '--'}</td><td>${m.phone || '--'}</td><td>${m.role || 'Member'}</td>
+            <td style="display:flex; gap: 8px;">
+                <button class="icon-btn" title="Edit Member" onclick="window.openAddMemberModal('${m.id}')"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>
+                <button class="icon-btn danger" title="Delete Member" onclick="window.deleteMember('${m.id}')"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>
+            </td></tr>`;
     });
 };
 
-window.openAddMemberModal = function() {
+window.openAddMemberModal = function(editId = null) {
     if(!selectedCompanyId) return alert('Select a company first');
+    const m = membersData.find(x => String(x.id) === String(editId)) || {};
+
     document.getElementById('modalBox').innerHTML = `
-        <div class="modal-header"><h2>Add Solicitor</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>
+        <div class="modal-header"><h2>${editId ? 'Edit Member' : 'Add Member'}</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>
         <div class="form-grid">
-            <div class="form-group"><label>First Name</label><input type="text" id="mFirstName" class="search-input"></div>
-            <div class="form-group"><label>Last Name</label><input type="text" id="mLastName" class="search-input"></div>
-            <div class="form-group"><label>Email Address</label><input type="text" id="mEmail" class="search-input"></div>
-            <div class="form-group"><label>Phone Number</label><input type="text" id="mPhone" class="search-input"></div>
-            <div class="form-group full"><label>Role / Title</label><input type="text" id="mRole" class="search-input" value="Solicitor"></div>
+            <div class="form-group"><label>First Name</label><input type="text" id="mFirstName" class="search-input" value="${m.first_name || ''}"></div>
+            <div class="form-group"><label>Last Name</label><input type="text" id="mLastName" class="search-input" value="${m.last_name || ''}"></div>
+            <div class="form-group"><label>Email Address</label><input type="text" id="mEmail" class="search-input" value="${m.email || ''}"></div>
+            <div class="form-group"><label>Phone Number</label><input type="text" id="mPhone" class="search-input" value="${m.phone || ''}"></div>
+            <div class="form-group full"><label>Role / Title</label><input type="text" id="mRole" class="search-input" value="${m.role || 'Member'}"></div>
         </div>
-        <button class="btn-action" style="margin-top:20px; width:100%; justify-content:center;" onclick="window.saveNewMember()">Save Solicitor</button>
+        <button class="btn-action" style="margin-top:20px; width:100%; justify-content:center;" onclick="window.saveNewMember('${m.id || ''}')">Save Member</button>
     `;
     document.getElementById('modalOverlay').style.display = 'flex';
 }
 
-window.saveNewMember = async function() {
+window.saveNewMember = async function(id) {
     const payload = {
         company_id: selectedCompanyId,
         first_name: document.getElementById('mFirstName').value,
         last_name: document.getElementById('mLastName').value,
-        name: document.getElementById('mFirstName').value + ' ' + document.getElementById('mLastName').value,
+        name: (document.getElementById('mFirstName').value + ' ' + document.getElementById('mLastName').value).trim(),
         email: document.getElementById('mEmail').value,
         phone: document.getElementById('mPhone').value,
         role: document.getElementById('mRole').value
     };
+    if (id) payload.id = id;
+
     try {
         const res = await fetch('/api/members', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
         const saved = await res.json();
-        membersData.push(saved);
-        document.getElementById('modalOverlay').style.display='none';
         
-        // Re-init filters so we can assign to this member
+        if (id) {
+            const index = membersData.findIndex(x => String(x.id) === String(id));
+            if(index > -1) membersData[index] = saved;
+        } else {
+            membersData.push(saved);
+        }
+        
+        document.getElementById('modalOverlay').style.display='none';
         initFilters();
         viewCompanyMembers(selectedCompanyId);
-        
-        // If we are on leads tab, re-render
+        if(document.getElementById('leadsView').classList.contains('active')) renderFilteredLeads();
+    } catch(e) { console.error(e); }
+};
+
+window.deleteMember = async function(id) {
+    if(!confirm("Are you sure you want to delete this member?")) return;
+    try {
+        await fetch('/api/members', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ id, action: 'delete' })});
+        membersData = membersData.filter(m => String(m.id) !== String(id));
+        initFilters();
+        viewCompanyMembers(selectedCompanyId);
         if(document.getElementById('leadsView').classList.contains('active')) renderFilteredLeads();
     } catch(e) { console.error(e); }
 };
