@@ -7,6 +7,20 @@ const leadStatuses = [
   'Not Yet Invoiced', 'Invoice Raised', 'Paid', 'Test Lead'
 ];
 
+// Universal Blacklist for old/redundant questions
+const FIELD_BLACKLIST = [
+    'electricsLights', 'electricsSockets', 'electricsExposed', 'electricsFuseBox', 'electricsDanger',
+    'heatingType', 'heatingFrequency', 'heatingDuration', 'heatingDaily', 'heatingHealth',
+    'structuralSeverity', 'structuralWhen', 'structuralWorsening', 'issueType',
+    'electricsMainIssue', 'heatingMainIssue', 'structuralLocation', 'issues'
+].map(k => k.toLowerCase());
+
+function shouldShow(key) {
+    const k = key.toLowerCase();
+    const systemKeys = ['id', 'notes', 'timestamp'];
+    return !FIELD_BLACKLIST.includes(k) && !systemKeys.includes(k);
+}
+
 // Switch between View Screens
 window.switchView = function(view) {
     document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
@@ -302,26 +316,20 @@ window.openViewModal = function(id) {
     const item = submissionsData.find(s => String(s.id) === String(id));
     if (!item) return;
     
-    const legacyIgnore = [
-        'electricsLights', 'electricsSockets', 'electricsExposed', 'electricsFuseBox', 'electricsDanger',
-        'heatingType', 'heatingFrequency', 'heatingDuration', 'heatingDaily', 'heatingHealth',
-        'structuralSeverity', 'structuralWhen', 'structuralWorsening', 'issueType',
-        'electricsMainIssue', 'heatingMainIssue', 'structuralLocation', 'issues'
-    ];
-    
     let fieldsHtml = '';
     const mainKeys = [
         'name', 'phone', 'email', 'tenantType', 'livingDuration', 
         'damp', 'leak', 
         'issues_electrics', 'issues_heating', 'issues_structural', 
-        'reported', 'arrears', 'solicitorName', 'leadStatus'
+        'reported', 'arrears', 'solicitorName', 'leadStatus', 'source'
     ];
-    // Filter out keys already in mainKeys to avoid duplicates
-    const otherKeys = Object.keys(item).filter(k => !mainKeys.includes(k) && !legacyIgnore.includes(k) && k !== 'notes' && k !== 'id' && k !== 'timestamp');
+    
+    // Use the universal 'shouldShow' logic to kill legacy fields
+    const otherKeys = Object.keys(item).filter(k => !mainKeys.includes(k) && shouldShow(k));
     
     [...mainKeys, ...otherKeys].forEach(key => {
         if (!item.hasOwnProperty(key)) return;
-        let val = item[key];
+        const val = item[key];
         const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
         fieldsHtml += `<div style="margin-bottom:12px; font-size:13px;"><label style="font-weight:700; color:#64748b; font-size:10px; text-transform:uppercase; display:block;">${label}</label><div style="padding:10px; background:#f8fafc; border-radius:8px; margin-top:4px;">${val || '---'}</div></div>`;
     });
@@ -346,22 +354,15 @@ window.openEditModal = function(id) {
     if (!item) return;
 
     let formHtml = '';
-    const ignore = [
-        'id', 'notes', 'timestamp', 'solicitorName', 'leadStatus',
-        'electricsLights', 'electricsSockets', 'electricsExposed', 'electricsFuseBox', 'electricsDanger',
-        'heatingType', 'heatingFrequency', 'heatingDuration', 'heatingDaily', 'heatingHealth',
-        'structuralSeverity', 'structuralWhen', 'structuralWorsening', 'issueType',
-        'electricsMainIssue', 'heatingMainIssue', 'structuralLocation', 'issues'
-    ];
     
-    // First: Important Fields in Logical Order
+    // Use the universal 'shouldShow' logic to kill legacy fields
     const priority = [
         'name', 'phone', 'email', 'tenantType', 'livingDuration', 
         'damp', 'leak', 
         'issues_electrics', 'issues_heating', 'issues_structural', 
         'reported', 'arrears', 'solicitorName', 'leadStatus'
     ];
-    const otherFields = Object.keys(item).filter(k => !priority.includes(k) && !ignore.includes(k));
+    const otherFields = Object.keys(item).filter(k => !priority.includes(k) && shouldShow(k));
 
     [...priority, ...otherFields].forEach(key => {
         if (!item.hasOwnProperty(key)) return;
@@ -491,7 +492,7 @@ window.downloadLead = function(id) {
 
     // --- Dynamic Q&A Injection ---
     const mainKeys = ['name', 'phone', 'email', 'tenantType', 'solicitorName', 'leadStatus'];
-    const otherFields = Object.keys(item).filter(k => !mainKeys.includes(k) && !['id', 'notes', 'timestamp'].includes(k));
+    const otherFields = Object.keys(item).filter(k => !mainKeys.includes(k) && shouldShow(k));
 
     [...mainKeys, ...otherFields].forEach(key => {
         if (!item.hasOwnProperty(key)) return;
