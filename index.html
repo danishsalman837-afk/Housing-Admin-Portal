@@ -334,18 +334,15 @@
             _origSwitch(view);
         };
 
-        // Mutation Observer to sync the donut inner texts
-        document.addEventListener('DOMContentLoaded', () => {
-            const observer = new MutationObserver(() => {
-                const total = document.getElementById('dashboardTotal')?.innerText;
-                const conv  = document.getElementById('dashboardConvRate')?.innerText;
-                if (document.getElementById('dashboardTotalDonut'))
-                    document.getElementById('dashboardTotalDonut').innerText = total || '0';
-                if (document.getElementById('dashboardConvRateDonut'))
-                    document.getElementById('dashboardConvRateDonut').innerText = conv || '0%';
-            });
-            observer.observe(document.body, { childList: true, subtree: true, characterData: true });
-        });
+        // Sync the donut inner texts when stats are updated
+        window._syncDonutText = function() {
+            const total = document.getElementById('dashboardTotal')?.innerText;
+            const conv  = document.getElementById('dashboardConvRate')?.innerText;
+            if (document.getElementById('dashboardTotalDonut'))
+                document.getElementById('dashboardTotalDonut').innerText = total || '0';
+            if (document.getElementById('dashboardConvRateDonut'))
+                document.getElementById('dashboardConvRateDonut').innerText = conv || '0%';
+        };
 
         // Toggle Sidebar
         function toggleSidebar() {
