@@ -54,7 +54,7 @@ const searchInput = document.getElementById('searchInput');
 
 function populateFilters() {
     if (filterStatus) {
-        filterStatus.innerHTML = '<option value="">All Statuses</option>';
+        filterStatus.innerHTML = '<option value="">All Statuses for this Solicitor</option>';
         leadStatuses.forEach(s => {
             filterStatus.innerHTML += `<option value="${s}">${s}</option>`;
         });
@@ -62,8 +62,8 @@ function populateFilters() {
     if (filterSolicitor) {
         const solicitors = [...new Set(submissionsData.map(s => s.solicitorName).filter(Boolean))].sort();
         filterSolicitor.innerHTML = `
-            <option value="">All Solicitors</option>
-            <option value="__unassigned__">Unassigned</option>
+            <option value="">Filter by Solicitor...</option>
+            <option value="__unassigned__">Unassigned Leads</option>
             ${solicitors.map(s => `<option value="${s}">${s}</option>`).join('')}
         `;
     }
@@ -75,24 +75,24 @@ function applyFilters() {
     const statVal = filterStatus ? filterStatus.value : '';
 
     const filtered = submissionsData.filter(item => {
-        // 1. Search Query
+        // 1. Search Box
         const matchesSearch = !search || 
             (item.name || '').toLowerCase().includes(search) || 
             (item.phone || '').toLowerCase().includes(search);
         if (!matchesSearch) return false;
 
-        // 2. Status Filter
-        if (statVal) {
-            const currentStatus = item.leadStatus || 'New Lead';
-            if (currentStatus !== statVal) return false;
-        }
-
-        // 3. Solicitor Filter
+        // 2. Solicitor Filter
         if (solVal) {
             if (solVal === '__unassigned__') {
                 if (item.solicitorName) return false;
             } else if (item.solicitorName !== solVal) {
                 return false;
+            }
+            
+            // 3. Status Drill-down (Only if solicitor is picked)
+            if (statVal) {
+                const currentStatus = item.leadStatus || 'New Lead';
+                if (currentStatus !== statVal) return false;
             }
         }
         return true;
@@ -101,12 +101,30 @@ function applyFilters() {
 }
 
 if (searchInput) searchInput.addEventListener('input', applyFilters);
-if (filterSolicitor) filterSolicitor.addEventListener('change', applyFilters);
-if (filterStatus) filterStatus.addEventListener('change', applyFilters);
+
+if (filterSolicitor) {
+    filterSolicitor.addEventListener('change', () => {
+        const value = filterSolicitor.value;
+        if (value) {
+            filterStatus.classList.remove('hidden');
+        } else {
+            filterStatus.classList.add('hidden');
+            filterStatus.value = ''; // Reset status if solicitor is cleared
+        }
+        applyFilters();
+    });
+}
+
+if (filterStatus) {
+    filterStatus.addEventListener('change', applyFilters);
+}
 
 window.clearFilters = function() {
     if (searchInput) searchInput.value = '';
-    if (filterSolicitor) filterSolicitor.value = '';
+    if (filterSolicitor) {
+        filterSolicitor.value = '';
+        filterStatus.classList.add('hidden');
+    }
     if (filterStatus) filterStatus.value = '';
     applyFilters();
 };

@@ -129,11 +129,11 @@
       box-shadow: 0 0 0 3px rgba(15, 52, 96, 0.1);
     }
 
-    .filter-value {
+    .filter-value, .hidden {
       display: none;
     }
 
-    .filter-value.visible {
+    .filter-value.visible, .visible {
       display: block;
     }
 
@@ -892,12 +892,17 @@
       </div>
 
       <div class="filter-group">
+        <!-- Main Filter (Solicitor) -->
         <select class="filter-select" id="filterSolicitor">
-          <option value="">All Solicitors</option>
-          <option value="__unassigned__">Unassigned</option>
+          <option value="">Filter by Solicitor...</option>
+          <option value="__unassigned__">Unassigned Leads</option>
+          <!-- Dynamically populated -->
         </select>
-        <select class="filter-select" id="filterStatus">
-          <option value="">All Statuses</option>
+        
+        <!-- Drill-down Filter (Status) - Hidden by default -->
+        <select class="filter-select hidden" id="filterStatus">
+          <option value="">All Statuses for this Solicitor</option>
+          <!-- Dynamically populated -->
         </select>
       </div>
 
