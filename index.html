@@ -324,32 +324,34 @@
 
     * { box-sizing: border-box; }
 
-    /* Parent Container */
-    .main-content {
-      display: flex; /* Sidebar & Wrapper Side-By-Side */
-      height: 100vh;
-      overflow: hidden;
-    }
+    /* ========== DESKTOP LAYOUT (1025px+) ========== */
+    @media (min-width: 1025px) {
+        .main-content {
+            display: flex; /* Sidebar & Wrapper Side-By-Side */
+            height: 100vh;
+            overflow: hidden;
+        }
 
-    .sidebar {
-      width: 280px;
-      flex-shrink: 0;
-      background: white;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      padding: 25px 0;
-      border-right: 1px solid #eef2f5;
-      z-index: 10;
-    }
+        .sidebar {
+            width: 280px;
+            flex-shrink: 0;
+            background: white;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 25px 0;
+            border-right: 1px solid #eef2f5;
+            z-index: 10;
+        }
 
-    .main-wrapper {
-      flex: 1;
-      height: 100vh;
-      overflow-y: auto;
-      padding: 30px 40px;
-      background: #fdfdfd;
-      min-width: 0;
+        .main-wrapper {
+            flex: 1;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 30px 40px;
+            background: #fdfdfd;
+            min-width: 0;
+        }
     }
 
     /* ========== PROFESSIONAL MOBILE FRAMEWORK (ISOLATED) ========== */
