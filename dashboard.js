@@ -146,17 +146,14 @@ function renderTable(data) {
     const tbody = document.querySelector("#submissionTable tbody");
     if (!tbody) return;
     tbody.innerHTML = '';
-    
-    const profileIcon = `<svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
-    const docxIcon = `<svg viewBox="0 0 24 24" width="16" height="16"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>`;
 
     data.forEach((item, index) => {
         const tr = document.createElement("tr");
 
-        let memberOptions = `<option value="">Unassigned</option>` + membersData.map(m => {
-            let mName = ((m.first_name || '') + ' ' + (m.last_name || '')).trim();
-            if (!mName || mName.includes('undefined')) mName = 'Unknown Member';
-            return `<option value="${m.id}" ${String(item.assigned_solicitor_id) === String(m.id) ? 'selected' : ''}>${mName}</option>`;
+        let compOptions = `<option value="">Unassigned</option>` + companiesData.map(c => {
+            let cName = c.name || c.company_name || 'Unnamed Company';
+            if (cName.includes('undefined')) cName = 'Unnamed Company';
+            return `<option value="${c.id}" ${String(item.assigned_company_id) === String(c.id) ? 'selected' : ''}>${cName}</option>`;
         }).join('');
 
         const statusSelectTheme = getStatusColor(item.leadStatus || 'New Lead');
@@ -166,15 +163,25 @@ function renderTable(data) {
             <td><strong>${item.name || item.first_name || "---"}</strong></td>
             <td>${item.phone || item.mobile_number || "---"}</td>
             <td>${item.timestamp ? new Date(item.timestamp).toLocaleDateString() : '---'}</td>
-            <td><select class="modern-select" style="padding: 6px 30px 6px 12px; font-size: 13px; width:180px; text-overflow: ellipsis; white-space: nowrap;" onchange="window.handleFieldUpdate('${item.id}', 'assigned_solicitor_id', this.value)">${memberOptions}</select></td>
+            <td><select class="modern-select" style="padding: 6px 30px 6px 12px; font-size: 13px; width:180px; text-overflow: ellipsis; white-space: nowrap;" onchange="window.handleFieldUpdate('${item.id}', 'assigned_company_id', this.value)">${compOptions}</select></td>
             <td>
                 <select class="status-badge" data-color="${statusSelectTheme}" onchange="window.handleFieldUpdate('${item.id}', 'leadStatus', this.value); this.setAttribute('data-color', getStatusColor(this.value));">
                     ${leadStatuses.map(s => `<option value="${s}" ${item.leadStatus === s ? 'selected' : ''}>${s}</option>`).join('')}
                 </select>
             </td>
             <td style="display:flex; gap:8px;">
-                <button class="icon-btn" onclick="window.openEditModal('${item.id}')" title="Intelligence Profile & Notes">${profileIcon}</button>
-                <button class="icon-btn" onclick="window.exportDocx('${item.id}')" title="Download Word Doc">${docxIcon}</button>
+                <button class="btn-outline btn-small" onclick="window.openViewModal('${item.id}')" title="View Profile">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="margin-right:4px;"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg> View
+                </button>
+                <button class="btn-outline btn-small" onclick="window.openEditLeadModal('${item.id}')" title="Edit Data">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="margin-right:4px;"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg> Edit
+                </button>
+                <button class="btn-outline btn-small" onclick="window.openNotesModal('${item.id}')" title="Internal Notes">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="margin-right:4px;"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg> Notes
+                </button>
+                <button class="btn-outline btn-small" onclick="window.exportDocx('${item.id}')" title="Download Word Doc">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="margin-right:4px;"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg> Download
+                </button>
             </td>`;
         tbody.appendChild(tr);
     });
@@ -384,13 +391,12 @@ window.deleteMember = async function(id) {
 };
 
 // --- LEADS EDIT & NOTES logic ---
-window.openEditModal = function(id) {
+window.openViewModal = function(id) {
     const s = submissionsData.find(x => String(x.id) === String(id));
     if(!s) return;
     
-    // Process all captured data into readable read-only fields
     let dataHtml = '';
-    const ignoreKeys = ['id', 'created_at', 'notes', 'leadStatus', 'assignedCompany', 'assignedSolicitor'];
+    const ignoreKeys = ['id', 'created_at', 'notes', 'leadStatus', 'assigned_company_id', 'assigned_solicitor_id'];
     Object.keys(s).forEach(key => {
         if(ignoreKeys.includes(key)) return;
         if(typeof s[key] === 'object' && s[key] !== null) {
@@ -400,15 +406,61 @@ window.openEditModal = function(id) {
         }
     });
 
-    // Parse notes logic securely
+    document.getElementById('modalBox').innerHTML = `
+        <div class="modal-header"><h2>Lead Profile: ${s.name || s.first_name || 'Client'}</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>
+        <div style="column-count: 2; column-gap: 32px;">
+            ${dataHtml}
+        </div>
+    `;
+    document.getElementById('modalOverlay').style.display = 'flex';
+};
+
+window.openEditLeadModal = function(id) {
+    const s = submissionsData.find(x => String(x.id) === String(id));
+    if(!s) return;
+
+    // Filter basic editable fields
+    const editableFields = ['name', 'first_name', 'last_name', 'phone', 'mobile_number', 'email', 'address', 'postcode'];
+    let html = '<div class="form-grid" id="editLeadForm">';
+    
+    Object.keys(s).filter(k => editableFields.includes(k)).forEach(k => {
+        html += `<div class="form-group"><label>${k.replace(/_/g, ' ')}</label>
+                 <input type="text" class="modern-input edit-inp" data-field="${k}" value="${s[k] || ''}"></div>`;
+    });
+    
+    html += `</div>
+             <div style="margin-top:24px; display:flex; justify-content:flex-end; gap:10px;">
+                <button class="btn-outline" style="padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:600;" onclick="document.getElementById('modalOverlay').style.display='none'">Cancel</button>
+                <button class="btn-action" onclick="window.saveLeadEdits('${s.id}')">Save Changes</button>
+             </div>`;
+
+    document.getElementById('modalBox').innerHTML = `<div class="modal-header"><h2>Edit Basic Details</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>${html}`;
+    document.getElementById('modalOverlay').style.display = 'flex';
+};
+
+window.saveLeadEdits = async function(id) {
+    const inputs = document.querySelectorAll('#editLeadForm .edit-inp');
+    const updates = { id };
+    inputs.forEach(inp => updates[inp.getAttribute('data-field')] = inp.value);
+
+    try {
+        await fetch('/api/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updates) });
+        const lead = submissionsData.find(s => String(s.id) === String(id));
+        if (lead) Object.assign(lead, updates);
+        document.getElementById('modalOverlay').style.display='none';
+        renderFilteredLeads();
+    } catch(e) { console.error("Save Error", e); }
+};
+
+window.openNotesModal = function(id) {
+    const s = submissionsData.find(x => String(x.id) === String(id));
+    if(!s) return;
+
     let notesArray = [];
     if(s.notes) {
         if(Array.isArray(s.notes)) notesArray = s.notes;
-        else if(typeof s.notes === 'string') {
-            try { notesArray = JSON.parse(s.notes); } catch(e) { notesArray = [{ note: s.notes, date: new Date().toISOString() }]; }
-        } else if(typeof s.notes === 'object') {
-            notesArray = [s.notes];
-        }
+        else if(typeof s.notes === 'string') { try { notesArray = JSON.parse(s.notes); } catch(e) { notesArray = [{ note: s.notes, date: new Date().toISOString() }]; } }
+        else if(typeof s.notes === 'object') { notesArray = [s.notes]; }
     }
     if(!Array.isArray(notesArray)) notesArray = [];
     
@@ -418,27 +470,17 @@ window.openEditModal = function(id) {
             <div style="font-size:13px; color:#111827; white-space:pre-wrap;">${n.note || JSON.stringify(n)}</div>
         </div>
     `).join('');
-    if(notesArray.length === 0) notesHtml = `<div style="font-size:13px; color:#9CA3AF; font-style:italic;">No notes have been added yet.</div>`;
+    if(notesArray.length === 0) notesHtml = `<div style="font-size:13px; color:#9CA3AF; font-style:italic; padding:20px; text-align:center;">No internal notes yet.</div>`;
 
     document.getElementById('modalBox').innerHTML = `
-        <div class="modal-header"><h2>Lead Intelligence Profile: ${s.name || s.first_name || 'Client'}</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>
-        <div style="display:flex; gap:32px; flex-wrap:wrap;">
-            <!-- Left Side Data -->
-            <div style="flex:1; min-width:280px;">
-                <h3 style="font-size:14px; font-weight:700; color:#374151; margin-bottom:16px; border-bottom:2px solid #E5E7EB; padding-bottom:8px;">Capture Data</h3>
-                ${dataHtml}
+        <div class="modal-header"><h2>Internal Notes: ${s.name || s.first_name || 'Client'}</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>
+        <div style="display:flex; flex-direction:column; gap:16px;">
+            <div style="max-height: 350px; overflow-y:auto; background:#FFF; border:1px solid #E2E8F0; padding:16px; border-radius:8px;">
+                ${notesHtml}
             </div>
-            
-            <!-- Right Side Notes -->
-            <div style="flex:1.5; min-width:300px;">
-                <h3 style="font-size:14px; font-weight:700; color:#374151; margin-bottom:16px; border-bottom:2px solid #E5E7EB; padding-bottom:8px;">Internal Notes</h3>
-                <div style="max-height: 250px; overflow-y:auto; margin-bottom:16px; background:#FFF; border:1px solid #E5E7EB; padding:12px; border-radius:8px;">
-                    ${notesHtml}
-                </div>
-                <div>
-                    <textarea id="newNoteEditor" placeholder="Type a new internal note..." style="width:100%; height:80px; padding:12px; border-radius:8px; border:1px solid #E5E7EB; outline:none; font-family:inherit; resize:vertical;"></textarea>
-                    <button class="btn-action" style="margin-top:12px;" onclick="window.saveNewNote('${s.id}')">Add Note</button>
-                </div>
+            <div>
+                <textarea id="newNoteEditor" placeholder="Type a new internal note..." style="width:100%; height:100px; padding:12px; border-radius:8px; border:1px solid #E2E8F0; outline:none; font-family:inherit; resize:vertical; background:#F8FAFC;"></textarea>
+                <button class="btn-action" style="margin-top:12px; width:100%; justify-content:center;" onclick="window.saveNewNote('${s.id}')">Add Note</button>
             </div>
         </div>
     `;
@@ -461,7 +503,7 @@ window.saveNewNote = async function(id) {
     
     const originalNotes = s.notes;
     s.notes = JSON.stringify(notesArray); // Fallback until db commits
-    window.openEditModal(id); // visually update immediately
+    window.openNotesModal(id); // visually update immediately
     
     try {
         await fetch('/api/update', {

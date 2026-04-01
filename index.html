@@ -1,134 +1,636 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Housing Disrepair - Admin</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-        
+
         :root {
-            --primary: #0EA5E9; /* Modern light blue */
+            --primary: #0EA5E9;
+            /* Modern light blue */
             --primary-hover: #0284C7;
             --success: #10B981;
             --danger: #EF4444;
-            --bg: #F8FAFC; /* Light gray background */
-            --surface: #FFFFFF; /* White cards */
+            --bg: #F8FAFC;
+            /* Light gray background */
+            --surface: #FFFFFF;
+            /* White cards */
             --border: #E2E8F0;
             --text-main: #0F172A;
             --text-muted: #64748B;
             --sidebar-bg: #FFFFFF;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background-color: var(--bg); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
 
         /* Sleek Light Sidebar */
-        #sidebar { width: 260px; background: var(--sidebar-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; transition: 0.3s; z-index: 50; }
-        .sidebar-header { padding: 24px; border-bottom: 1px solid var(--border); }
-        .logo-box { font-size: 22px; font-weight: 800; color: #0EA5E9; letter-spacing: -0.5px; display: flex; align-items: center; gap: 8px; }
-        .nav-items { flex: 1; padding: 16px 12px; }
-        .nav-item { padding: 12px 16px; margin-bottom: 4px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 12px; font-weight: 500; font-size: 14px; color: var(--text-muted); transition: all 0.2s; }
-        .nav-item:hover { background: #F1F5F9; color: var(--text-main); }
-        .nav-item.active { background: #E0F2FE; color: var(--primary); font-weight: 600; }
-        .nav-item svg { width: 20px; height: 20px; fill: currentColor; }
+        #sidebar {
+            width: 260px;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            transition: 0.3s;
+            z-index: 50;
+        }
 
-        #main-content { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow-y: auto; position: relative; }
-        .view-container { display: none; padding: 40px; animation: fadeIn 0.3s ease; max-width: 1400px; margin: 0 auto; width: 100%; }
-        .view-container.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .sidebar-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border);
+        }
 
-        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
-        .page-header h1 { font-size: 28px; font-weight: 700; color: var(--text-main); letter-spacing: -0.5px; }
+        .logo-box {
+            font-size: 22px;
+            font-weight: 800;
+            color: #0EA5E9;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-items {
+            flex: 1;
+            padding: 16px 12px;
+        }
+
+        .nav-item {
+            padding: 12px 16px;
+            margin-bottom: 4px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+            font-size: 14px;
+            color: var(--text-muted);
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover {
+            background: #F1F5F9;
+            color: var(--text-main);
+        }
+
+        .nav-item.active {
+            background: #E0F2FE;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .nav-item svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        #main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .view-container {
+            display: none;
+            padding: 40px;
+            animation: fadeIn 0.3s ease;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .view-container.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-main);
+            letter-spacing: -0.5px;
+        }
 
         /* Dashboard specific */
-        .dashboard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 32px; }
-        .dashboard-card { background: var(--surface); border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid var(--border); display: flex; flex-direction: column; }
-        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-        .card-title { font-size: 15px; font-weight: 600; color: var(--text-main); }
-        .card-icon { width: 20px; height: 20px; color: var(--text-muted); }
-        .circle-chart-wrapper { position: relative; width: 140px; height: 140px; margin: 0 auto; }
-        .circle-inner-text { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .circle-value { font-size: 28px; font-weight: 800; color: var(--text-main); line-height: 1; }
-        .circle-label { font-size: 12px; color: var(--text-muted); font-weight: 500; margin-top: 4px; }
-        .bar-chart-container { height: 200px; width: 100%; position: relative; }
-        .card-footer { margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border); text-align: center; }
-        .card-footer-val { font-size: 24px; font-weight: 700; color: var(--text-main); }
-        .card-footer-label { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .dashboard-card {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .card-icon {
+            width: 20px;
+            height: 20px;
+            color: var(--text-muted);
+        }
+
+        .circle-chart-wrapper {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            margin: 0 auto;
+        }
+
+        .circle-inner-text {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .circle-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--text-main);
+            line-height: 1;
+        }
+
+        .circle-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-top: 4px;
+        }
+
+        .bar-chart-container {
+            height: 200px;
+            width: 100%;
+            position: relative;
+        }
+
+        .card-footer {
+            margin-top: auto;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .card-footer-val {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .card-footer-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
 
         /* Filters & Controls */
-        .controls-bar { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; background: white; padding: 16px; border-radius: 12px; border: 1px solid var(--border); align-items: center; }
-        .modern-input, .modern-select { padding: 10px 16px; border-radius: 8px; border: 1px solid var(--border); font-size: 14px; outline: none; background: #FFF; color: var(--text-main); font-family: inherit; transition: all 0.2s; }
-        .modern-input:focus, .modern-select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15); }
-        .search-input { flex: 1; min-width: 250px; padding: 10px 16px; border-radius: 8px; border: 1px solid #E2E8F0; font-size: 14px; outline: none; background: #FFF; color: #334155; }
-        .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15); }
-        
-        .btn-action { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 2px 4px rgba(14, 165, 233, 0.2); }
-        .btn-action:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 4px 6px rgba(14, 165, 233, 0.3); }
-        .btn-outline { background: white; border: 1px solid var(--border); color: #334155; }
-        .btn-outline:hover { background: #F8FAFC; border-color: #CBD5E1; color: #0F172A; transform: none; box-shadow: none; }
-        .btn-small { padding: 6px 16px; font-size: 13px; font-weight: 600; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
-        .btn-small.danger { color: #DC2626; border-color: #FECACA; background: #FEF2F2; }
-        .btn-small.danger:hover { background: #FEE2E2; }
-        .btn-small svg { margin-right: 6px; }
+        .controls-bar {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            align-items: center;
+        }
 
-        .panel { background: white; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 24px; }
-        .panel-header { padding: 20px 24px; border-bottom: 1px solid #F1F5F9; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .modern-input,
+        .modern-select {
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            font-size: 14px;
+            outline: none;
+            background: #FFF;
+            color: var(--text-main);
+            font-family: inherit;
+            transition: all 0.2s;
+        }
 
-        .table-responsive { overflow-x: auto; width: 100%; border-radius: 12px; }
-        table { width: 100%; border-collapse: separate; border-spacing: 0; white-space: nowrap; }
-        th { text-align: left; padding: 16px 24px; color: #64748B; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); background: #F8FAFC; margin-bottom: 10px; }
-        td { padding: 18px 24px; border-bottom: 1px solid #F1F5F9; font-size: 14px; color: #1E293B; font-weight: 500; }
-        tr:last-child td { border-bottom: none; }
-        tr:hover td { background: #F8FAFC; }
+        .modern-input:focus,
+        .modern-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+        }
 
-        .status-badge { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; border: none; cursor: pointer; outline: none; letter-spacing: 0.2px; text-transform: uppercase; }
-        select.status-badge { padding-right: 28px; background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 10px center; background-size: 10px; appearance: none; -webkit-appearance: none; }
+        .search-input {
+            flex: 1;
+            min-width: 250px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: 1px solid #E2E8F0;
+            font-size: 14px;
+            outline: none;
+            background: #FFF;
+            color: #334155;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+        }
+
+        .btn-action {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 4px rgba(14, 165, 233, 0.2);
+        }
+
+        .btn-action:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(14, 165, 233, 0.3);
+        }
+
+        .btn-outline {
+            background: white;
+            border: 1px solid var(--border);
+            color: #334155;
+        }
+
+        .btn-outline:hover {
+            background: #F8FAFC;
+            border-color: #CBD5E1;
+            color: #0F172A;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-small {
+            padding: 6px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-small.danger {
+            color: #DC2626;
+            border-color: #FECACA;
+            background: #FEF2F2;
+        }
+
+        .btn-small.danger:hover {
+            background: #FEE2E2;
+        }
+
+        .btn-small svg {
+            margin-right: 6px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        .panel-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #F1F5F9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            width: 100%;
+            border-radius: 12px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            white-space: nowrap;
+        }
+
+        th {
+            text-align: left;
+            padding: 16px 24px;
+            color: #64748B;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
+            background: #F8FAFC;
+            margin-bottom: 10px;
+        }
+
+        td {
+            padding: 18px 24px;
+            border-bottom: 1px solid #F1F5F9;
+            font-size: 14px;
+            color: #1E293B;
+            font-weight: 500;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: #F8FAFC;
+        }
+
+        .status-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            outline: none;
+            letter-spacing: 0.2px;
+            text-transform: uppercase;
+        }
+
+        select.status-badge {
+            padding-right: 28px;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 10px;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+
         /* Same colors */
-        .status-badge[data-color="new"] { background-color: #E0F2FE; color: #0284C7; border: 1px solid #bae6fd; }
-        .status-badge[data-color="warning"] { background-color: #FEF3C7; color: #D97706; border: 1px solid #fde68a; }
-        .status-badge[data-color="success"] { background-color: #D1FAE5; color: #059669; border: 1px solid #a7f3d0; }
-        .status-badge[data-color="danger"] { background-color: #FEE2E2; color: #DC2626; border: 1px solid #fecaca; }
-        .status-badge[data-color="purple"] { background-color: #F3E8FF; color: #9333EA; border: 1px solid #e9d5ff; }
-        .status-badge[data-color="gray"] { background-color: #F1F5F9; color: #475569; border: 1px solid #cbd5e1; }
+        .status-badge[data-color="new"] {
+            background-color: #E0F2FE;
+            color: #0284C7;
+            border: 1px solid #bae6fd;
+        }
 
-        .icon-btn { background: #FFF; border: 1px solid var(--border); cursor: pointer; width: 32px; height: 32px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; color: var(--text-muted); transition: all 0.2s; }
-        .icon-btn:hover { background: #F8FAFC; color: var(--primary); border-color: var(--primary); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .icon-btn svg { width: 16px; height: 16px; fill: currentColor; }
+        .status-badge[data-color="warning"] {
+            background-color: #FEF3C7;
+            color: #D97706;
+            border: 1px solid #fde68a;
+        }
+
+        .status-badge[data-color="success"] {
+            background-color: #D1FAE5;
+            color: #059669;
+            border: 1px solid #a7f3d0;
+        }
+
+        .status-badge[data-color="danger"] {
+            background-color: #FEE2E2;
+            color: #DC2626;
+            border: 1px solid #fecaca;
+        }
+
+        .status-badge[data-color="purple"] {
+            background-color: #F3E8FF;
+            color: #9333EA;
+            border: 1px solid #e9d5ff;
+        }
+
+        .status-badge[data-color="gray"] {
+            background-color: #F1F5F9;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+        }
+
+        .icon-btn {
+            background: #FFF;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            transition: all 0.2s;
+        }
+
+        .icon-btn:hover {
+            background: #F8FAFC;
+            color: var(--primary);
+            border-color: var(--primary);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .icon-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
 
         /* Modals */
-        #modalOverlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
-        #modalBox { background: white; width: 100%; max-width: 800px; border-radius: 12px; padding: 32px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); max-height: 90vh; overflow-y: auto; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
-        .modal-header h2 { font-size: 20px; font-weight: 700; color: #0F172A; }
-        .close-btn { background: #F1F5F9; border: none; width: 32px; height: 32px; border-radius: 16px; font-size: 20px; line-height: 1; display:flex; align-items:center; justify-content:center; cursor: pointer; color: #64748B; transition: 0.2s; }
-        .close-btn:hover { background: #FEE2E2; color: #DC2626; }
-        
-        .form-grid { display: grid; gap: 24px; grid-template-columns: 1fr 1fr; }
-        .form-group { display: flex; flex-direction: column; gap: 8px; }
-        .form-group.full { grid-column: span 2; }
-        .form-group label { font-size: 12px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; }
-        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid #E2E8F0; font-size: 14px; outline: none; background: #FFF; transition: border-color 0.2s; }
-        .form-group input:focus, .form-group select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15); }
+        #modalOverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        #modalBox {
+            background: white;
+            width: 100%;
+            max-width: 800px;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-header h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #0F172A;
+        }
+
+        .close-btn {
+            background: #F1F5F9;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 16px;
+            font-size: 20px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #64748B;
+            transition: 0.2s;
+        }
+
+        .close-btn:hover {
+            background: #FEE2E2;
+            color: #DC2626;
+        }
+
+        .form-grid {
+            display: grid;
+            gap: 24px;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group.full {
+            grid-column: span 2;
+        }
+
+        .form-group label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid #E2E8F0;
+            font-size: 14px;
+            outline: none;
+            background: #FFF;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+        }
     </style>
 </head>
+
 <body onload="initDashboard()">
-    
+
     <div id="sidebar">
         <div class="sidebar-header">
             <div class="logo-box">HDR CRM</div>
         </div>
         <div class="nav-items" style="margin-top:10px;">
             <div class="nav-item active" onclick="switchView('dashboard')">
-                <svg viewBox="0 0 24 24"><path d="M4 13h6v8H4v-8zm0-9h6v6H4V4zm8 11h8v6h-8v-6zm0-11h8v9h-8V4z"/></svg> Dashboard
+                <svg viewBox="0 0 24 24">
+                    <path d="M4 13h6v8H4v-8zm0-9h6v6H4V4zm8 11h8v6h-8v-6zm0-11h8v9h-8V4z" />
+                </svg> Dashboard
             </div>
             <div class="nav-item" onclick="switchView('companies')">
-                <svg viewBox="0 0 24 24"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg> Company
+                <svg viewBox="0 0 24 24">
+                    <path
+                        d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z" />
+                </svg> Company
             </div>
             <div class="nav-item" onclick="switchView('leads')">
-                <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg> Leads Management
+                <svg viewBox="0 0 24 24">
+                    <path
+                        d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
+                </svg> Leads Management
             </div>
         </div>
     </div>
@@ -161,7 +663,7 @@
                         <canvas id="leadsFlowChart"></canvas>
                     </div>
                 </div>
-                
+
                 <div class="dashboard-card" style="grid-column: span 1;">
                     <div class="card-header"><span class="card-title">Stage Distribution</span></div>
                     <div class="circle-chart-wrapper">
@@ -176,18 +678,23 @@
                         <div class="card-footer-label">Rejected / Dead Leads</div>
                     </div>
                 </div>
-                
+
                 <div class="dashboard-card" style="grid-column: span 2;">
                     <div class="card-header"><span class="card-title">Company / Solicitor Metrics</span></div>
-                    <div class="bar-chart-container" style="display:flex; gap:50px; align-items:center; justify-content:center;">
+                    <div class="bar-chart-container"
+                        style="display:flex; gap:50px; align-items:center; justify-content:center;">
                         <div style="text-align:center;">
-                            <div style="font-size:56px; font-weight:800; color:var(--primary); letter-spacing:-2px;" id="dashboardActive">0</div>
-                            <div style="font-size:15px; color:#64748B; font-weight:600; margin-top:8px;">Registered Firms</div>
+                            <div style="font-size:56px; font-weight:800; color:var(--primary); letter-spacing:-2px;"
+                                id="dashboardActive">0</div>
+                            <div style="font-size:15px; color:#64748B; font-weight:600; margin-top:8px;">Registered
+                                Firms</div>
                         </div>
                         <div style="height:100px; width:1px; background:#E2E8F0;"></div>
                         <div style="text-align:center;">
-                            <div style="font-size:56px; font-weight:800; color:var(--success); letter-spacing:-2px;" id="dashboardSolicitorsCount">0</div>
-                            <div style="font-size:15px; color:#64748B; font-weight:600; margin-top:8px;">Active Solicitors</div>
+                            <div style="font-size:56px; font-weight:800; color:var(--success); letter-spacing:-2px;"
+                                id="dashboardSolicitorsCount">0</div>
+                            <div style="font-size:15px; color:#64748B; font-weight:600; margin-top:8px;">Active
+                                Solicitors</div>
                         </div>
                     </div>
                 </div>
@@ -199,14 +706,25 @@
             <div class="page-header">
                 <h1>Company</h1>
                 <button class="btn-action" onclick="window.openAddCompanyModal()">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Add Firm
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                    </svg> Add Firm
                 </button>
             </div>
-            
+
             <div class="panel">
                 <div class="table-responsive">
                     <table id="companyTable">
-                        <thead><tr><th>Company Name</th><th>Type</th><th>Main Contact</th><th>Email</th><th>Phone</th><th>Actions</th></tr></thead>
+                        <thead>
+                            <tr>
+                                <th>Company Name</th>
+                                <th>Type</th>
+                                <th>Main Contact</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
                         <tbody></tbody>
                     </table>
                 </div>
@@ -215,12 +733,21 @@
             <div id="companyMembersSection" style="display:none;">
                 <div class="page-header" style="margin-top:20px;">
                     <h2 id="membersSectionTitle" style="font-size:18px; font-weight:600;">Solicitors for [Company]</h2>
-                    <button class="btn-action btn-outline" style="color:var(--primary); border-color:var(--primary);" onclick="window.openAddMemberModal()">+ Add Solicitor</button>
+                    <button class="btn-action btn-outline" style="color:var(--primary); border-color:var(--primary);"
+                        onclick="window.openAddMemberModal()">+ Add Solicitor</button>
                 </div>
                 <div class="panel">
                     <div class="table-responsive">
                         <table id="membersTable">
-                            <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Actions</th></tr></thead>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Role</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
                             <tbody></tbody>
                         </table>
                     </div>
@@ -232,25 +759,37 @@
         <div id="leadsView" class="view-container">
             <div class="page-header">
                 <h1>Lead Management</h1>
-                <button class="btn-action" style="background:var(--success);" onclick="window.exportExcel()">Download CSV / Excel</button>
+                <button class="btn-action" style="background:var(--success);" onclick="window.exportExcel()">Download
+                    CSV / Excel</button>
             </div>
-            
+
             <div class="panel">
                 <div class="panel-header">
                     <div style="display:flex; gap:10px; flex:1;">
-                        <input type="text" id="searchLead" class="search-input" placeholder="Search name, phone, email..." onkeyup="window.renderFilteredLeads()">
+                        <input type="text" id="searchLead" class="search-input"
+                            placeholder="Search name, phone, email..." onkeyup="window.renderFilteredLeads()">
                         <select id="filterStatus" class="modern-select" onchange="window.renderFilteredLeads()">
                             <option value="All">All Statuses</option>
                         </select>
                         <select id="filterCompany" class="modern-select" onchange="window.renderFilteredLeads()">
-                            <option value="All">All Solicitors</option>
+                            <option value="All">All Companies</option>
                         </select>
                     </div>
                 </div>
 
                 <div class="table-responsive">
                     <table id="submissionTable">
-                        <thead><tr><th>#</th><th>Client Name</th><th>Phone</th><th>Date</th><th>Assigned Solicitor</th><th>Status</th><th>Actions</th></tr></thead>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Client Name</th>
+                                <th>Phone</th>
+                                <th>Date</th>
+                                <th>Assigned Company</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
                         <tbody></tbody>
                     </table>
                 </div>
@@ -259,8 +798,11 @@
     </div>
 
     <!-- Universal Modal -->
-    <div id="modalOverlay"><div id="modalBox"></div></div>
+    <div id="modalOverlay">
+        <div id="modalBox"></div>
+    </div>
 
     <script src="dashboard.js"></script>
 </body>
+
 </html>
