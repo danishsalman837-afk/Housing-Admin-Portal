@@ -180,10 +180,15 @@ function renderTable(data) {
                 </select>
             </td>
             <td>
-                <div style="display: flex; gap: 8px;">
-                    <button class="btn-icon" onclick="window.openViewModal('${buttonId}')" title="View Profile">👁️</button>
-                    <button class="btn-icon" onclick="window.openNotesModal('${buttonId}')" title="Activity Log">📝</button>
-                    <button class="btn-icon" onclick="window.downloadLead('${buttonId}')" title="Download Document">📄</button>
+                <div class="action-btn-group">
+                    <button class="btn-action" onclick="window.openViewModal('${buttonId}')">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        View Profile
+                    </button>
+                    <button class="btn-action" onclick="window.openNotesModal('${buttonId}')">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        Activity Log
+                    </button>
                 </div>
             </td>
         `;
