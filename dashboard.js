@@ -5,7 +5,7 @@ let charts = {};
 // SECURITY CORE: Initialize Supabase Client
 const supabaseUrl = "PASTE_YOUR_SUPABASE_URL_HERE";
 const supabaseKey = "PASTE_YOUR_ANON_KEY_HERE";
-const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+window.supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 const leadStatuses = [
   'New Lead', 'Transferred', 'Accepted', 'Rejected', 
@@ -90,7 +90,6 @@ function calculateDashboardStats() {
     // Update Trend UI in Dashboard Cards
     const trendContainers = document.querySelectorAll('.stat-card .trend');
     if (trendContainers[0]) trendContainers[0].innerHTML = leadTrendHtml;
-    // (You can add more specific trend logic for conversion/rejection if desired)
 
     initCharts(submissionsData);
 }
@@ -102,12 +101,9 @@ function initCharts(data) {
 
     if (!ctxFlow || !ctxStatus) return;
 
-    // Cleanup existing charts if they exist
     if (charts.flow) charts.flow.destroy();
     if (charts.status) charts.status.destroy();
 
-    // 1. Line Chart: Lead Flow (Simulated/Calculated by Month from timestamps)
-    // We'll group by month name
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const flowData = new Array(12).fill(0);
     
@@ -144,7 +140,6 @@ function initCharts(data) {
         }
     });
 
-    // 2. Donut Chart: Status Distribution
     const statusCounts = leadStatuses.map(status => data.filter(s => s.leadStatus === status).length);
     
     charts.status = new Chart(ctxStatus, {
@@ -230,12 +225,6 @@ function renderTable(data) {
     });
 }
 
-// ======== FILTERS ========
-
-const filterSolicitor = document.getElementById('filterSolicitor');
-const filterStatus = document.getElementById('filterStatus');
-const searchInput = document.getElementById('searchInput');
-
 function populateFilters() {
     if (filterStatus) {
         filterStatus.innerHTML = '<option value="">Filter by Status...</option>';
@@ -270,12 +259,16 @@ function applyFilters() {
             } else if (item.solicitorName !== solVal) {
                 return false;
             }
-            if (statVal && (item.leadStatus || 'New Lead') !== statVal) return false;
         }
+        if (statVal && (item.leadStatus || 'New Lead') !== statVal) return false;
         return true;
     });
     renderTable(filtered);
 }
+
+const filterSolicitor = document.getElementById('filterSolicitor');
+const filterStatus = document.getElementById('filterStatus');
+const searchInput = document.getElementById('searchInput');
 
 if (searchInput) searchInput.addEventListener('input', applyFilters);
 if (filterSolicitor) {
@@ -294,11 +287,8 @@ window.clearAllFilters = function() {
     applyFilters();
 };
 
-// ======== DATABASE UPDATES ========
-
 window.handleStatusUpdate = async function(id, el) {
     const newStatus = el.value;
-    // Update color class instantly
     el.className = `status-select ${getStatusClass(newStatus)}`;
     try {
         const res = await fetch('/api/update', {
@@ -311,12 +301,9 @@ window.handleStatusUpdate = async function(id, el) {
             if (item) item.leadStatus = newStatus;
             calculateDashboardStats();
         }
-    } catch (e) {
-        console.error(e);
-    }
+    } catch (e) { console.error(e); }
 };
 
-// Re-implementing View Modal Logic
 window.openViewModal = function(id) {
     const item = submissionsData.find(s => String(s.id) === String(id));
     if (!item) return;
@@ -332,7 +319,6 @@ window.openViewModal = function(id) {
         'arrears', 'arrearsAmount', 'additionalNotes', 'solicitorName', 'leadStatus', 'source'
     ];
     
-    // Use the universal 'shouldShow' logic to kill legacy fields
     const otherKeys = Object.keys(item).filter(k => !mainKeys.includes(k) && shouldShow(k));
     
     [...mainKeys, ...otherKeys].forEach(key => {
@@ -356,14 +342,11 @@ window.openViewModal = function(id) {
     document.getElementById('modalOverlay').style.display = 'flex';
 };
 
-// Edit Full Lead Details Modal (Dynamic for all Questions)
 window.openEditModal = function(id) {
     const item = submissionsData.find(s => String(s.id) === String(id));
     if (!item) return;
 
     let formHtml = '';
-    
-    // Use the universal 'shouldShow' logic to kill legacy fields
     const priority = [
         'name', 'phone', 'email', 'postcode', 'address',
         'tenantType', 'livingDuration', 
@@ -406,10 +389,7 @@ window.openEditModal = function(id) {
 window.saveEdit = async function(id) {
     const payload = { id };
     const inputs = document.querySelectorAll('.edit-input');
-    
-    inputs.forEach(input => {
-        payload[input.dataset.key] = input.value;
-    });
+    inputs.forEach(input => { payload[input.dataset.key] = input.value; });
 
     try {
         const res = await fetch('/api/update', {
@@ -420,9 +400,7 @@ window.saveEdit = async function(id) {
         if (res.ok) {
             const item = submissionsData.find(s => String(s.id) === String(id));
             if (item) {
-                Object.keys(payload).forEach(k => {
-                    if (k !== 'id') item[k] = payload[k];
-                });
+                Object.keys(payload).forEach(k => { if (k !== 'id') item[k] = payload[k]; });
             }
             document.getElementById('modalOverlay').style.display = 'none';
             applyFilters(); 
@@ -431,7 +409,6 @@ window.saveEdit = async function(id) {
     } catch (e) { console.error(e); }
 };
 
-// Activity Log / Notes Modal
 window.openNotesModal = function(id) {
     const item = submissionsData.find(s => String(s.id) === String(id));
     if (!item) return;
@@ -460,7 +437,6 @@ window.openNotesModal = function(id) {
 window.saveNote = async function(id) {
     const text = document.getElementById('newNote').value.trim();
     if (!text) return;
-    
     const item = submissionsData.find(s => String(s.id) === String(id));
     const notes = Array.isArray(item.notes) ? [...item.notes] : [];
     notes.unshift({ text, time: new Date().toLocaleString('en-GB') });
@@ -478,7 +454,6 @@ window.saveNote = async function(id) {
     } catch (e) { console.error(e); }
 };
 
-// Professional .docx Document Engine
 window.downloadLead = function(id) {
     const item = submissionsData.find(s => String(s.id) === String(id));
     if (!item) return;
@@ -501,7 +476,6 @@ window.downloadLead = function(id) {
         })
     ];
 
-    // --- Dynamic Q&A Injection (Mirroring Agent Form Order) ---
     const mainKeys = [
         'name', 'phone', 'email', 'postcode', 'address',
         'tenantType', 'livingDuration', 
@@ -517,7 +491,6 @@ window.downloadLead = function(id) {
         if (!item.hasOwnProperty(key)) return;
         const val = item[key] || '---';
         const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
-        
         children.push(new Paragraph({
             children: [
                 new TextRun({ text: `${label}: `, bold: true }),
@@ -527,7 +500,6 @@ window.downloadLead = function(id) {
         }));
     });
 
-    // --- Activity Log Section ---
     if (item.notes && item.notes.length > 0) {
         children.push(new Paragraph({
             text: "ACTIVITY LOG / CASE NOTES",
@@ -546,10 +518,7 @@ window.downloadLead = function(id) {
         });
     }
 
-    const doc = new Document({
-        sections: [{ properties: {}, children }]
-    });
-
+    const doc = new Document({ sections: [{ properties: {}, children }] });
     Packer.toBlob(doc).then(blob => {
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
@@ -559,6 +528,7 @@ window.downloadLead = function(id) {
 };
 
 window.exportData = function() {
+    if (!submissionsData || !submissionsData.length) return;
     const headers = Object.keys(submissionsData[0]).filter(k => k !== 'notes');
     const csv = [headers.join(','), ...submissionsData.map(s => headers.map(h => `"${String(s[h]||'').replace(/"/g,'""')}"`).join(','))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -569,17 +539,19 @@ window.exportData = function() {
 };
 
 window.handleLogout = async function() {
-    await supabase.auth.signOut();
+    if (window.supabaseClient) {
+        await window.supabaseClient.auth.signOut();
+    }
     window.location.href = 'login.html';
 };
 
-// ======== AUTHENTICATED INIT ========
+// ======== AUTHENTICATED INIT WITH REALTIME PRESENCE ========
 (async function init() {
     try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await window.supabaseClient.auth.getSession();
         if (!session) { window.location.href = 'login.html'; return; }
 
-        const channel = supabase.channel('admin-presence', {
+        const channel = window.supabaseClient.channel('admin-presence', {
             config: { presence: { key: session.user.id } }
         });
 
@@ -595,12 +567,11 @@ window.handleLogout = async function() {
 
         const res = await fetch('/api/submissions');
         submissionsData = await res.json();
-        
-        // Populate and Calculate
         populateFilters();
         calculateDashboardStats();
-        
-        // Show default view
         switchView('dashboard');
-    } catch (e) { console.error("Initialization Error:", e); }
+    } catch (e) { 
+        console.warn("Auth Init Error:", e);
+        window.location.href = 'login.html'; 
+    }
 })();
