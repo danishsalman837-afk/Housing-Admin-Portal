@@ -6,13 +6,14 @@ module.exports = async function handler(req, res) {
 
   if (req.method === 'GET') {
     const { company_id } = req.query;
-    if (!company_id) return res.status(400).json({ error: 'Company ID required' });
 
-    const { data, error } = await supabase
-      .from('company_members')
-      .select('*')
-      .eq('company_id', company_id)
-      .order('first_name', { ascending: true });
+    let query = supabase.from('company_members').select('*').order('first_name', { ascending: true });
+    
+    if (company_id) {
+        query = query.eq('company_id', company_id);
+    }
+    
+    const { data, error } = await query;
     
     if (error) return res.status(500).json({ error: error.message });
     return res.status(200).json(data);

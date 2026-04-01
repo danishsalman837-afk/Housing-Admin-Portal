@@ -1,14 +1,24 @@
-// 🚀 Full Admin Dashboard Script
 let submissionsData = [];
 let companiesData = [];
+let membersData = [];
 let charts = {};
+let selectedCompanyId = null;
 
 const leadStatuses = [
     'New Lead', 'Transferred', 'Accepted', 'Rejected',
     'Not Yet Invoiced', 'Invoice Raised', 'Paid', 'Test Lead'
 ];
 
-window.switchView = function (view) {
+function getStatusColor(status) {
+    if (status === 'New Lead') return 'new';
+    if (status === 'Accepted' || status === 'Paid') return 'success';
+    if (status === 'Rejected') return 'danger';
+    if (status === 'Transferred') return 'purple';
+    if (status === 'Invoice Raised' || status === 'Not Yet Invoiced') return 'warning';
+    return 'gray';
+}
+
+window.switchView = function(view) {
     document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     const navItems = document.querySelectorAll('.nav-item');
@@ -30,22 +40,10 @@ window.switchView = function (view) {
 
 function calculateDashboardStats() {
     const total = submissionsData.length;
-    const accepted = submissionsData.filter(s => s.leadStatus === 'Accepted').length;
-    const rejected = submissionsData.filter(s => s.leadStatus === 'Rejected').length;
-
-    if (document.getElementById('dashboardTotal')) {
-        document.getElementById('dashboardTotal').innerText = total;
-    }
-    if (document.getElementById('dashboardConvRate')) {
-        document.getElementById('dashboardConvRate').innerText = total > 0 ? ((accepted / total) * 100).toFixed(1) + '%' : '0%';
-    }
-    if (document.getElementById('dashboardRejected')) {
-        document.getElementById('dashboardRejected').innerText = rejected;
-    }
-    if (document.getElementById('dashboardActive')) {
-        document.getElementById('dashboardActive').innerText = companiesData.length; // Active companies
-    }
-
+    if (document.getElementById('dashboardTotal')) document.getElementById('dashboardTotal').innerText = total;
+    if (document.getElementById('dashboardActive')) document.getElementById('dashboardActive').innerText = companiesData.length;
+    if (document.getElementById('dashboardSolicitorsCount')) document.getElementById('dashboardSolicitorsCount').innerText = membersData.length;
+    
     initCharts(submissionsData);
 }
 
@@ -56,29 +54,25 @@ function initCharts(data) {
     if (charts.flow) charts.flow.destroy();
     if (charts.status) charts.status.destroy();
 
-    // Line chart
     if (ctxFlow) {
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         let monthlyCounts = Array(12).fill(0);
         data.forEach(item => {
-            if (item.timestamp) {
-                const date = new Date(item.timestamp);
-                monthlyCounts[date.getMonth()]++;
-            }
+            if (item.timestamp) { const date = new Date(item.timestamp); if(!isNaN(date)) monthlyCounts[date.getMonth()]++; }
         });
         charts.flow = new Chart(ctxFlow, {
             type: 'line',
-            data: {
-                labels: months,
-                datasets: [{ label: 'Leads per Month', data: monthlyCounts, borderColor: '#2563eb', tension: 0.4 }]
-            },
-            options: { responsive: true, maintainAspectRatio: false }
+            data: { labels: months, datasets: [{ label: 'Leads Received', data: monthlyCounts, borderColor: '#4F46E5', backgroundColor: 'rgba(79, 70, 229, 0.1)', fill: true, tension: 0.4 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
         });
     }
 
-    // Doughnut
     if (ctxStatus) {
-        charts.status = new Chart(ctxStatus, { type: 'doughnut', data: { labels: leadStatuses, datasets: [{ data: leadStatuses.map(s => data.filter(x => x.leadStatus === s).length), backgroundColor: ['#3b82f6', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#6366f1'] }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '70%' } });
+        charts.status = new Chart(ctxStatus, {
+            type: 'doughnut',
+            data: { labels: leadStatuses, datasets: [{ data: leadStatuses.map(s => data.filter(x => x.leadStatus === s).length), backgroundColor: ['#3B82F6', '#6D28D9', '#10B981', '#EF4444', '#F59E0B', '#F59E0B', '#10B981', '#9CA3AF'], borderWidth: 0 }] },
+            options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'right' } } }
+        });
     }
 }
 
@@ -95,195 +89,275 @@ function initFilters() {
     }
 
     if (companySelect && companySelect.options.length <= 1) {
-        companiesData.forEach(c => {
+        membersData.forEach(m => {
             const opt = document.createElement('option');
-            opt.value = c.id; opt.innerText = c.name;
+            opt.value = m.id; opt.innerText = m.name || (m.first_name + ' ' + m.last_name);
             companySelect.appendChild(opt);
         });
     }
 }
 
-window.renderFilteredLeads = function () {
+window.renderFilteredLeads = function() {
     const statusFilter = document.getElementById('filterStatus')?.value || 'All';
     const companyFilter = document.getElementById('filterCompany')?.value || 'All';
+    const searchVal = (document.getElementById('searchLead')?.value || '').toLowerCase();
 
     const filtered = submissionsData.filter(item => {
         let matchStatus = statusFilter === 'All' || item.leadStatus === statusFilter;
         let matchCompany = companyFilter === 'All' || String(item.assigned_company_id || '') === String(companyFilter);
-        return matchStatus && matchCompany;
+        let matchSearch = true;
+        
+        if(searchVal) {
+            const textToSearch = `${item.name||''} ${item.email||''} ${item.phone||''}`.toLowerCase();
+            matchSearch = textToSearch.includes(searchVal);
+        }
+        
+        return matchStatus && matchCompany && matchSearch;
     });
 
     renderTable(filtered);
 };
 
-
 function renderTable(data) {
     const tbody = document.querySelector("#submissionTable tbody");
     if (!tbody) return;
     tbody.innerHTML = '';
+    
+    // SVG icons replace emojis
+    const viewIcon = `<svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>`;
+    const editIcon = `<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`;
+    const docxIcon = `<svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>`;
+
     data.forEach((item, index) => {
         const tr = document.createElement("tr");
 
-        let companyOptions = `<option value="">Unassigned</option>` + companiesData.map(c => `<option value="${c.id}" ${String(item.assigned_company_id) === String(c.id) ? 'selected' : ''}>${c.name}</option>`).join('');
+        let memberOptions = `<option value="">Unassigned</option>` + membersData.map(m => {
+            const mName = m.name || (m.first_name + ' ' + m.last_name);
+            return `<option value="${m.id}" ${String(item.assigned_company_id) === String(m.id) ? 'selected' : ''}>${mName}</option>`;
+        }).join('');
+
+        const statusSelectTheme = getStatusColor(item.leadStatus || 'New Lead');
 
         tr.innerHTML = `
             <td>${index + 1}</td>
             <td><strong>${item.name || "---"}</strong></td>
             <td>${item.phone || "---"}</td>
             <td>${item.timestamp ? new Date(item.timestamp).toLocaleDateString() : '---'}</td>
-            <td><select class="status-select" onchange="window.handleFieldUpdate('${item.id}', 'assigned_company_id', this.value)">${companyOptions}</select></td>
-            <td><select class="status-select" onchange="window.handleFieldUpdate('${item.id}', 'leadStatus', this.value)">${leadStatuses.map(s => `<option value="${s}" ${item.leadStatus === s ? 'selected' : ''}>${s}</option>`).join('')}</select></td>
-            <td style="display:flex; gap:5px;">
-                <button class="btn-action" style="padding:6px 10px;" onclick="window.openViewModal('${item.id}')">👁️</button>
-                <button class="btn-action" style="padding:6px 10px;" onclick="window.openEditModal('${item.id}')">✏️</button>
-                <button class="btn-action" style="padding:6px 10px;" onclick="window.exportDocx('${item.id}')">📄</button>
+            <td><select class="modern-select" style="padding: 6px 12px; font-size: 13px; width: 100%; border-radius:20px;" onchange="window.handleFieldUpdate('${item.id}', 'assigned_company_id', this.value)">${memberOptions}</select></td>
+            <td>
+                <select class="status-badge" data-color="${statusSelectTheme}" onchange="window.handleFieldUpdate('${item.id}', 'leadStatus', this.value); this.setAttribute('data-color', getStatusColor(this.value));">
+                    ${leadStatuses.map(s => `<option value="${s}" ${item.leadStatus === s ? 'selected' : ''}>${s}</option>`).join('')}
+                </select>
+            </td>
+            <td style="display:flex; gap:8px;">
+                <button class="icon-btn" onclick="window.openViewModal('${item.id}')" title="View Details">${viewIcon}</button>
+                <button class="icon-btn" onclick="window.openEditModal('${item.id}')" title="Edit & Notes">${editIcon}</button>
+                <button class="icon-btn" onclick="window.exportDocx('${item.id}')" title="Download Word Doc">${docxIcon}</button>
             </td>`;
         tbody.appendChild(tr);
     });
 }
 
-window.handleFieldUpdate = async function (id, fieldName, value) {
+window.handleFieldUpdate = async function(id, fieldName, value) {
     try {
         const updateParams = { id };
         updateParams[fieldName] = value;
         await fetch('/api/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updateParams) });
-        // Update local state without full refetch
         const lead = submissionsData.find(s => String(s.id) === String(id));
         if (lead) lead[fieldName] = value;
         if(fieldName === 'leadStatus') calculateDashboardStats();
     } catch (e) { console.error(e); }
 };
 
-window.openViewModal = function (id) {
+window.openViewModal = function(id) {
     const item = submissionsData.find(s => String(s.id) === String(id));
     if (!item) return;
-    let html = '<div style="max-height:60vh; overflow-y:auto; padding:10px;">';
+    let html = '<div class="form-grid">';
     Object.keys(item).forEach(k => {
         if (k !== 'id') {
-            html += `<div style="margin-bottom:10px;"><label style="font-size:10px; font-weight:800; color:#64748b; text-transform:uppercase;">${k.replace(/_/g, ' ')}</label><div style="padding:10px; background:#f8fafc; border-radius:8px; white-space:pre-wrap;">${item[k] || '---'}</div></div>`;
+            html += `<div class="form-group ${k === 'notes' ? 'full' : ''}"><label>${k.replace(/_/g, ' ')}</label><div style="padding:12px; background:#F9FAFB; border-radius:8px; border: 1px solid var(--border); font-size: 14px; white-space:pre-wrap;">${item[k] || '---'}</div></div>`;
         }
     });
-    document.getElementById('modalBox').innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;"><h2>View Details</h2><button onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>${html}</div>`;
+    document.getElementById('modalBox').innerHTML = `<div class="modal-header"><h2>View Details</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>${html}</div>`;
     document.getElementById('modalOverlay').style.display = 'flex';
 };
 
-window.openEditModal = function (id) {
+window.openEditModal = function(id) {
     const item = submissionsData.find(s => String(s.id) === String(id));
     if (!item) return;
 
-    let html = '<div style="max-height:60vh; overflow-y:auto; padding:10px;" id="editFormContainer">';
+    let html = '<div class="form-grid" id="editFormContainer">';
     
-    // Allow editing major fields. For brevity, assuming top-level str fields
     ['name', 'phone', 'email', 'leadSource', 'notes'].forEach(k => {
-        // We'll treat notes as a textarea
         if (k === 'notes') {
-            html += `<div style="margin-bottom:10px;"><label style="font-size:10px; font-weight:800; color:#64748b; text-transform:uppercase;">${k}</label>
-                     <textarea class="edit-input" data-field="${k}" rows="5" placeholder="Add timestamped notes here...">${item[k] || ''}</textarea></div>`;
+            html += `<div class="form-group full"><label>${k}</label>
+                     <textarea class="search-input" data-field="${k}" rows="5" placeholder="Add timestamped notes here...">${item[k] || ''}</textarea></div>`;
         } else {
-             html += `<div style="margin-bottom:10px;"><label style="font-size:10px; font-weight:800; color:#64748b; text-transform:uppercase;">${k}</label>
-                     <input type="text" class="edit-input" data-field="${k}" value="${item[k] || ''}"></div>`;
+             html += `<div class="form-group"><label>${k}</label>
+                     <input type="text" class="search-input" data-field="${k}" value="${item[k] || ''}"></div>`;
         }
     });
     
     html += `</div>
-             <div style="margin-top:20px; display:flex; justify-content:flex-end; gap:10px;">
-                <button class="btn-action" style="background:var(--primary); color:white;" onclick="window.saveLeadEdits('${item.id}')">Save Changes</button>
+             <div style="margin-top:30px; display:flex; justify-content:flex-end; gap:10px;">
+                <button class="btn-action btn-secondary" onclick="document.getElementById('modalOverlay').style.display='none'">Cancel</button>
+                <button class="btn-action" onclick="window.saveLeadEdits('${item.id}')">Save Changes</button>
              </div>`;
 
-    document.getElementById('modalBox').innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;"><h2>Edit Lead / Notes</h2><button onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>${html}`;
+    document.getElementById('modalBox').innerHTML = `<div class="modal-header"><h2>Edit Lead / Notes</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>${html}`;
     document.getElementById('modalOverlay').style.display = 'flex';
 };
 
 window.saveLeadEdits = async function(id) {
     const container = document.getElementById('editFormContainer');
-    const inputs = container.querySelectorAll('.edit-input');
+    const inputs = container.querySelectorAll('.search-input');
     const updates = { id };
     
-    inputs.forEach(inp => {
-        updates[inp.getAttribute('data-field')] = inp.value;
-    });
+    inputs.forEach(inp => updates[inp.getAttribute('data-field')] = inp.value);
 
     try {
         await fetch('/api/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updates) });
-        // update local
         const lead = submissionsData.find(s => String(s.id) === String(id));
         if (lead) Object.assign(lead, updates);
-        
         document.getElementById('modalOverlay').style.display='none';
         renderFilteredLeads();
-    } catch(e) {
-        console.error("Save Error", e);
-    }
+    } catch(e) { console.error("Save Error", e); }
 };
 
-window.exportDocx = function(id) {
-    window.open('/api/export-docx?id=' + id, '_blank');
-};
-
+window.exportDocx = function(id) { window.open('/api/export-docx?id=' + id, '_blank'); };
 window.exportExcel = function() {
-    // Collect applied filters
     const status = document.getElementById('filterStatus')?.value || 'All';
     const company = document.getElementById('filterCompany')?.value || 'All';
     window.open('/api/export-xlsx?status=' + status + '&company=' + company, '_blank');
 };
 
 
-// VERY BASIC COMPANIES MOCK TO SUPPORT DB RENDER
+// 🏢 COMPANY CRM
 window.renderCompanies = function() {
     const tbody = document.querySelector("#companyTable tbody");
     if (!tbody) return;
     tbody.innerHTML = '';
     companiesData.forEach((c) => {
-        tbody.innerHTML += `<tr><td><strong>${c.name}</strong></td><td>${c.type || 'Firm'}</td><td>${c.contact || '--'}</td><td>${c.postcode || '--'}</td><td>Active</td><td><button class="btn-action">Edit</button></td></tr>`;
+        tr = document.createElement('tr');
+        tr.innerHTML = `<td><strong>${c.name}</strong></td><td>${c.type || 'Firm'}</td><td>${c.main_contact || '--'}</td><td>${c.email || '--'}</td><td>${c.contact || '--'}</td>
+            <td>
+                <button class="btn-action btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="window.viewCompanyMembers('${c.id}')">Manage Solicitors</button>
+            </td>`;
+        tbody.appendChild(tr);
     });
+    document.getElementById('companyMembersSection').style.display = 'none';
 };
 
 window.openAddCompanyModal = function() {
      document.getElementById('modalBox').innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h2>Add Firm</h2>
-            <button onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button>
+        <div class="modal-header"><h2>Add Firm</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>
+        <div class="form-grid">
+            <div class="form-group full"><label>Company Name</label><input type="text" id="cName" class="search-input"></div>
+            <div class="form-group"><label>Company Type</label><input type="text" id="cType" class="search-input" value="Solicitors"></div>
+            <div class="form-group"><label>Main Contact Name</label><input type="text" id="cMainContact" class="search-input"></div>
+            <div class="form-group"><label>Email Address</label><input type="text" id="cEmail" class="search-input"></div>
+            <div class="form-group"><label>Phone Number</label><input type="text" id="cPhone" class="search-input"></div>
+            <div class="form-group full"><label>Office Address</label><input type="text" id="cAddress" class="search-input"></div>
         </div>
-        <input type="text" id="newCompanyName" placeholder="Company Name" class="edit-input">
-        <input type="text" id="newCompanyContact" placeholder="Contact Details" class="edit-input">
-        <input type="text" id="newCompanyPostcode" placeholder="Postcode" class="edit-input">
-        <button class="btn-action" style="margin-top:15px; background:var(--primary); color:white; width:100%;" onclick="window.saveNewCompany()">Add Company</button>
+        <button class="btn-action" style="margin-top:20px; width:100%; justify-content:center;" onclick="window.saveNewCompany()">Save Company</button>
     `;
     document.getElementById('modalOverlay').style.display = 'flex';
 };
 
 window.saveNewCompany = async function() {
-    const name = document.getElementById('newCompanyName').value;
-    const contact = document.getElementById('newCompanyContact').value;
-    const postcode = document.getElementById('newCompanyPostcode').value;
-    
+    const payload = {
+        name: document.getElementById('cName').value,
+        type: document.getElementById('cType').value,
+        main_contact: document.getElementById('cMainContact').value,
+        email: document.getElementById('cEmail').value,
+        contact: document.getElementById('cPhone').value,
+        address: document.getElementById('cAddress').value
+    };
     try {
-        const res = await fetch('/api/companies', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name, contact, postcode, type:'Solicitor'})});
+        const res = await fetch('/api/companies', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
         const saved = await res.json();
         companiesData.push(saved);
         document.getElementById('modalOverlay').style.display='none';
-        initFilters();
         renderCompanies();
     } catch(e) { console.error(e); }
 };
 
+window.viewCompanyMembers = function(companyId) {
+    selectedCompanyId = companyId;
+    const company = companiesData.find(c => String(c.id) === String(companyId));
+    document.getElementById('companyMembersSection').style.display = 'block';
+    document.getElementById('membersSectionTitle').innerText = 'Solicitors for ' + (company?.name || 'Company');
+    
+    const tbody = document.querySelector("#membersTable tbody");
+    tbody.innerHTML = '';
+    
+    const relatedMembers = membersData.filter(m => String(m.company_id) === String(companyId));
+    if(relatedMembers.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#6B7280;">No solicitors assigned to this firm yet.</td></tr>';
+        return;
+    }
+    
+    relatedMembers.forEach(m => {
+        const mName = m.name || (m.first_name + ' ' + m.last_name);
+        tbody.innerHTML += `<tr><td><strong>${mName}</strong></td><td>${m.email || '--'}</td><td>${m.phone || '--'}</td><td>${m.role || 'Solicitor'}</td>
+            <td><button class="icon-btn"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button></td></tr>`;
+    });
+};
+
+window.openAddMemberModal = function() {
+    if(!selectedCompanyId) return alert('Select a company first');
+    document.getElementById('modalBox').innerHTML = `
+        <div class="modal-header"><h2>Add Solicitor</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>
+        <div class="form-grid">
+            <div class="form-group"><label>First Name</label><input type="text" id="mFirstName" class="search-input"></div>
+            <div class="form-group"><label>Last Name</label><input type="text" id="mLastName" class="search-input"></div>
+            <div class="form-group"><label>Email Address</label><input type="text" id="mEmail" class="search-input"></div>
+            <div class="form-group"><label>Phone Number</label><input type="text" id="mPhone" class="search-input"></div>
+            <div class="form-group full"><label>Role / Title</label><input type="text" id="mRole" class="search-input" value="Solicitor"></div>
+        </div>
+        <button class="btn-action" style="margin-top:20px; width:100%; justify-content:center;" onclick="window.saveNewMember()">Save Solicitor</button>
+    `;
+    document.getElementById('modalOverlay').style.display = 'flex';
+}
+
+window.saveNewMember = async function() {
+    const payload = {
+        company_id: selectedCompanyId,
+        first_name: document.getElementById('mFirstName').value,
+        last_name: document.getElementById('mLastName').value,
+        name: document.getElementById('mFirstName').value + ' ' + document.getElementById('mLastName').value,
+        email: document.getElementById('mEmail').value,
+        phone: document.getElementById('mPhone').value,
+        role: document.getElementById('mRole').value
+    };
+    try {
+        const res = await fetch('/api/members', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+        const saved = await res.json();
+        membersData.push(saved);
+        document.getElementById('modalOverlay').style.display='none';
+        
+        // Re-init filters so we can assign to this member
+        initFilters();
+        viewCompanyMembers(selectedCompanyId);
+        
+        // If we are on leads tab, re-render
+        if(document.getElementById('leadsView').classList.contains('active')) renderFilteredLeads();
+    } catch(e) { console.error(e); }
+};
 
 window.initDashboard = async function () {
     try {
-        // Fetch Submissions
         const resSub = await fetch('/api/submissions');
-        if (resSub.ok) {
-            submissionsData = JSON.parse(await resSub.text());
-        }
+        if (resSub.ok) submissionsData = JSON.parse(await resSub.text());
 
-        // Fetch Companies
         const resComp = await fetch('/api/companies');
-        if (resComp.ok) {
-            companiesData = JSON.parse(await resComp.text());
-        }
+        if (resComp.ok) companiesData = JSON.parse(await resComp.text());
+        
+        const resMembers = await fetch('/api/members');
+        if (resMembers.ok) membersData = JSON.parse(await resMembers.text());
+        
     } catch (e) {
-        console.error("Sync Error - You are likely running this locally instead of via Vercel:", e);
-        alert('Warning: API connection failed. You might be running this file locally instead of on your live site.');
+        console.error("Setup running locally:", e);
     } finally {
         initFilters();
         calculateDashboardStats();
