@@ -113,9 +113,12 @@ function initFilters() {
     }
 
     if (companySelect && companySelect.options.length <= 1) {
-        membersData.forEach(m => {
+        // Clear all except first option if re-initializing
+        companySelect.innerHTML = '<option value="All">All Solicitors</option>';
+        companiesData.forEach(c => {
             const opt = document.createElement('option');
-            opt.value = m.id; opt.innerText = m.name || (m.first_name + ' ' + m.last_name);
+            opt.value = c.id; 
+            opt.innerText = c.name || c.company_name || 'Unnamed Solicitor';
             companySelect.appendChild(opt);
         });
     }
@@ -151,8 +154,8 @@ function renderTable(data) {
         const tr = document.createElement("tr");
 
         let compOptions = `<option value="">Unassigned</option>` + companiesData.map(c => {
-            let cName = c.name || c.company_name || 'Unnamed Company';
-            if (cName.includes('undefined')) cName = 'Unnamed Company';
+            let cName = c.name || c.company_name || 'Unnamed Solicitor';
+            if (cName.includes('undefined')) cName = 'Unnamed Solicitor';
             return `<option value="${c.id}" ${String(item.assigned_company_id) === String(c.id) ? 'selected' : ''}>${cName}</option>`;
         }).join('');
 
@@ -218,8 +221,8 @@ window.renderCompanies = function() {
     if (!tbody) return;
     tbody.innerHTML = '';
     companiesData.forEach((c) => {
-        let nameDisp = c.name || c.company_name || 'Unnamed Company';
-        if (nameDisp === 'undefined' || nameDisp.includes('undefined')) nameDisp = 'Unnamed Company';
+        let nameDisp = c.name || c.company_name || 'Unnamed Solicitor';
+        if (nameDisp === 'undefined' || nameDisp.includes('undefined')) nameDisp = 'Unnamed Solicitor';
         
         const tr = document.createElement('tr');
         tr.innerHTML = `<td><strong>${nameDisp}</strong></td><td>${c.type || '--'}</td><td>${c.main_contact || '--'}</td><td>${c.postcode || '--'}</td><td>${c.website || '--'}</td>
@@ -299,7 +302,7 @@ window.viewCompanyMembers = function(companyId) {
     const company = companiesData.find(c => String(c.id) === String(companyId));
     document.getElementById('companyMembersSection').style.display = 'block';
     
-    let compName = company?.name || 'Unknown Company';
+    let compName = company?.name || 'Unknown Solicitor';
     document.getElementById('membersSectionTitle').innerText = 'Members for ' + compName;
     
     const tbody = document.querySelector("#membersTable tbody");
