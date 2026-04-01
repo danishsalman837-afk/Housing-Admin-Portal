@@ -2,13 +2,6 @@
 let submissionsData = [];
 let charts = {};
 
-// SECURITY CORE: Initialize Supabase Client
-const supabaseUrl = "PASTE_YOUR_SUPABASE_URL_HERE";
-const supabaseKey = "PASTE_YOUR_ANON_KEY_HERE";
-if (!window.supabaseClient && typeof supabase !== 'undefined') {
-    window.supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-}
-
 const leadStatuses = [
   'New Lead', 'Transferred', 'Accepted', 'Rejected', 
   'Not Yet Invoiced', 'Invoice Raised', 'Paid', 'Test Lead'
@@ -228,6 +221,9 @@ function renderTable(data) {
 }
 
 function populateFilters() {
+    const filterStatus = document.getElementById('filterStatus');
+    const filterSolicitor = document.getElementById('filterSolicitor');
+    
     if (filterStatus) {
         filterStatus.innerHTML = '<option value="">Filter by Status...</option>';
         leadStatuses.forEach(s => {
@@ -540,40 +536,18 @@ window.exportData = function() {
     a.click();
 };
 
-window.handleLogout = async function() {
-    if (window.supabaseClient) {
-        await window.supabaseClient.auth.signOut();
-    }
-    window.location.href = 'login.html';
-};
+// ======== INIT ========
 
-// ======== AUTHENTICATED INIT WITH REALTIME PRESENCE ========
 (async function init() {
     try {
-        const { data: { session } } = await window.supabaseClient.auth.getSession();
-        if (!session) { window.location.href = 'login.html'; return; }
-
-        const channel = window.supabaseClient.channel('admin-presence', {
-            config: { presence: { key: session.user.id } }
-        });
-
-        channel
-            .on('presence', { event: 'sync' }, () => {
-                const state = channel.presenceState();
-                const el = document.getElementById('activeAgents');
-                if (el) el.innerText = Object.keys(state).length;
-            })
-            .subscribe(async (status) => {
-                if (status === 'SUBSCRIBED') await channel.track({ online_at: new Date().toISOString() });
-            });
-
         const res = await fetch('/api/submissions');
         submissionsData = await res.json();
+        
+        // Populate and Calculate
         populateFilters();
         calculateDashboardStats();
+        
+        // Show default view
         switchView('dashboard');
-    } catch (e) { 
-        console.warn("Auth Init Error:", e);
-        window.location.href = 'login.html'; 
-    }
+    } catch (e) { console.error("Initialization Error:", e); }
 })();
