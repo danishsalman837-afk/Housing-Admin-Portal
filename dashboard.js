@@ -54,7 +54,7 @@ const searchInput = document.getElementById('searchInput');
 
 function populateFilters() {
     if (filterStatus) {
-        filterStatus.innerHTML = '<option value="">All Statuses for this Solicitor</option>';
+        filterStatus.innerHTML = '<option value="">Filter by Status...</option>';
         leadStatuses.forEach(s => {
             filterStatus.innerHTML += `<option value="${s}">${s}</option>`;
         });
@@ -62,7 +62,7 @@ function populateFilters() {
     if (filterSolicitor) {
         const solicitors = [...new Set(submissionsData.map(s => s.solicitorName).filter(Boolean))].sort();
         filterSolicitor.innerHTML = `
-            <option value="">Filter...</option>
+            <option value="">Filter by Solicitor...</option>
             <option value="__unassigned__">Unassigned Leads</option>
             ${solicitors.map(s => `<option value="${s}">${s}</option>`).join('')}
         `;
