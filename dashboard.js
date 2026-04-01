@@ -147,35 +147,33 @@ function renderTable(data) {
     if (!tbody) return;
     tbody.innerHTML = '';
     
-    // SVG icons replace emojis
-    const viewIcon = `<svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>`;
-    const editIcon = `<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`;
-    const docxIcon = `<svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>`;
+    const profileIcon = `<svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
+    const docxIcon = `<svg viewBox="0 0 24 24" width="16" height="16"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>`;
 
     data.forEach((item, index) => {
         const tr = document.createElement("tr");
 
         let memberOptions = `<option value="">Unassigned</option>` + membersData.map(m => {
-            const mName = m.name || (m.first_name + ' ' + m.last_name);
-            return `<option value="${m.id}" ${String(item.assigned_company_id) === String(m.id) ? 'selected' : ''}>${mName}</option>`;
+            let mName = ((m.first_name || '') + ' ' + (m.last_name || '')).trim();
+            if (!mName || mName.includes('undefined')) mName = 'Unknown Member';
+            return `<option value="${m.id}" ${String(item.assigned_solicitor_id) === String(m.id) ? 'selected' : ''}>${mName}</option>`;
         }).join('');
 
         const statusSelectTheme = getStatusColor(item.leadStatus || 'New Lead');
 
         tr.innerHTML = `
             <td>${index + 1}</td>
-            <td><strong>${item.name || "---"}</strong></td>
-            <td>${item.phone || "---"}</td>
+            <td><strong>${item.name || item.first_name || "---"}</strong></td>
+            <td>${item.phone || item.mobile_number || "---"}</td>
             <td>${item.timestamp ? new Date(item.timestamp).toLocaleDateString() : '---'}</td>
-            <td><select class="modern-select" style="padding: 6px 12px; font-size: 13px; width: 100%; border-radius:20px;" onchange="window.handleFieldUpdate('${item.id}', 'assigned_company_id', this.value)">${memberOptions}</select></td>
+            <td><select class="modern-select" style="padding: 6px 30px 6px 12px; font-size: 13px; width:180px; text-overflow: ellipsis; white-space: nowrap;" onchange="window.handleFieldUpdate('${item.id}', 'assigned_solicitor_id', this.value)">${memberOptions}</select></td>
             <td>
                 <select class="status-badge" data-color="${statusSelectTheme}" onchange="window.handleFieldUpdate('${item.id}', 'leadStatus', this.value); this.setAttribute('data-color', getStatusColor(this.value));">
                     ${leadStatuses.map(s => `<option value="${s}" ${item.leadStatus === s ? 'selected' : ''}>${s}</option>`).join('')}
                 </select>
             </td>
             <td style="display:flex; gap:8px;">
-                <button class="icon-btn" onclick="window.openViewModal('${item.id}')" title="View Details">${viewIcon}</button>
-                <button class="icon-btn" onclick="window.openEditModal('${item.id}')" title="Edit & Notes">${editIcon}</button>
+                <button class="icon-btn" onclick="window.openEditModal('${item.id}')" title="Intelligence Profile & Notes">${profileIcon}</button>
                 <button class="icon-btn" onclick="window.exportDocx('${item.id}')" title="Download Word Doc">${docxIcon}</button>
             </td>`;
         tbody.appendChild(tr);
@@ -191,61 +189,6 @@ window.handleFieldUpdate = async function(id, fieldName, value) {
         if (lead) lead[fieldName] = value;
         if(fieldName === 'leadStatus') calculateDashboardStats();
     } catch (e) { console.error(e); }
-};
-
-window.openViewModal = function(id) {
-    const item = submissionsData.find(s => String(s.id) === String(id));
-    if (!item) return;
-    let html = '<div class="form-grid">';
-    Object.keys(item).forEach(k => {
-        if (k !== 'id') {
-            html += `<div class="form-group ${k === 'notes' ? 'full' : ''}"><label>${k.replace(/_/g, ' ')}</label><div style="padding:12px; background:#F9FAFB; border-radius:8px; border: 1px solid var(--border); font-size: 14px; white-space:pre-wrap;">${item[k] || '---'}</div></div>`;
-        }
-    });
-    document.getElementById('modalBox').innerHTML = `<div class="modal-header"><h2>View Details</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>${html}</div>`;
-    document.getElementById('modalOverlay').style.display = 'flex';
-};
-
-window.openEditModal = function(id) {
-    const item = submissionsData.find(s => String(s.id) === String(id));
-    if (!item) return;
-
-    let html = '<div class="form-grid" id="editFormContainer">';
-    
-    ['name', 'phone', 'email', 'leadSource', 'notes'].forEach(k => {
-        if (k === 'notes') {
-            html += `<div class="form-group full"><label>${k}</label>
-                     <textarea class="search-input" data-field="${k}" rows="5" placeholder="Add timestamped notes here...">${item[k] || ''}</textarea></div>`;
-        } else {
-             html += `<div class="form-group"><label>${k}</label>
-                     <input type="text" class="search-input" data-field="${k}" value="${item[k] || ''}"></div>`;
-        }
-    });
-    
-    html += `</div>
-             <div style="margin-top:30px; display:flex; justify-content:flex-end; gap:10px;">
-                <button class="btn-action btn-secondary" onclick="document.getElementById('modalOverlay').style.display='none'">Cancel</button>
-                <button class="btn-action" onclick="window.saveLeadEdits('${item.id}')">Save Changes</button>
-             </div>`;
-
-    document.getElementById('modalBox').innerHTML = `<div class="modal-header"><h2>Edit Lead / Notes</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>${html}`;
-    document.getElementById('modalOverlay').style.display = 'flex';
-};
-
-window.saveLeadEdits = async function(id) {
-    const container = document.getElementById('editFormContainer');
-    const inputs = container.querySelectorAll('.search-input');
-    const updates = { id };
-    
-    inputs.forEach(inp => updates[inp.getAttribute('data-field')] = inp.value);
-
-    try {
-        await fetch('/api/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updates) });
-        const lead = submissionsData.find(s => String(s.id) === String(id));
-        if (lead) Object.assign(lead, updates);
-        document.getElementById('modalOverlay').style.display='none';
-        renderFilteredLeads();
-    } catch(e) { console.error("Save Error", e); }
 };
 
 window.exportDocx = function(id) { window.open('/api/export-docx?id=' + id, '_blank'); };
@@ -272,10 +215,10 @@ window.renderCompanies = function() {
         if (nameDisp === 'undefined' || nameDisp.includes('undefined')) nameDisp = 'Unnamed Company';
         
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td><strong>${nameDisp}</strong></td><td>${c.type || '--'}</td><td>${c.main_contact || '--'}</td><td>${c.email || '--'}</td><td>${c.contact || '--'}</td>
+        tr.innerHTML = `<td><strong>${nameDisp}</strong></td><td>${c.type || '--'}</td><td>${c.main_contact || '--'}</td><td>${c.postcode || '--'}</td><td>${c.website || '--'}</td>
             <td style="display:flex; gap:8px;">
                 <button class="icon-btn" onclick="window.viewCompanyEditModal('${c.id}')" title="Edit Company"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>
-                <button class="btn-action btn-outline" style="padding: 6px 12px; font-size: 12px;" onclick="window.viewCompanyMembers('${c.id}')">View Members</button>
+                <button class="btn-outline btn-small" style="padding: 6px 12px; font-size: 12px;" onclick="window.viewCompanyMembers('${c.id}')">View Members</button>
             </td>`;
         tbody.appendChild(tr);
     });
@@ -289,7 +232,7 @@ window.openAddCompanyModal = function(existingCompany = null) {
      document.getElementById('modalBox').innerHTML = `
         <div class="modal-header"><h2>${isEdit ? 'Edit Company' : 'Add Company'}</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>
         <div class="form-grid">
-            <div class="form-group full"><label>Company Name</label><input type="text" id="cName" class="search-input" value="${c.name || ''}" placeholder="Enter company name"></div>
+            <div class="form-group"><label>Company Name</label><input type="text" id="cName" class="modern-input" value="${c.name || ''}" placeholder="Name"></div>
             <div class="form-group">
                 <label>Company Type</label>
                 <select id="cType" class="modern-select">
@@ -300,10 +243,12 @@ window.openAddCompanyModal = function(existingCompany = null) {
                     <option value="Other" ${c.type === 'Other' ? 'selected' : ''}>Other</option>
                 </select>
             </div>
-            <div class="form-group"><label>Main Contact Name</label><input type="text" id="cMainContact" class="search-input" value="${c.main_contact || ''}"></div>
-            <div class="form-group"><label>Email Address</label><input type="text" id="cEmail" class="search-input" value="${c.email || ''}"></div>
-            <div class="form-group"><label>Phone Number</label><input type="text" id="cPhone" class="search-input" value="${c.contact || c.phone || ''}"></div>
-            <div class="form-group full"><label>Office Address</label><input type="text" id="cAddress" class="search-input" value="${c.address || ''}"></div>
+            <div class="form-group"><label>Main Contact First/Last</label><input type="text" id="cMainContact" class="modern-input" value="${c.main_contact || ''}"></div>
+            <div class="form-group"><label>Website</label><input type="text" id="cWebsite" class="modern-input" value="${c.website || ''}"></div>
+            <div class="form-group full"><label>Address Line</label><input type="text" id="cAddress" class="modern-input" value="${c.address || ''}"></div>
+            <div class="form-group"><label>Town / City</label><input type="text" id="cTown" class="modern-input" value="${c.town || ''}"></div>
+            <div class="form-group"><label>County</label><input type="text" id="cCounty" class="modern-input" value="${c.county || ''}"></div>
+            <div class="form-group"><label>Postcode</label><input type="text" id="cPostcode" class="modern-input" value="${c.postcode || ''}"></div>
         </div>
         <button class="btn-action" style="margin-top:20px; width:100%; justify-content:center;" onclick="window.saveNewCompany('${c.id || ''}')">Save Company</button>
     `;
@@ -315,9 +260,11 @@ window.saveNewCompany = async function(id) {
         name: document.getElementById('cName').value,
         type: document.getElementById('cType').value,
         main_contact: document.getElementById('cMainContact').value,
-        email: document.getElementById('cEmail').value,
-        contact: document.getElementById('cPhone').value,
-        address: document.getElementById('cAddress').value
+        address: document.getElementById('cAddress').value,
+        town: document.getElementById('cTown').value,
+        county: document.getElementById('cCounty').value,
+        postcode: document.getElementById('cPostcode').value,
+        website: document.getElementById('cWebsite').value
     };
     if (id) payload.id = id;
 
@@ -325,10 +272,7 @@ window.saveNewCompany = async function(id) {
         const res = await fetch('/api/companies', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
         const saved = await res.json();
         
-        if (!res.ok || saved.error) {
-            alert("Database Error: " + (saved.error || "Failed to save to Supabase. Make sure columns exist."));
-            return;
-        }
+        if (!res.ok || saved.error) { return alert("Database Error: " + (saved.error || "Failed to save to Supabase. Check schema.")); }
         
         if (id) {
             const index = companiesData.findIndex(x => String(x.id) === String(id));
@@ -339,6 +283,7 @@ window.saveNewCompany = async function(id) {
         
         document.getElementById('modalOverlay').style.display='none';
         renderCompanies();
+        calculateDashboardStats();
     } catch(e) { console.error(e); alert("Network Error: " + e.message); }
 };
 
@@ -348,7 +293,6 @@ window.viewCompanyMembers = function(companyId) {
     document.getElementById('companyMembersSection').style.display = 'block';
     
     let compName = company?.name || 'Unknown Company';
-    if(compName.includes('undefined')) compName = 'Unknown Company';
     document.getElementById('membersSectionTitle').innerText = 'Members for ' + compName;
     
     const tbody = document.querySelector("#membersTable tbody");
@@ -356,15 +300,15 @@ window.viewCompanyMembers = function(companyId) {
     
     const relatedMembers = membersData.filter(m => String(m.company_id) === String(companyId));
     if(relatedMembers.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 30px; color:#94A3B8;">No members assigned to this company yet.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 30px; color:#94A3B8;">No members assigned to this company yet.</td></tr>';
         return;
     }
     
     relatedMembers.forEach(m => {
-        let mName = m.name || ((m.first_name || '') + ' ' + (m.last_name || '')).trim();
-        if (!mName || mName === 'undefined undefined' || mName.includes('undefined')) mName = 'Unknown Member';
+        let mName = ((m.first_name || '') + ' ' + (m.last_name || '')).trim();
+        if (!mName || mName.includes('undefined')) mName = 'Unknown Member';
         
-        tbody.innerHTML += `<tr><td><strong>${mName}</strong></td><td>${m.email || '--'}</td><td>${m.phone || '--'}</td><td><span class="status-badge" style="background:#F1F5F9; color:#475569;">${m.role || 'Member'}</span></td>
+        tbody.innerHTML += `<tr><td><strong>${mName}</strong></td><td>${m.job_title || '--'}</td><td>${m.email || '--'}</td><td>${m.mobile || '--'}</td><td>${m.landline || '--'}</td>
             <td style="display:flex; gap: 8px;">
                 <button class="btn-outline btn-small" title="Edit Member" onclick="window.openAddMemberModal('${m.id}')">
                     <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="margin-right:4px;"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg> Edit
@@ -386,8 +330,9 @@ window.openAddMemberModal = function(editId = null) {
             <div class="form-group"><label>First Name</label><input type="text" id="mFirstName" class="modern-input" value="${m.first_name || ''}"></div>
             <div class="form-group"><label>Last Name</label><input type="text" id="mLastName" class="modern-input" value="${m.last_name || ''}"></div>
             <div class="form-group"><label>Email Address</label><input type="text" id="mEmail" class="modern-input" value="${m.email || ''}"></div>
-            <div class="form-group"><label>Phone Number</label><input type="text" id="mPhone" class="modern-input" value="${m.phone || ''}"></div>
-            <div class="form-group full"><label>Role / Title</label><input type="text" id="mRole" class="modern-input" value="${m.role || 'Member'}"></div>
+            <div class="form-group"><label>Job Title</label><input type="text" id="mJobTitle" class="modern-input" value="${m.job_title || ''}"></div>
+            <div class="form-group"><label>Mobile Base</label><input type="text" id="mMobile" class="modern-input" value="${m.mobile || ''}"></div>
+            <div class="form-group"><label>Landline</label><input type="text" id="mLandline" class="modern-input" value="${m.landline || ''}"></div>
         </div>
         <button class="btn-action" style="margin-top:24px; width:100%; justify-content:center; padding:12px;" onclick="window.saveNewMember('${m.id || ''}')">Save Member</button>
     `;
@@ -399,10 +344,10 @@ window.saveNewMember = async function(id) {
         company_id: selectedCompanyId,
         first_name: document.getElementById('mFirstName').value,
         last_name: document.getElementById('mLastName').value,
-        name: (document.getElementById('mFirstName').value + ' ' + document.getElementById('mLastName').value).trim(),
-        email: document.getElementById('mEmail').value,
-        phone: document.getElementById('mPhone').value,
-        role: document.getElementById('mRole').value
+        mobile: document.getElementById('mMobile').value,
+        landline: document.getElementById('mLandline').value,
+        job_title: document.getElementById('mJobTitle').value,
+        email: document.getElementById('mEmail').value
     };
     if (id) payload.id = id;
 
@@ -410,10 +355,7 @@ window.saveNewMember = async function(id) {
         const res = await fetch('/api/members', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
         const saved = await res.json();
         
-        if (!res.ok || saved.error) {
-            alert("Database Error: " + (saved.error || "Failed to save member. Check database schema."));
-            return;
-        }
+        if (!res.ok || saved.error) return alert("Database Error: " + (saved.error || "Check database schema."));
 
         if (id) {
             const index = membersData.findIndex(x => String(x.id) === String(id));
@@ -425,6 +367,7 @@ window.saveNewMember = async function(id) {
         document.getElementById('modalOverlay').style.display='none';
         initFilters();
         viewCompanyMembers(selectedCompanyId);
+        calculateDashboardStats();
         if(document.getElementById('leadsView').classList.contains('active')) renderFilteredLeads();
     } catch(e) { console.error(e); alert("Network Error: " + e.message); }
 };
@@ -438,6 +381,99 @@ window.deleteMember = async function(id) {
         viewCompanyMembers(selectedCompanyId);
         if(document.getElementById('leadsView').classList.contains('active')) renderFilteredLeads();
     } catch(e) { console.error(e); }
+};
+
+// --- LEADS EDIT & NOTES logic ---
+window.openEditModal = function(id) {
+    const s = submissionsData.find(x => String(x.id) === String(id));
+    if(!s) return;
+    
+    // Process all captured data into readable read-only fields
+    let dataHtml = '';
+    const ignoreKeys = ['id', 'created_at', 'notes', 'leadStatus', 'assignedCompany', 'assignedSolicitor'];
+    Object.keys(s).forEach(key => {
+        if(ignoreKeys.includes(key)) return;
+        if(typeof s[key] === 'object' && s[key] !== null) {
+            dataHtml += `<div style="margin-bottom:12px;"><label style="font-size:11px; color:#6B7280; text-transform:uppercase;">${key.replace(/_/g, ' ')}</label><div style="font-size:14px; color:#111827; font-weight:500;">${JSON.stringify(s[key])}</div></div>`;
+        } else {
+            dataHtml += `<div style="margin-bottom:12px;"><label style="font-size:11px; color:#6B7280; text-transform:uppercase;">${key.replace(/_/g, ' ')}</label><div style="font-size:14px; color:#111827; font-weight:500;">${s[key] || '--'}</div></div>`;
+        }
+    });
+
+    // Parse notes logic securely
+    let notesArray = [];
+    if(s.notes) {
+        if(Array.isArray(s.notes)) notesArray = s.notes;
+        else if(typeof s.notes === 'string') {
+            try { notesArray = JSON.parse(s.notes); } catch(e) { notesArray = [{ note: s.notes, date: new Date().toISOString() }]; }
+        } else if(typeof s.notes === 'object') {
+            notesArray = [s.notes];
+        }
+    }
+    if(!Array.isArray(notesArray)) notesArray = [];
+    
+    let notesHtml = notesArray.map(n => `
+        <div style="background:#F9FAFB; border:1px solid #E5E7EB; padding:12px; border-radius:8px; margin-bottom:8px;">
+            <div style="font-size:11px; color:#6B7280; margin-bottom:4px;">${new Date(n.date || Date.now()).toLocaleString()}</div>
+            <div style="font-size:13px; color:#111827; white-space:pre-wrap;">${n.note || JSON.stringify(n)}</div>
+        </div>
+    `).join('');
+    if(notesArray.length === 0) notesHtml = `<div style="font-size:13px; color:#9CA3AF; font-style:italic;">No notes have been added yet.</div>`;
+
+    document.getElementById('modalBox').innerHTML = `
+        <div class="modal-header"><h2>Lead Intelligence Profile: ${s.name || s.first_name || 'Client'}</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>
+        <div style="display:flex; gap:32px; flex-wrap:wrap;">
+            <!-- Left Side Data -->
+            <div style="flex:1; min-width:280px;">
+                <h3 style="font-size:14px; font-weight:700; color:#374151; margin-bottom:16px; border-bottom:2px solid #E5E7EB; padding-bottom:8px;">Capture Data</h3>
+                ${dataHtml}
+            </div>
+            
+            <!-- Right Side Notes -->
+            <div style="flex:1.5; min-width:300px;">
+                <h3 style="font-size:14px; font-weight:700; color:#374151; margin-bottom:16px; border-bottom:2px solid #E5E7EB; padding-bottom:8px;">Internal Notes</h3>
+                <div style="max-height: 250px; overflow-y:auto; margin-bottom:16px; background:#FFF; border:1px solid #E5E7EB; padding:12px; border-radius:8px;">
+                    ${notesHtml}
+                </div>
+                <div>
+                    <textarea id="newNoteEditor" placeholder="Type a new internal note..." style="width:100%; height:80px; padding:12px; border-radius:8px; border:1px solid #E5E7EB; outline:none; font-family:inherit; resize:vertical;"></textarea>
+                    <button class="btn-action" style="margin-top:12px;" onclick="window.saveNewNote('${s.id}')">Add Note</button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.getElementById('modalOverlay').style.display = 'flex';
+};
+
+window.saveNewNote = async function(id) {
+    const s = submissionsData.find(x => String(x.id) === String(id));
+    if(!s) return;
+    const txt = document.getElementById('newNoteEditor').value.trim();
+    if(!txt) return alert("Please type a note first.");
+
+    let notesArray = [];
+    if(s.notes) {
+        if(Array.isArray(s.notes)) notesArray = [...s.notes];
+        else if(typeof s.notes === 'string') { try { notesArray = JSON.parse(s.notes); } catch(e) { notesArray = [{ note: s.notes, date: new Date().toISOString() }]; } }
+    }
+    
+    notesArray.push({ note: txt, date: new Date().toISOString() });
+    
+    const originalNotes = s.notes;
+    s.notes = JSON.stringify(notesArray); // Fallback until db commits
+    window.openEditModal(id); // visually update immediately
+    
+    try {
+        await fetch('/api/update', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ id: s.id, notes: JSON.stringify(notesArray) })
+        });
+    } catch(e) {
+        console.error(e);
+        s.notes = originalNotes; // revert mapping
+        alert("Failed to save note to server.");
+    }
 };
 
 window.initDashboard = async function () {
