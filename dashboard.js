@@ -1,52 +1,163 @@
-// Professional Dashboard Script with Dedicated Notes Button
+// Professional Enterprise Dashboard & CRM Script
 let submissionsData = [];
+let charts = {};
 
 const leadStatuses = [
   'New Lead', 'Transferred', 'Accepted', 'Rejected', 
   'Not Yet Invoiced', 'Invoice Raised', 'Paid', 'Test Lead'
 ];
 
-function getStatusClass(status) {
-  if (!status) return 'status-new';
-  const map = {
-    'New Lead': 'status-new',
-    'Transferred': 'status-transferred',
-    'Accepted': 'status-accepted',
-    'Rejected': 'status-rejected',
-    'Not Yet Invoiced': 'status-not-yet-invoiced',
-    'Invoice Raised': 'status-invoice-raised',
-    'Paid': 'status-paid',
-    'Test Lead': 'status-test'
-  };
-  return map[status] || 'status-new';
-}
+// Switch between View Screens
+window.switchView = function(view) {
+    document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
 
-const readonlyFields = ['id', 'timestamp', 'created_at', 'notes'];
-
-window.showToast = function(message, type = 'success') {
-  const toast = document.createElement('div');
-  toast.className = `toast ${type}`;
-  toast.textContent = message;
-  document.body.appendChild(toast);
-  setTimeout(() => { toast.remove(); }, 3000);
-};
-
-window.closeModal = function() {
-  const overlay = document.getElementById('modalOverlay');
-  if (overlay) overlay.classList.remove('active');
-};
-
-function updateStats() {
-    const statTotal = document.getElementById('statTotal');
-    const statUnassigned = document.getElementById('statUnassigned');
-    if (statTotal) statTotal.textContent = submissionsData.length;
-    if (statUnassigned) {
-        const unassigned = submissionsData.filter(s => !s.solicitorName).length;
-        statUnassigned.textContent = unassigned;
+    if (view === 'dashboard') {
+        document.getElementById('dashboardView').classList.add('active');
+        document.querySelectorAll('.nav-item')[0].classList.add('active');
+        calculateDashboardStats();
+    } else if (view === 'leads') {
+        document.getElementById('leadsView').classList.add('active');
+        document.querySelectorAll('.nav-item')[1].classList.add('active');
+        renderTable(submissionsData);
     }
+};
+
+// Calculate & Display Dashboard Stats
+function calculateDashboardStats() {
+    if (!submissionsData.length) return;
+
+    const total = submissionsData.length;
+    const accepted = submissionsData.filter(s => s.leadStatus === 'Accepted').length;
+    const paid = submissionsData.filter(s => s.leadStatus === 'Paid').length;
+    const rejected = submissionsData.filter(s => s.leadStatus === 'Rejected').length;
+    const uniqueSolicitors = [...new Set(submissionsData.map(s => s.solicitorName).filter(Boolean))].length;
+
+    // Display basic stats
+    document.getElementById('dashboardTotal').innerText = total;
+    document.getElementById('dashboardConvRate').innerText = total > 0 ? ((accepted / total) * 100).toFixed(1) + '%' : '0%';
+    document.getElementById('dashboardRejected').innerText = rejected;
+    document.getElementById('dashboardSolicitors').innerText = uniqueSolicitors;
+
+    initCharts(submissionsData);
 }
 
-// ======== FILTERING ========
+// Initialize Charts using Chart.js
+function initCharts(data) {
+    const ctxFlow = document.getElementById('leadsFlowChart');
+    const ctxStatus = document.getElementById('statusDonutChart');
+
+    if (!ctxFlow || !ctxStatus) return;
+
+    // Cleanup existing charts if they exist
+    if (charts.flow) charts.flow.destroy();
+    if (charts.status) charts.status.destroy();
+
+    // 1. Line Chart: Lead Flow (Simulated/Calculated by Month from timestamps)
+    // We'll group by month name
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const flowData = new Array(12).fill(0);
+    
+    data.forEach(s => {
+        if (s.timestamp) {
+            const m = new Date(s.timestamp).getMonth();
+            flowData[m]++;
+        }
+    });
+
+    charts.flow = new Chart(ctxFlow, {
+        type: 'line',
+        data: {
+            labels: months,
+            datasets: [{
+                label: 'Lead Inbound Volume',
+                data: flowData,
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointBackgroundColor: '#3b82f6'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    // 2. Donut Chart: Status Distribution
+    const statusCounts = leadStatuses.map(status => data.filter(s => s.leadStatus === status).length);
+    
+    charts.status = new Chart(ctxStatus, {
+        type: 'doughnut',
+        data: {
+            labels: leadStatuses,
+            datasets: [{
+                data: statusCounts,
+                backgroundColor: [
+                    '#3b82f6', '#f59e0b', '#10b981', '#ef4444', 
+                    '#8b5cf6', '#ec4899', '#14b8a6', '#6366f1'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } }
+            }
+        }
+    });
+}
+
+// ======== DATA RENDERING ========
+
+function renderTable(data) {
+    const tbody = document.querySelector("#submissionTable tbody");
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    
+    const totalCount = document.getElementById('filterCount');
+    if (totalCount) totalCount.innerText = `Showing ${data.length} of ${submissionsData.length}`;
+
+    data.forEach((item, index) => {
+        const tr = document.createElement("tr");
+        const ts = item.timestamp ? new Date(item.timestamp).toLocaleDateString('en-GB') : "N/A";
+        const solicitor = item.solicitorName || "Unassigned";
+        const buttonId = item.id || index;
+
+        tr.innerHTML = `
+            <td>${index + 1}</td>
+            <td><strong>${item.name || "Unknown"}</strong></td>
+            <td>${item.phone || "---"}</td>
+            <td>${solicitor}</td>
+            <td>${ts}</td>
+            <td>
+                <select class="status-select" style="padding: 5px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11px; background: #fff;" onchange="window.handleStatusUpdate('${buttonId}', this)">
+                    ${leadStatuses.map(s => `<option value="${s}" ${ (item.leadStatus || 'New Lead') === s ? 'selected' : '' }>${s}</option>`).join('')}
+                </select>
+            </td>
+            <td>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn-icon" onclick="window.openViewModal('${buttonId}')" title="View Profile">👁️</button>
+                    <button class="btn-icon" onclick="window.openNotesModal('${buttonId}')" title="Activity Log">📝</button>
+                    <button class="btn-icon" onclick="window.downloadLead('${buttonId}')" title="Download Document">📄</button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// ======== FILTERS ========
 
 const filterSolicitor = document.getElementById('filterSolicitor');
 const filterStatus = document.getElementById('filterStatus');
@@ -75,25 +186,18 @@ function applyFilters() {
     const statVal = filterStatus ? filterStatus.value : '';
 
     const filtered = submissionsData.filter(item => {
-        // 1. Search Box
         const matchesSearch = !search || 
             (item.name || '').toLowerCase().includes(search) || 
             (item.phone || '').toLowerCase().includes(search);
         if (!matchesSearch) return false;
 
-        // 2. Solicitor Filter
         if (solVal) {
             if (solVal === '__unassigned__') {
                 if (item.solicitorName) return false;
             } else if (item.solicitorName !== solVal) {
                 return false;
             }
-            
-            // 3. Status Drill-down (Only if solicitor is picked)
-            if (statVal) {
-                const currentStatus = item.leadStatus || 'New Lead';
-                if (currentStatus !== statVal) return false;
-            }
+            if (statVal && (item.leadStatus || 'New Lead') !== statVal) return false;
         }
         return true;
     });
@@ -101,84 +205,26 @@ function applyFilters() {
 }
 
 if (searchInput) searchInput.addEventListener('input', applyFilters);
-
 if (filterSolicitor) {
     filterSolicitor.addEventListener('change', () => {
-        const value = filterSolicitor.value;
-        if (value) {
-            filterStatus.classList.remove('hidden');
-        } else {
-            filterStatus.classList.add('hidden');
-            filterStatus.value = ''; // Reset status if solicitor is cleared
-        }
+        if (filterSolicitor.value) filterStatus.classList.remove('hidden');
+        else { filterStatus.classList.add('hidden'); filterStatus.value = ''; }
         applyFilters();
     });
 }
+if (filterStatus) filterStatus.addEventListener('change', applyFilters);
 
-if (filterStatus) {
-    filterStatus.addEventListener('change', applyFilters);
-}
-
-window.clearFilters = function() {
+window.clearAllFilters = function() {
     if (searchInput) searchInput.value = '';
-    if (filterSolicitor) {
-        filterSolicitor.value = '';
-        filterStatus.classList.add('hidden');
-    }
-    if (filterStatus) filterStatus.value = '';
+    if (filterSolicitor) filterSolicitor.value = '';
+    if (filterStatus) { filterStatus.value = ''; filterStatus.classList.add('hidden'); }
     applyFilters();
 };
 
-function findItem(id) {
-    return submissionsData.find((s, idx) => {
-        const sId = (s.id !== undefined && s.id !== null) ? String(s.id) : String(idx);
-        return sId === String(id);
-    });
-}
-
-// ======== TABLE ========
-
-function renderTable(data) {
-    const tbody = document.querySelector("#submissionTable tbody");
-    if (!tbody) return;
-    tbody.innerHTML = '';
-    
-    document.getElementById('filterCount').textContent = `Showing ${data.length} of ${submissionsData.length}`;
-
-    data.forEach((item, index) => {
-        const tr = document.createElement("tr");
-        const ts = item.timestamp ? new Date(item.timestamp).toLocaleString() : "N/A";
-        const solicitor = item.solicitorName ? `<strong>${item.solicitorName}</strong>` : `<em>Unassigned</em>`;
-        const buttonId = (item.id !== undefined && item.id !== null) ? item.id : index;
-
-        tr.innerHTML = `
-            <td>${index + 1}</td>
-            <td>${item.name || "N/A"}</td>
-            <td>${item.phone || "N/A"}</td>
-            <td>${item.tenantType || "N/A"}</td>
-            <td>${ts}</td>
-            <td>${solicitor}</td>
-            <td>
-                <select class="status-select ${getStatusClass(item.leadStatus)}" onchange="window.handleStatusUpdate('${buttonId}', this)">
-                    ${leadStatuses.map(s => `<option value="${s}" ${ (item.leadStatus || 'New Lead') === s ? 'selected' : '' }>${s}</option>`).join('')}
-                </select>
-            </td>
-            <td>
-                <div class="action-btns">
-                    <button class="btn-view" onclick="window.openViewModal('${buttonId}')">👁 View</button>
-                    <button class="btn-edit" onclick="window.openEditModal('${buttonId}')">✍ Edit</button>
-                    <button class="btn-notes" onclick="window.openNotesModal('${buttonId}')">📝 Notes</button>
-                    <button class="btn-download-single" onclick="window.downloadLead('${buttonId}')">📥 Doc</button>
-                </div>
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
-}
+// ======== DATABASE UPDATES ========
 
 window.handleStatusUpdate = async function(id, el) {
     const newStatus = el.value;
-    el.className = `status-select ${getStatusClass(newStatus)}`;
     try {
         const res = await fetch('/api/update', {
             method: 'POST',
@@ -186,22 +232,19 @@ window.handleStatusUpdate = async function(id, el) {
             body: JSON.stringify({ id, leadStatus: newStatus })
         });
         if (res.ok) {
-            window.showToast("Status updated");
-            const item = findItem(id);
+            const item = submissionsData.find(s => String(s.id) === String(id));
             if (item) item.leadStatus = newStatus;
-            updateStats();
+            calculateDashboardStats();
         }
     } catch (e) {
-        window.showToast("Error updating status", "error");
+        console.error(e);
     }
 };
 
-// ======== MODALS ========
-
+// Re-implementing View Modal Logic
 window.openViewModal = function(id) {
-    const item = findItem(id);
+    const item = submissionsData.find(s => String(s.id) === String(id));
     if (!item) return;
-    const modal = document.getElementById('modalBox');
     
     let fieldsHtml = '';
     const mainKeys = ['name', 'phone', 'email', 'tenantType', 'solicitorName', 'leadStatus'];
@@ -211,174 +254,100 @@ window.openViewModal = function(id) {
         if (!item.hasOwnProperty(key)) return;
         let val = item[key];
         const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
-        fieldsHtml += `<div class="modal-field readonly"><label>${label}</label><input type="text" value="${val || ''}" readonly></div>`;
+        fieldsHtml += `<div style="margin-bottom:12px; font-size:13px;"><label style="font-weight:700; color:#64748b; font-size:10px; text-transform:uppercase; display:block;">${label}</label><div style="padding:10px; background:#f8fafc; border-radius:8px; margin-top:4px;">${val || '---'}</div></div>`;
     });
 
-    modal.innerHTML = `
-        <div class="modal-header"><h2>Lead Details</h2><button class="modal-close" onclick="window.closeModal()">&times;</button></div>
-        <div class="modal-body">${fieldsHtml}</div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="window.closeModal()">Close</button>
-            <button class="btn btn-primary" onclick="window.downloadLead('${id}')">📥 Download Profile</button>
+    document.getElementById('modalBox').innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h2>Lead Details</h2>
+            <button onclick="document.getElementById('modalOverlay').style.display='none'" style="border:none; background:none; font-size:24px; cursor:pointer;">&times;</button>
+        </div>
+        <div style="max-height: 450px; overflow-y: auto; padding-right:10px;">${fieldsHtml}</div>
+        <div style="margin-top:20px; display:flex; gap:10px;">
+            <button onclick="window.downloadLead('${id}')" style="flex:1; padding:12px; background:#0f172a; color:white; border-radius:10px; font-weight:700; border:none; cursor:pointer;">Download Profile</button>
+            <button onclick="document.getElementById('modalOverlay').style.display='none'" style="flex:1; padding:12px; background:#f1f5f9; color:#64748b; border-radius:10px; font-weight:700; border:none; cursor:pointer;">Close</button>
         </div>
     `;
-    document.getElementById('modalOverlay').classList.add('active');
+    document.getElementById('modalOverlay').style.display = 'flex';
 };
 
-window.openEditModal = function(id) {
-    const item = findItem(id);
-    if (!item) return;
-    const modal = document.getElementById('modalBox');
-    
-    let fieldsHtml = '';
-    Object.keys(item).forEach(key => {
-        if (key === 'notes') return;
-        const label = key.charAt(0).toUpperCase() + key.slice(1);
-        if (readonlyFields.includes(key)) {
-            fieldsHtml += `<div class="modal-field readonly"><label>${label}</label><input type="text" value="${item[key] || ''}" readonly></div>`;
-        } else {
-            fieldsHtml += `<div class="modal-field"><label>${label}</label><input type="text" name="${key}" value="${item[key] || ''}"></div>`;
-        }
-    });
-
-    modal.innerHTML = `
-        <div class="modal-header"><h2>Edit Lead</h2><button class="modal-close" onclick="window.closeModal()">&times;</button></div>
-        <div class="modal-body"><form id="editForm">${fieldsHtml}</form></div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="window.closeModal()">Cancel</button>
-            <button class="btn btn-primary" onclick="window.saveEdit('${id}')">Save Changes</button>
-        </div>
-    `;
-    document.getElementById('modalOverlay').classList.add('active');
-};
-
-// ======== DEDICATED NOTES MODAL ========
-
+// Activity Log / Notes Modal
 window.openNotesModal = function(id) {
-    const item = findItem(id);
+    const item = submissionsData.find(s => String(s.id) === String(id));
     if (!item) return;
-    const modal = document.getElementById('modalBox');
-    
-    function buildNotesHtml(notes) {
-        if (!notes || !Array.isArray(notes) || notes.length === 0) return '';
-        return notes.map(n => `
-            <div class="note-item">
-                <p class="note-text">${n.text}</p>
-                <span class="note-meta">${n.time}</span>
-            </div>
-        `).join('');
-    }
 
-    modal.innerHTML = `
-        <div class="modal-header">
-            <h2>Activity Log for ${item.name || 'this Lead'}</h2>
-            <button class="modal-close" onclick="window.closeModal()">&times;</button>
+    const notesHistory = (item.notes || []).map(n => `
+        <div style="padding:12px; background:#f8fafc; border-left:4px solid #3b82f6; border-radius:8px; margin-bottom:10px;">
+            <p style="font-size:13px; color:#1e293b;">${n.text}</p>
+            <span style="font-size:10px; color:#94a3b8; font-weight:700;">${n.time}</span>
         </div>
-        <div class="modal-body">
-            <div class="add-note-box">
-                <textarea id="newNoteInput" placeholder="Add a new update or note here..." class="modal-field" style="width:100%"></textarea>
-                <button class="btn btn-primary" style="margin-top:10px" onclick="window.saveNote('${id}')">Add Note</button>
-            </div>
-            <div class="notes-section">
-                <div class="notes-title">Past Updates</div>
-                <div class="notes-history">${buildNotesHtml(item.notes)}</div>
-            </div>
+    `).join('') || '<p style="color:#94a3b8; font-size:13px;">No updates found.</p>';
+
+    document.getElementById('modalBox').innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h2>Activity Log</h2>
+            <button onclick="document.getElementById('modalOverlay').style.display='none'" style="border:none; background:none; font-size:24px; cursor:pointer;">&times;</button>
         </div>
-        <div class="modal-footer"><button class="btn btn-secondary" onclick="window.closeModal()">Close</button></div>
+        <div style="margin-bottom:20px;">
+            <textarea id="newNote" placeholder="Add a status update or internal note..." style="width:100%; padding:12px; border:1px solid #e2e8f0; border-radius:10px; height:80px;"></textarea>
+            <button onclick="window.saveNote('${id}')" style="margin-top:10px; width:100%; padding:12px; background:#3b82f6; color:white; border-radius:10px; font-weight:700; border:none; cursor:pointer;">Add Note</button>
+        </div>
+        <div style="max-height:250px; overflow-y:auto;">${notesHistory}</div>
     `;
-    document.getElementById('modalOverlay').classList.add('active');
+    document.getElementById('modalOverlay').style.display = 'flex';
 };
 
 window.saveNote = async function(id) {
-    const noteEl = document.getElementById('newNoteInput');
-    if (!noteEl || !noteEl.value.trim()) {
-        alert("Please enter a note!");
-        return;
-    }
+    const text = document.getElementById('newNote').value.trim();
+    if (!text) return;
     
-    const item = findItem(id);
-    const currentNotes = Array.isArray(item.notes) ? [...item.notes] : [];
-    const newNote = {
-        text: noteEl.value.trim(),
-        time: new Date().toLocaleString('en-GB')
-    };
-    currentNotes.unshift(newNote);
+    const item = submissionsData.find(s => String(s.id) === String(id));
+    const notes = Array.isArray(item.notes) ? [...item.notes] : [];
+    notes.unshift({ text, time: new Date().toLocaleString('en-GB') });
 
     try {
         const res = await fetch('/api/update', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id, notes: currentNotes })
+            body: JSON.stringify({ id, notes })
         });
         if (res.ok) {
-            window.showToast("Note added successfully!");
-            item.notes = currentNotes; // Update local data
-            window.openNotesModal(id); // Refresh modal view
+            item.notes = notes;
+            window.openNotesModal(id);
         }
-    } catch (e) {
-        window.showToast("Error saving note", "error");
-    }
+    } catch (e) { console.error(e); }
 };
 
-// ======== LEAD EXPORT ENGINE ========
-
+// Lead Document Engine
 window.downloadLead = function(id) {
-    const item = findItem(id);
+    const item = submissionsData.find(s => String(s.id) === String(id));
     if (!item) return;
 
-    let content = `FULL LEAD PROFILE: ${item.name || 'UNKNOWN'}\n`;
-    content += `========================================================\n\n`;
+    let content = `LEAD PROFILE: ${item.name || 'UNKNOWN'}\n`;
+    content += `Generated: ${new Date().toLocaleString()}\n`;
+    content += `------------------------------------------------\n\n`;
 
-    const skipKeys = ['id', 'timestamp', 'leadStatus', 'solicitorName', 'notes'];
-    
-    // Sort keys to keep Name/Address at top
-    const allKeys = Object.keys(item).sort((a,b) => {
-        if (a === 'name') return -1;
-        if (b === 'name') return 1;
-        return 0;
-    });
-
-    allKeys.forEach(key => {
-        if (skipKeys.includes(key)) return;
-        
-        // Make the label readable (e.g. tenantType -> Tenant Type)
+    Object.keys(item).forEach(key => {
+        if (['id', 'notes'].includes(key)) return;
         const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
-        let val = item[key];
-        
-        // Format arrays (like issueType)
-        if (Array.isArray(val)) val = val.join(", ");
-        
-        content += `${label}: ${val || '---'}\n`;
+        content += `${label}: ${item[key] || '---'}\n`;
     });
 
-    content += `\n========================================================\n`;
-    content += `Generated on ${new Date().toLocaleString()}\n`;
-
-    const blob = new Blob([content], { type: 'application/msword' });
+    const blob = new Blob([content], { type: 'text/plain' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `Lead_Profile_${(item.name || 'Unknown').replace(/\s+/g,'_')}.doc`;
+    a.download = `Lead_${(item.name || 'Unknown').replace(/\s+/g,'_')}.txt`;
     a.click();
 };
 
-window.saveEdit = async function(id) {
-    const formData = new FormData(document.getElementById('editForm'));
-    const updates = { id };
-    formData.forEach((v, k) => updates[k] = v);
-
-    try {
-        const res = await fetch('/api/update', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(updates)
-        });
-        if (res.ok) {
-            window.showToast("Saved!");
-            location.reload();
-        }
-    } catch (e) {
-        window.showToast("Error saving", "error");
-    }
+window.exportData = function() {
+    const headers = Object.keys(submissionsData[0]).filter(k => k !== 'notes');
+    const csv = [headers.join(','), ...submissionsData.map(s => headers.map(h => `"${String(s[h]||'').replace(/"/g,'""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'Leads_Report.csv';
+    a.click();
 };
 
 // ======== INIT ========
@@ -387,27 +356,12 @@ window.saveEdit = async function(id) {
     try {
         const res = await fetch('/api/submissions');
         submissionsData = await res.json();
+        
+        // Populate and Calculate
         populateFilters();
-        updateStats();
-        renderTable(submissionsData);
-    } catch (e) {
-        console.error(e);
-    }
+        calculateDashboardStats();
+        
+        // Show default view
+        switchView('dashboard');
+    } catch (e) { console.error("Initialization Error:", e); }
 })();
-
-// CSV Logo Logic
-const overlay = document.getElementById('modalOverlay');
-if (overlay) overlay.onclick = (e) => (e.target === overlay) && window.closeModal();
-
-const downloadBtn = document.getElementById('downloadCsvBtn');
-if (downloadBtn) {
-    downloadBtn.addEventListener('click', () => {
-        const headers = Object.keys(submissionsData[0]);
-        const csv = [headers.join(','), ...submissionsData.map(s => headers.map(h => `"${String(s[h]||'').replace(/"/g,'""')}"`).join(','))].join('\n');
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'Leads_Report.csv';
-        a.click();
-    });
-}
