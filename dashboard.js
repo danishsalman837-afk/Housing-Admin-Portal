@@ -2,6 +2,11 @@
 let submissionsData = [];
 let charts = {};
 
+// SECURITY CORE: Initialize Supabase Client
+const supabaseUrl = "PASTE_YOUR_SUPABASE_URL_HERE";
+const supabaseKey = "PASTE_YOUR_ANON_KEY_HERE";
+const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
 const leadStatuses = [
   'New Lead', 'Transferred', 'Accepted', 'Rejected', 
   'Not Yet Invoiced', 'Invoice Raised', 'Paid', 'Test Lead'
@@ -563,10 +568,31 @@ window.exportData = function() {
     a.click();
 };
 
-// ======== INIT ========
+window.handleLogout = async function() {
+    await supabase.auth.signOut();
+    window.location.href = 'login.html';
+};
 
+// ======== AUTHENTICATED INIT ========
 (async function init() {
     try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) { window.location.href = 'login.html'; return; }
+
+        const channel = supabase.channel('admin-presence', {
+            config: { presence: { key: session.user.id } }
+        });
+
+        channel
+            .on('presence', { event: 'sync' }, () => {
+                const state = channel.presenceState();
+                const el = document.getElementById('activeAgents');
+                if (el) el.innerText = Object.keys(state).length;
+            })
+            .subscribe(async (status) => {
+                if (status === 'SUBSCRIBED') await channel.track({ online_at: new Date().toISOString() });
+            });
+
         const res = await fetch('/api/submissions');
         submissionsData = await res.json();
         
