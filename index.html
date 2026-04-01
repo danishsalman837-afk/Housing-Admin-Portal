@@ -6,6 +6,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard | Housing Disrepair</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Security Guard: Redirect away if not logged in -->
+  <script>
+    const session = localStorage.getItem('admin_session');
+    if (!session) {
+      window.location.href = '/login.html';
+    }
+  </script>
+  
   <style>
     * {
       box-sizing: border-box;
@@ -18,24 +26,55 @@
       background: #f0f2f5;
       color: #1a1a2e;
       min-height: 100vh;
+      opacity: 0; /* Fade in once security check passes */
+      transition: opacity 0.3s;
+    }
+
+    body.authorized {
+      opacity: 1;
     }
 
     /* Header */
     .header {
       background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-      padding: 20px 30px;
+      padding: 15px 30px;
       color: white;
       display: flex;
       justify-content: space-between;
       align-items: center;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     }
+    
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
 
     .header h1 {
-      font-size: 20px;
+      font-size: 18px;
       font-weight: 700;
       letter-spacing: -0.3px;
     }
+
+    .admin-info {
+      font-size: 11px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 4px 10px;
+      border-radius: 6px;
+      color: #94a3b8;
+    }
+
+    .logout-link {
+        font-size: 12px;
+        color: #f87171;
+        cursor: pointer;
+        text-decoration: none;
+        font-weight: 600;
+        margin-left: 10px;
+    }
+    
+    .logout-link:hover { text-decoration: underline; color: #ef4444; }
 
     .header-stats {
       display: flex;
@@ -877,12 +916,32 @@
 
   <!-- Header -->
   <div class="header">
-    <h1>Housing Disrepair — Admin</h1>
+    <div class="header-left">
+      <h1>Housing Disrepair — Admin</h1>
+      <div id="adminBadge" class="admin-info">Admin: Loading... <a class="logout-link" onclick="handleLogout()">[Logout]</a></div>
+    </div>
     <div class="header-stats">
       <div class="header-stat">Total: <span id="statTotal">0</span></div>
       <div class="header-stat">Unassigned: <span id="statUnassigned">0</span></div>
     </div>
   </div>
+
+  <script>
+    // Security Pass: Show content and handle logout
+    document.addEventListener('DOMContentLoaded', () => {
+        const sessionStr = localStorage.getItem('admin_session');
+        if (sessionStr) {
+            const session = JSON.parse(sessionStr);
+            document.getElementById('adminBadge').innerHTML = `Admin: ${session.user.email} <a class="logout-link" onclick="handleLogout()">[Logout]</a>`;
+            document.body.classList.add('authorized');
+        }
+    });
+
+    function handleLogout() {
+        localStorage.removeItem('admin_session');
+        window.location.href = '/login.html';
+    }
+  </script>
 
   <div class="container">
     <!-- Toolbar -->
