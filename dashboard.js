@@ -538,10 +538,20 @@ window.exportData = function() {
 
 // ======== INIT ========
 
-(async function init() {
+window.initDashboard = async function() {
     try {
+        console.log("🚀 Initializing Dashboard...");
         const res = await fetch('/api/submissions');
+        
+        if (!res.ok) {
+            const errData = await res.json();
+            console.error("❌ Server Error:", errData);
+            alert("Dashboard Connection Error: " + (errData.error || "Could not fetch leads."));
+            return;
+        }
+
         submissionsData = await res.json();
+        console.log("📦 Leads Loaded:", submissionsData.length);
         
         // Populate and Calculate
         populateFilters();
@@ -549,5 +559,8 @@ window.exportData = function() {
         
         // Show default view
         switchView('dashboard');
-    } catch (e) { console.error("Initialization Error:", e); }
-})();
+    } catch (e) { 
+        console.error("🚨 Dashboard Load Error:", e);
+        alert("The server is not responding. Please check your internet or Vercel logs.");
+    }
+};
