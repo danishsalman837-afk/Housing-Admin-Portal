@@ -75,9 +75,28 @@
         </div>
 
         <div id="leadsView" class="view-container">
-            <h1>Leads Management</h1>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h1>Leads Management</h1>
+                <button class="btn-action" style="background:#10b981; color:white;" onclick="window.exportExcel()">📥 Export to Excel</button>
+            </div>
+            
+            <div style="display:flex; gap:15px; margin-bottom:20px; padding:15px; background:white; border-radius:12px; border:1px solid #e2e8f0;">
+                <div>
+                    <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:5px; display:block;">Filter by Status</label>
+                    <select id="filterStatus" class="status-select" onchange="window.renderFilteredLeads()">
+                        <option value="All">All Statuses</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:5px; display:block;">Filter by Solicitor (Company)</label>
+                    <select id="filterCompany" class="status-select" onchange="window.renderFilteredLeads()">
+                        <option value="All">All Companies</option>
+                    </select>
+                </div>
+            </div>
+
             <table id="submissionTable">
-                <thead><tr><th>#</th><th>Name</th><th>Phone</th><th>Date</th><th>Status</th><th>Action</th></tr></thead>
+                <thead><tr><th>#</th><th>Name</th><th>Phone</th><th>Date</th><th>Assigned Co.</th><th>Status</th><th>Actions</th></tr></thead>
                 <tbody></tbody>
             </table>
         </div>
