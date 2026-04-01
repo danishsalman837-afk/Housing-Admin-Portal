@@ -154,6 +154,17 @@ function initCharts(data) {
 
 // ======== DATA RENDERING ========
 
+function getStatusClass(status) {
+    if (!status) return 'status-new';
+    if (status === 'Accepted') return 'status-accepted';
+    if (status === 'Rejected') return 'status-rejected';
+    if (status === 'Transferred') return 'status-transferred';
+    if (status === 'Test Lead') return 'status-test';
+    if (status === 'Paid') return 'status-paid';
+    if (status.includes('Invoice')) return 'status-invoice';
+    return 'status-new';
+}
+
 function renderTable(data) {
     const tbody = document.querySelector("#submissionTable tbody");
     if (!tbody) return;
@@ -175,7 +186,7 @@ function renderTable(data) {
             <td>${solicitor}</td>
             <td>${ts}</td>
             <td>
-                <select class="status-select" style="padding: 5px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11px; background: #fff;" onchange="window.handleStatusUpdate('${buttonId}', this)">
+                <select class="status-select ${getStatusClass(item.leadStatus)}" onchange="window.handleStatusUpdate('${buttonId}', this)">
                     ${leadStatuses.map(s => `<option value="${s}" ${ (item.leadStatus || 'New Lead') === s ? 'selected' : '' }>${s}</option>`).join('')}
                 </select>
             </td>
@@ -264,6 +275,8 @@ window.clearAllFilters = function() {
 
 window.handleStatusUpdate = async function(id, el) {
     const newStatus = el.value;
+    // Update color class instantly
+    el.className = `status-select ${getStatusClass(newStatus)}`;
     try {
         const res = await fetch('/api/update', {
             method: 'POST',
