@@ -315,11 +315,13 @@
     
     .btn-action i { font-style: normal; font-size: 12px; }
 
-    /* ========== FINAL MOBILE POLISH (GHOST BAR FIX) ========== */
+    /* ========== THE "ZERO-GAP" LAYOUT (FIX FOR WHITE BAR) ========== */
     
     html, body {
-        margin: 0; padding: 0; width: 100%; height: 100%;
+        margin: 0 !important; padding: 0 !important;
+        width: 100vw !important; max-width: 100vw !important;
         overflow-x: hidden !important; background: #fdfdfd;
+        position: relative;
     }
 
     * { box-sizing: border-box; }
@@ -327,14 +329,21 @@
     @media (max-width: 1024px) {
         .mobile-header { display: flex; }
         
+        /* Force container to STACK, not FLEX side-by-side */
+        .main-content { 
+            display: block !important; 
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+        }
+
         .sidebar {
-            display: none !important; /* Total removal from layout flow */
-            position: fixed !important; top: 0 !important; left: -300px !important;
+            display: none !important;
+            position: fixed !important; top: 0 !important; left: -320px !important;
             width: 280px !important; height: 100vh !important;
             z-index: 10000 !important;
             background: white !important;
             box-shadow: 15px 0 45px rgba(0,0,0,0.15) !important;
-            transition: left 0.3s ease-in-out;
         }
 
         .sidebar.active { 
@@ -343,31 +352,24 @@
         }
 
         .main-wrapper {
-            margin-left: 0 !important;
+            margin: 0 !important; /* KILL GHOST MARGIN */
             width: 100vw !important;
             padding: 85px 15px 40px !important; 
+            background: #fdfdfd !important;
+            min-height: 100vh !important;
             display: block !important;
-            overflow-x: visible !important; 
         }
 
-        .stats-grid { grid-template-columns: 1fr 1fr !important; gap: 15px !important; }
+        .stats-grid { grid-template-columns: 1fr 1fr !important; gap: 12px !important; }
         .charts-row { grid-template-columns: 1fr !important; }
     }
 
     @media (max-width: 768px) {
         .stats-grid { grid-template-columns: 1fr !important; }
-        .header-bar { flex-direction: column; align-items: stretch; gap: 12px; margin-bottom: 25px; }
+        .header-bar { flex-direction: column; align-items: stretch; gap: 10px; margin-bottom: 25px; }
         .toolbar { flex-direction: column; align-items: stretch; gap: 10px; }
-        
-        .table-card { 
-            overflow-x: auto !important; 
-            -webkit-overflow-scrolling: touch !important;
-            background: white; border: 1px solid #e2e8f0; border-radius: 12px;
-        }
-        table { min-width: 1100px !important; width: 100% !important; }
-        th, td { white-space: nowrap !important; padding: 15px !important; }
-
-        #modalBox { width: 95% !important; padding: 24px !important; border-radius: 20px !important; }
+        .table-card { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; }
+        table { min-width: 1100px !important; }
     }
 
     #sidebarOverlay {
