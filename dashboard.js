@@ -128,8 +128,15 @@ window.saveCompany = async function(id = null) {
         if (res.ok) {
             document.getElementById('modalOverlay').style.display = 'none';
             fetchCompanies();
+            alert("Success: Company registration finalized.");
+        } else {
+            const err = await res.json();
+            alert("Save Failure: " + (err.error || "Could not reach the database."));
         }
-    } catch (e) { console.error(e); }
+    } catch (e) { 
+        console.error(e);
+        alert("Connectivity Issue: Please check your internet or Vercel logs.");
+    }
 };
 
 window.openEditCompanyModal = function(id) {
@@ -229,8 +236,15 @@ window.saveMember = async function() {
         if (res.ok) {
             document.getElementById('modalOverlay').style.display = 'none';
             fetchMembers();
+            alert("Success: Member added successfully.");
+        } else {
+            const err = await res.json();
+            alert("Member Registration Error: " + (err.error || "Could not reach the database."));
         }
-    } catch (e) { console.error(e); }
+    } catch (e) { 
+        console.error(e);
+        alert("Connectivity Issue: Could not connect to the API.");
+    }
 };
 
 window.deleteMember = async function(id) {
