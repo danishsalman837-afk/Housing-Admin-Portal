@@ -62,7 +62,7 @@ function populateFilters() {
     if (filterSolicitor) {
         const solicitors = [...new Set(submissionsData.map(s => s.solicitorName).filter(Boolean))].sort();
         filterSolicitor.innerHTML = `
-            <option value="">Filter by Solicitor...</option>
+            <option value="">Filter...</option>
             <option value="__unassigned__">Unassigned Leads</option>
             ${solicitors.map(s => `<option value="${s}">${s}</option>`).join('')}
         `;
