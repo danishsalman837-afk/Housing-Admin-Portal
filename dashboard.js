@@ -193,12 +193,16 @@ function renderTable(data) {
             <td>
                 <div class="action-btn-group">
                     <button class="btn-action" onclick="window.openViewModal('${buttonId}')">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                        View Profile
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        View
+                    </button>
+                    <button class="btn-action" onclick="window.openEditModal('${buttonId}')">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        Edit
                     </button>
                     <button class="btn-action" onclick="window.openNotesModal('${buttonId}')">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                        Activity Log
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        Log
                     </button>
                 </div>
             </td>
@@ -321,6 +325,69 @@ window.openViewModal = function(id) {
         </div>
     `;
     document.getElementById('modalOverlay').style.display = 'flex';
+};
+
+// Edit Lead Details Modal
+window.openEditModal = function(id) {
+    const item = submissionsData.find(s => String(s.id) === String(id));
+    if (!item) return;
+
+    document.getElementById('modalBox').innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h2 style="font-size:18px; font-weight:800; color:#1e293b;">Edit Lead Details</h2>
+            <button onclick="document.getElementById('modalOverlay').style.display='none'" style="border:none; background:none; font-size:24px; cursor:pointer; color:#94a3b8;">&times;</button>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:16px;">
+            <div style="display:flex; flex-direction:column; gap:6px;">
+                <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">Full Name</label>
+                <input type="text" id="editName" value="${item.name || ''}" style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:10px; font-size:13px; outline:none; focus:border-color:#2563eb;">
+            </div>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+                <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">Phone</label>
+                <input type="text" id="editPhone" value="${item.phone || ''}" style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:10px; font-size:13px; outline:none;">
+            </div>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+                <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">Email Address</label>
+                <input type="text" id="editEmail" value="${item.email || ''}" style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:10px; font-size:13px; outline:none;">
+            </div>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+                <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">Solicitor Assigned</label>
+                <input type="text" id="editSolicitor" value="${item.solicitorName || ''}" style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:10px; font-size:13px; outline:none;">
+            </div>
+            <div style="margin-top:10px; display:flex; gap:10px;">
+                <button onclick="window.saveEdit('${id}')" style="flex:1.5; padding:12px; background:#2563eb; color:white; border-radius:10px; font-weight:700; border:none; cursor:pointer; font-size:13px;">Save Changes</button>
+                <button onclick="document.getElementById('modalOverlay').style.display='none'" style="flex:1; padding:12px; background:#f1f5f9; color:#64748b; border-radius:10px; font-weight:700; border:none; cursor:pointer; font-size:13px;">Cancel</button>
+            </div>
+        </div>
+    `;
+    document.getElementById('modalOverlay').style.display = 'flex';
+};
+
+window.saveEdit = async function(id) {
+    const name = document.getElementById('editName').value;
+    const phone = document.getElementById('editPhone').value;
+    const email = document.getElementById('editEmail').value;
+    const solicitorName = document.getElementById('editSolicitor').value;
+
+    try {
+        const res = await fetch('/api/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, name, phone, email, solicitorName })
+        });
+        if (res.ok) {
+            const item = submissionsData.find(s => String(s.id) === String(id));
+            if (item) {
+                item.name = name;
+                item.phone = phone;
+                item.email = email;
+                item.solicitorName = solicitorName;
+            }
+            document.getElementById('modalOverlay').style.display = 'none';
+            applyFilters(); // Refresh table view
+            calculateDashboardStats(); // Refresh insights
+        }
+    } catch (e) { console.error(e); }
 };
 
 // Activity Log / Notes Modal
