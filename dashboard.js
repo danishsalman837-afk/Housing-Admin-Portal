@@ -327,65 +327,70 @@ window.openViewModal = function(id) {
     document.getElementById('modalOverlay').style.display = 'flex';
 };
 
-// Edit Lead Details Modal
+// Edit Full Lead Details Modal (Dynamic for all Questions)
 window.openEditModal = function(id) {
     const item = submissionsData.find(s => String(s.id) === String(id));
     if (!item) return;
 
+    let formHtml = '';
+    const ignore = ['id', 'notes', 'timestamp', 'solicitorName', 'leadStatus'];
+    
+    // First: Important Fields
+    const priority = ['name', 'phone', 'email', 'tenantType', 'solicitorName'];
+    const otherFields = Object.keys(item).filter(k => !priority.includes(k) && !ignore.includes(k));
+
+    [...priority, ...otherFields].forEach(key => {
+        if (!item.hasOwnProperty(key)) return;
+        const val = item[key] || '';
+        const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
+        formHtml += `
+            <div style="display:flex; flex-direction:column; gap:6px;">
+                <label style="font-size:10px; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:0.5px;">${label}</label>
+                <input type="text" class="edit-input" data-key="${key}" value="${val}" style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:10px; font-size:13px; outline:none; background:#fdfdfd;">
+            </div>
+        `;
+    });
+
     document.getElementById('modalBox').innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h2 style="font-size:18px; font-weight:800; color:#1e293b;">Edit Lead Details</h2>
+            <h2 style="font-size:18px; font-weight:800; color:#1e293b;">Complete Lead Editor</h2>
             <button onclick="document.getElementById('modalOverlay').style.display='none'" style="border:none; background:none; font-size:24px; cursor:pointer; color:#94a3b8;">&times;</button>
         </div>
-        <div style="display:flex; flex-direction:column; gap:16px;">
-            <div style="display:flex; flex-direction:column; gap:6px;">
-                <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">Full Name</label>
-                <input type="text" id="editName" value="${item.name || ''}" style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:10px; font-size:13px; outline:none; focus:border-color:#2563eb;">
-            </div>
-            <div style="display:flex; flex-direction:column; gap:6px;">
-                <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">Phone</label>
-                <input type="text" id="editPhone" value="${item.phone || ''}" style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:10px; font-size:13px; outline:none;">
-            </div>
-            <div style="display:flex; flex-direction:column; gap:6px;">
-                <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">Email Address</label>
-                <input type="text" id="editEmail" value="${item.email || ''}" style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:10px; font-size:13px; outline:none;">
-            </div>
-            <div style="display:flex; flex-direction:column; gap:6px;">
-                <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">Solicitor Assigned</label>
-                <input type="text" id="editSolicitor" value="${item.solicitorName || ''}" style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:10px; font-size:13px; outline:none;">
-            </div>
-            <div style="margin-top:10px; display:flex; gap:10px;">
-                <button onclick="window.saveEdit('${id}')" style="flex:1.5; padding:12px; background:#2563eb; color:white; border-radius:10px; font-weight:700; border:none; cursor:pointer; font-size:13px;">Save Changes</button>
-                <button onclick="document.getElementById('modalOverlay').style.display='none'" style="flex:1; padding:12px; background:#f1f5f9; color:#64748b; border-radius:10px; font-weight:700; border:none; cursor:pointer; font-size:13px;">Cancel</button>
-            </div>
+        <div style="max-height:400px; overflow-y:auto; padding-right:12px; display:flex; flex-direction:column; gap:16px;">
+            ${formHtml}
+        </div>
+        <div style="margin-top:20px; display:flex; gap:12px; padding-top:15px; border-top:1px solid #f1f5f9;">
+            <button onclick="window.saveEdit('${id}')" style="flex:1.5; padding:12px; background:#2563eb; color:white; border-radius:12px; font-weight:700; border:none; cursor:pointer; font-size:14px; box-shadow:0 4px 6px rgba(37, 99, 235, 0.2);">Save Full Lead Profile</button>
+            <button onclick="document.getElementById('modalOverlay').style.display='none'" style="flex:1; padding:12px; background:#f1f5f9; color:#64748b; border-radius:12px; font-weight:700; border:none; cursor:pointer; font-size:14px;">Dismiss</button>
         </div>
     `;
     document.getElementById('modalOverlay').style.display = 'flex';
 };
 
 window.saveEdit = async function(id) {
-    const name = document.getElementById('editName').value;
-    const phone = document.getElementById('editPhone').value;
-    const email = document.getElementById('editEmail').value;
-    const solicitorName = document.getElementById('editSolicitor').value;
+    const payload = { id };
+    const inputs = document.querySelectorAll('.edit-input');
+    
+    inputs.forEach(input => {
+        payload[input.dataset.key] = input.value;
+    });
 
     try {
         const res = await fetch('/api/update', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id, name, phone, email, solicitorName })
+            body: JSON.stringify(payload)
         });
         if (res.ok) {
             const item = submissionsData.find(s => String(s.id) === String(id));
             if (item) {
-                item.name = name;
-                item.phone = phone;
-                item.email = email;
-                item.solicitorName = solicitorName;
+                Object.keys(payload).forEach(k => {
+                    if (k !== 'id') item[k] = payload[k];
+                });
             }
             document.getElementById('modalOverlay').style.display = 'none';
-            applyFilters(); // Refresh table view
-            calculateDashboardStats(); // Refresh insights
+            applyFilters(); 
+            calculateDashboardStats();
         }
     } catch (e) { console.error(e); }
 };
