@@ -1,4 +1,4 @@
-const { createClient } = require("@supabase/supabase-js");
+const { createSupabaseClient, assertEnv } = require("./supabaseClient");
 
 // Webhook for Primo Dialler to push leads directly to Admin Dashboard
 module.exports = async function handler(req, res) {
@@ -9,9 +9,8 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: "No data received. Ensure you are sending fields like name, phone, etc." });
   }
 
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_ANON_KEY;
-  const supabase = createClient(supabaseUrl, supabaseKey);
+  if (!assertEnv('anon', res)) return;
+  const supabase = createSupabaseClient('anon');
 
   try {
     // Add a default status if not provided
