@@ -48,52 +48,50 @@ function updateStats() {
 
 // ======== FILTERING ========
 
-const filterBy = document.getElementById('filterBy');
-const filterValue = document.getElementById('filterValue');
+const filterSolicitor = document.getElementById('filterSolicitor');
+const filterStatus = document.getElementById('filterStatus');
 const searchInput = document.getElementById('searchInput');
 
-if (filterBy) {
-    filterBy.addEventListener('change', () => {
-        const type = filterBy.value;
-        filterValue.innerHTML = '<option value="">Select...</option>';
-        if (!type) {
-            filterValue.classList.remove('visible');
-        } else {
-            filterValue.classList.add('visible');
-            if (type === 'status') {
-                leadStatuses.forEach(s => {
-                    filterValue.innerHTML += `<option value="${s}">${s}</option>`;
-                });
-            } else if (type === 'solicitor') {
-                const solicitors = [...new Set(submissionsData.map(s => s.solicitorName).filter(Boolean))].sort();
-                filterValue.innerHTML += `<option value="__unassigned__">Unassigned</option>`;
-                solicitors.forEach(s => {
-                    filterValue.innerHTML += `<option value="${s}">${s}</option>`;
-                });
-            }
-        }
-        applyFilters();
-    });
+function populateFilters() {
+    if (filterStatus) {
+        filterStatus.innerHTML = '<option value="">All Statuses</option>';
+        leadStatuses.forEach(s => {
+            filterStatus.innerHTML += `<option value="${s}">${s}</option>`;
+        });
+    }
+    if (filterSolicitor) {
+        const solicitors = [...new Set(submissionsData.map(s => s.solicitorName).filter(Boolean))].sort();
+        filterSolicitor.innerHTML = `
+            <option value="">All Solicitors</option>
+            <option value="__unassigned__">Unassigned</option>
+            ${solicitors.map(s => `<option value="${s}">${s}</option>`).join('')}
+        `;
+    }
 }
 
 function applyFilters() {
     const search = searchInput ? searchInput.value.toLowerCase().trim() : '';
-    const type = filterBy ? filterBy.value : '';
-    const val = filterValue ? filterValue.value : '';
+    const solVal = filterSolicitor ? filterSolicitor.value : '';
+    const statVal = filterStatus ? filterStatus.value : '';
 
     const filtered = submissionsData.filter(item => {
+        // 1. Search Query
         const matchesSearch = !search || 
             (item.name || '').toLowerCase().includes(search) || 
             (item.phone || '').toLowerCase().includes(search);
         if (!matchesSearch) return false;
-        if (type === 'status' && val) {
+
+        // 2. Status Filter
+        if (statVal) {
             const currentStatus = item.leadStatus || 'New Lead';
-            if (currentStatus !== val) return false;
+            if (currentStatus !== statVal) return false;
         }
-        if (type === 'solicitor' && val) {
-            if (val === '__unassigned__') {
+
+        // 3. Solicitor Filter
+        if (solVal) {
+            if (solVal === '__unassigned__') {
                 if (item.solicitorName) return false;
-            } else if (item.solicitorName !== val) {
+            } else if (item.solicitorName !== solVal) {
                 return false;
             }
         }
@@ -103,15 +101,13 @@ function applyFilters() {
 }
 
 if (searchInput) searchInput.addEventListener('input', applyFilters);
-if (filterValue) filterValue.addEventListener('change', applyFilters);
+if (filterSolicitor) filterSolicitor.addEventListener('change', applyFilters);
+if (filterStatus) filterStatus.addEventListener('change', applyFilters);
 
 window.clearFilters = function() {
     if (searchInput) searchInput.value = '';
-    if (filterBy) filterBy.value = '';
-    if (filterValue) {
-        filterValue.value = '';
-        filterValue.classList.remove('visible');
-    }
+    if (filterSolicitor) filterSolicitor.value = '';
+    if (filterStatus) filterStatus.value = '';
     applyFilters();
 };
 
@@ -373,6 +369,7 @@ window.saveEdit = async function(id) {
     try {
         const res = await fetch('/api/submissions');
         submissionsData = await res.json();
+        populateFilters();
         updateStats();
         renderTable(submissionsData);
     } catch (e) {
