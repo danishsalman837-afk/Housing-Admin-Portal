@@ -327,31 +327,30 @@
     /* ========== DESKTOP LAYOUT (1025px+) ========== */
     @media (min-width: 1025px) {
         .main-content {
-            display: flex; /* Sidebar & Wrapper Side-By-Side */
+            display: flex;
             height: 100vh;
             overflow: hidden;
         }
-
         .sidebar {
-            width: 280px;
+            width: 280px; 
             flex-shrink: 0;
-            background: white;
+            background: white; 
             height: 100vh;
-            display: flex;
+            display: flex; 
             flex-direction: column;
-            padding: 25px 0;
+            padding: 25px 0; 
             border-right: 1px solid #eef2f5;
             z-index: 10;
         }
-
         .main-wrapper {
-            flex: 1;
-            height: 100vh;
+            flex: 1; 
+            height: 100vh; 
             overflow-y: auto;
-            padding: 30px 40px;
+            padding: 30px 40px; 
             background: #fdfdfd;
             min-width: 0;
         }
+        .mobile-header { display: none; }
     }
 
     /* ========== PROFESSIONAL MOBILE FRAMEWORK (ISOLATED) ========== */
@@ -364,7 +363,7 @@
             align-items: center; padding: 0 15px; gap: 10px;
         }
 
-        .main-content { display: block !important; }
+        .main-content { display: block !important; width: 100% !important; height: auto !important; }
 
         .sidebar {
             display: none !important; position: fixed !important; 
@@ -377,15 +376,16 @@
 
         .main-wrapper {
             margin: 0 !important; width: 100% !important;
-            padding: 80px 15px 40px !important; min-height: 100vh !important;
+            padding: 85px 15px 40px !important; min-height: 100vh !important;
             display: block !important;
+            overflow-x: hidden !important; 
         }
 
         #mobileMenuBtn {
             background: #f8fafc; border: 1px solid #e2e8f0; cursor: pointer;
-            padding: 8px; border-radius: 8px; color: var(--primary); display: flex;
+            padding: 8px; border-radius: 8px; color: #2563eb; display: flex;
         }
-        .mobile-brand { font-size: 13px; font-weight: 700; color: var(--primary); }
+        .mobile-brand { font-size: 13px; font-weight: 700; color: #2563eb; }
 
         .stats-grid { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
         .charts-row { grid-template-columns: 1fr !important; }
@@ -396,17 +396,14 @@
         /* THE HARDCORE TABLE SCROLL ENGINE */
         .table-card { 
             overflow-x: auto !important; 
-            -webkit-overflow-scrolling: touch !important; /* Forces hardware acceleration */
+            -webkit-overflow-scrolling: touch !important; 
             background: white; border-radius: 12px; border: 1px solid #e2e8f0;
             width: 100% !important; margin: 0 !important;
         }
 
-        table { 
-            min-width: 1250px !important; /* Guaranteed swipability */
-            width: 100% !important; border-collapse: collapse !important;
-        }
+        table { min-width: 1250px !important; width: 100% !important; border-collapse: collapse !important; }
         th, td { white-space: nowrap !important; padding: 12px 15px !important; }
-        
+
         #modalBox { width: 95% !important; padding: 25px !important; max-height: 90vh; }
     }
 
