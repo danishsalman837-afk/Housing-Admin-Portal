@@ -1,20 +1,8 @@
 {
-  "name": "hdr-web-form",
+  "name": "housing-admin-portal",
   "version": "1.0.0",
-  "description": "",
-  "main": "dashboard.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
-    "@supabase/supabase-js": "^2.101.0",
-    "body-parser": "^2.2.2",
-    "express": "^5.2.1",
-    "xlsx": "^0.18.5"
+    "@supabase/supabase-js": "^2.39.0",
+    "docx": "^8.2.3"
   }
 }
