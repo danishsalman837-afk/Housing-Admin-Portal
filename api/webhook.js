@@ -29,6 +29,7 @@ module.exports = async function handler(req, res) {
       email: incoming.email || "",
       phone: incoming.phone || incoming.phone_number || incoming.contact_number || "N/A",
       dob: incoming.dob || incoming.date_of_birth || "",
+      postcode: incoming.postcode || "",
       address: incoming.address || incoming.full_address || "",
       tenantType: incoming.tenantType || incoming.tenant_type || "N/A",
       livingDuration: incoming.livingDuration || incoming.how_long_living || "",
@@ -79,7 +80,7 @@ module.exports = async function handler(req, res) {
       // --- DASHBOARD METADATA ---
       leadStatus: incoming.leadStatus || "New Lead",
       timestamp: incoming.timestamp || new Date().toISOString(),
-      source: 'Primo Dialer',
+      source: incoming.source || "Primo Dialer",
       solicitorName: incoming.solicitorName || null
     };
 

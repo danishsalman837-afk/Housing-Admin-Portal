@@ -318,10 +318,13 @@ window.openViewModal = function(id) {
     
     let fieldsHtml = '';
     const mainKeys = [
-        'name', 'phone', 'email', 'tenantType', 'livingDuration', 
-        'damp', 'leak', 
+        'name', 'phone', 'email', 'postcode', 'address',
+        'tenantType', 'livingDuration', 
+        'damp', 'dampLocation', 'dampRooms', 'dampSurface', 'dampDuration', 'dampCause', 'dampDamage', 'dampHealth',
+        'leak', 'leakLocation', 'leakSource', 'leakStart', 'leakDamage', 'leakCracks', 'leakBelongings',
         'issues_electrics', 'issues_heating', 'issues_structural', 
-        'reported', 'arrears', 'solicitorName', 'leadStatus', 'source'
+        'reported', 'reportCount', 'reportFirst', 'reportResponse', 'reportAttempt', 'reportStatus',
+        'arrears', 'arrearsAmount', 'additionalNotes', 'solicitorName', 'leadStatus', 'source'
     ];
     
     // Use the universal 'shouldShow' logic to kill legacy fields
@@ -357,10 +360,13 @@ window.openEditModal = function(id) {
     
     // Use the universal 'shouldShow' logic to kill legacy fields
     const priority = [
-        'name', 'phone', 'email', 'tenantType', 'livingDuration', 
-        'damp', 'leak', 
+        'name', 'phone', 'email', 'postcode', 'address',
+        'tenantType', 'livingDuration', 
+        'damp', 'dampLocation', 'dampRooms', 'dampSurface', 'dampDuration', 'dampCause', 'dampDamage', 'dampHealth',
+        'leak', 'leakLocation', 'leakSource', 'leakStart', 'leakDamage', 'leakCracks', 'leakBelongings',
         'issues_electrics', 'issues_heating', 'issues_structural', 
-        'reported', 'arrears', 'solicitorName', 'leadStatus'
+        'reported', 'reportCount', 'reportFirst', 'reportResponse', 'reportAttempt', 'reportStatus',
+        'arrears', 'arrearsAmount', 'additionalNotes', 'solicitorName', 'leadStatus'
     ];
     const otherFields = Object.keys(item).filter(k => !priority.includes(k) && shouldShow(k));
 
@@ -490,8 +496,16 @@ window.downloadLead = function(id) {
         })
     ];
 
-    // --- Dynamic Q&A Injection ---
-    const mainKeys = ['name', 'phone', 'email', 'tenantType', 'solicitorName', 'leadStatus'];
+    // --- Dynamic Q&A Injection (Mirroring Agent Form Order) ---
+    const mainKeys = [
+        'name', 'phone', 'email', 'postcode', 'address',
+        'tenantType', 'livingDuration', 
+        'damp', 'dampLocation', 'dampRooms', 'dampSurface', 'dampDuration', 'dampCause', 'dampDamage', 'dampHealth',
+        'leak', 'leakLocation', 'leakSource', 'leakStart', 'leakDamage', 'leakCracks', 'leakBelongings',
+        'issues_electrics', 'issues_heating', 'issues_structural', 
+        'reported', 'reportCount', 'reportFirst', 'reportResponse', 'reportAttempt', 'reportStatus',
+        'arrears', 'arrearsAmount', 'additionalNotes', 'solicitorName', 'leadStatus', 'source'
+    ];
     const otherFields = Object.keys(item).filter(k => !mainKeys.includes(k) && shouldShow(k));
 
     [...mainKeys, ...otherFields].forEach(key => {
