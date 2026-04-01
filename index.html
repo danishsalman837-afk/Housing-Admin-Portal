@@ -3,22 +3,23 @@
 <head>
   <script>
     // SECURITY GATE: Redirect to login if not authenticated
-    // Note: Replace with your actual project URL and Anon Key
     const supabaseUrl = "PASTE_YOUR_SUPABASE_URL_HERE";
     const supabaseKey = "PASTE_YOUR_ANON_KEY_HERE";
     
     async function quickGuard() {
       if (typeof supabase !== 'undefined') {
-        const client = supabase.createClient(supabaseUrl, supabaseKey);
-        const { data: { session } } = await client.auth.getSession();
+        // Shared instance for the entire page
+        if (!window.supabaseClient) {
+            window.supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+        }
+        const { data: { session } } = await window.supabaseClient.auth.getSession();
         if (!session) {
             window.location.href = 'login.html';
         } else if (!session.user.email.toLowerCase().endsWith('@energygrants.online')) {
-            await client.auth.signOut();
+            await window.supabaseClient.auth.signOut();
             window.location.href = 'login.html';
         }
       } else {
-        // If supabase isn't loaded yet, try again in 50ms
         setTimeout(quickGuard, 50);
       }
     }

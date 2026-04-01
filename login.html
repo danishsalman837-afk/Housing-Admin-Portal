@@ -87,7 +87,7 @@
         // Use your existing Supabase credentials
         const supabaseUrl = "PASTE_YOUR_SUPABASE_URL_HERE";
         const supabaseKey = "PASTE_YOUR_ANON_KEY_HERE";
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        window.supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
         async function handleLogin() {
             const email = document.getElementById('email').value.trim();
@@ -102,7 +102,7 @@
             }
 
             // 2. SIGN IN WITH SUPABASE
-            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            const { data, error } = await window.supabaseClient.auth.signInWithPassword({ email, password });
 
             if (error) {
                 errorEl.innerText = error.message;
@@ -113,7 +113,7 @@
         }
 
         // Check if already logged in
-        supabase.auth.getSession().then(({ data: { session } }) => {
+        window.supabaseClient.auth.getSession().then(({ data: { session } }) => {
             if (session) window.location.href = 'index.html';
         });
     </script>

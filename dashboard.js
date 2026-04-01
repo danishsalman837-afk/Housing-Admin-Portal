@@ -5,7 +5,9 @@ let charts = {};
 // SECURITY CORE: Initialize Supabase Client
 const supabaseUrl = "PASTE_YOUR_SUPABASE_URL_HERE";
 const supabaseKey = "PASTE_YOUR_ANON_KEY_HERE";
-window.supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+if (!window.supabaseClient && typeof supabase !== 'undefined') {
+    window.supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+}
 
 const leadStatuses = [
   'New Lead', 'Transferred', 'Accepted', 'Rejected', 
