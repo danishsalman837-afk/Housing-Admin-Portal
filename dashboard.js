@@ -283,6 +283,7 @@ window.renderCompanies = function() {
             ? `<div class="status-badge" data-color="success">Active</div>`
             : `<div class="status-badge" data-color="gray">Inactive</div>`;
 
+        const tr = document.createElement('tr');
         tr.innerHTML = `<td><strong>${nameDisp}</strong></td><td>${c.type || '--'}</td><td>${statusBadge}</td><td>${c.main_contact || '--'}</td><td>${c.postcode || '--'}</td><td>${c.website || '--'}</td>
             <td>
                 <div class="action-group">
