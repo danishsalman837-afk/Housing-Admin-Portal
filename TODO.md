@@ -1,0 +1,1 @@
+# Git/Vercel Deploy TODO&#10;&#10;## [x] 1. Resolve merge conflicts in dashboard.js (favor advanced remote features)&#10;## [ ] 2. git add dashboard.js&#10;## [ ] 3. git commit -m "Resolve merge conflicts, merge advanced dashboard + field order"&#10;## [ ] 4. git push origin main (Vercel auto-deploy)&#10;## [ ] 5. Verify Vercel deployment URL
