@@ -23,11 +23,14 @@ function assertEnv(role = "service", res) {
 }
 
 function createSupabaseClient(role = "service") {
-  if (!assertEnv(role)) {
-    return null; // should never happen when assertEnv has response checking
-  }
+  // Caller should validate with assertEnv(role, res) first.
   const url = process.env.SUPABASE_URL;
   const key = role === "anon" ? process.env.SUPABASE_ANON_KEY : process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !key) {
+    throw new Error(`Missing env for createSupabaseClient(${role})`);
+  }
+
   return createClient(url, key);
 }
 
