@@ -1399,17 +1399,18 @@
         const _origCalc = window.calculateDashboardStats || null;
         // The dashboardTotalDonut and dashboardConvRateDonut mirrors are synced via initCharts calls
         // We hook into the DOM after initDashboard is done to copy values
-        document.addEventListener('DOMContentLoaded', () => {
-            const observer = new MutationObserver(() => {
-                const total = document.getElementById('dashboardTotal')?.innerText;
-                const conv  = document.getElementById('dashboardConvRate')?.innerText;
-                if (document.getElementById('dashboardTotalDonut'))
-                    document.getElementById('dashboardTotalDonut').innerText = total || '0';
-                if (document.getElementById('dashboardConvRateDonut'))
-                    document.getElementById('dashboardConvRateDonut').innerText = conv || '0%';
-            });
-            observer.observe(document.body, { childList: true, subtree: true, characterData: true });
-        });
+        // Sync new dashboard stats boxes via standard functions
+        function syncDonutStats() {
+            const total = document.getElementById('dashboardTotal')?.innerText;
+            const conv  = document.getElementById('dashboardConvRate')?.innerText;
+            if (document.getElementById('dashboardTotalDonut'))
+                document.getElementById('dashboardTotalDonut').innerText = total || '0';
+            if (document.getElementById('dashboardConvRateDonut'))
+                document.getElementById('dashboardConvRateDonut').innerText = conv || '0%';
+        }
+        // Stats are updated in calculateDashboardStats, so we'll call sync once here
+        window.addEventListener('load', syncDonutStats);
+
     </script>
 
 </body>
