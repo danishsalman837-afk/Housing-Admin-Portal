@@ -506,26 +506,52 @@ window.openViewModal = function(id) {
     const s = submissionsData.find(x => String(x.id) === String(id));
     if(!s) return;
     
+    const systemFields = ['id', 'created_at', 'notes', 'leadStatus', 'assigned_company_id', 'assigned_solicitor_id', 'member_id', 'active', 'timestamp'];
+    const processedKeys = new Set();
+    
     let html = '<div style="column-count: 2; column-gap: 32px; max-height: 450px; overflow-y: auto; padding: 4px;">';
+    
     leadViewOrder.forEach(key => {
+        processedKeys.add(key);
         const label = leadFieldLabels[key] || key.replace(/_/g, ' ');
         let value = s[key];
         
         // Comprehensive fallback for different naming conventions
         if (value === undefined || value === null) {
             if (key === 'dateOfBirth') value = s.dob || s.birthDate || s.date_of_birth;
-            if (key === 'tenantType') value = s.tenant_type || s.councilTenant || s.housingAssociation;
-            if (key === 'livingDuration') value = s.tenancyDuration || s.living_duration || s.livingduration;
-            if (key === 'damp') value = s.hasDampMould || s.damp_issue;
+            else if (key === 'tenantType') value = s.tenant_type || s.councilTenant || s.housingAssociation;
+            else if (key === 'livingDuration') value = s.tenancyDuration || s.living_duration || s.livingduration;
+            else if (key === 'damp') value = s.hasDampMould || s.damp_issue;
         }
 
-        if(typeof value === 'object' && value !== null) value = JSON.stringify(value);
-        
-        html += `<div style="margin-bottom:16px; break-inside: avoid;">
-                    <label style="font-size:10px; color:#6B7280; text-transform:uppercase; font-weight:700; display:block; margin-bottom:4px;">${label}</label>
-                    <div style="font-size:14px; color:#111827; font-weight:500; background:#F9FAFB; padding:8px 12px; border-radius:8px; border:1px solid #F3F4F6;">${value || '--'}</div>
-                 </div>`;
+        if (value !== null && value !== undefined && value !== '') {
+            processedKeys.add('dob'); processedKeys.add('birthDate'); processedKeys.add('date_of_birth');
+            processedKeys.add('tenant_type'); processedKeys.add('councilTenant'); processedKeys.add('housingAssociation');
+            processedKeys.add('tenancyDuration'); processedKeys.add('living_duration'); processedKeys.add('livingduration');
+            processedKeys.add('hasDampMould'); processedKeys.add('damp_issue');
+
+            if(typeof value === 'object' && value !== null) value = JSON.stringify(value);
+            
+            html += `<div style="margin-bottom:16px; break-inside: avoid;">
+                        <label style="font-size:10px; color:#6B7280; text-transform:uppercase; font-weight:700; display:block; margin-bottom:4px;">${label}</label>
+                        <div style="font-size:14px; color:#111827; font-weight:500; background:#F9FAFB; padding:8px 12px; border-radius:8px; border:1px solid #F3F4F6;">${value}</div>
+                     </div>`;
+        }
     });
+
+    // Append any extra fields
+    Object.keys(s).forEach(key => {
+        if (processedKeys.has(key) || systemFields.includes(key)) return;
+        let value = s[key];
+        if (value !== null && value !== undefined && value !== '') {
+            if(typeof value === 'object') value = JSON.stringify(value);
+            html += `<div style="margin-bottom:16px; break-inside: avoid;">
+                        <label style="font-size:10px; color:#6B7280; text-transform:uppercase; font-weight:700; display:block; margin-bottom:4px;">${key.replace(/_/g, ' ')}</label>
+                        <div style="font-size:14px; color:#111827; font-weight:500; background:#F9FAFB; padding:8px 12px; border-radius:8px; border:1px solid #F3F4F6;">${value}</div>
+                     </div>`;
+        }
+    });
+
     html += '</div>';
 
     document.getElementById('modalBox').innerHTML = `

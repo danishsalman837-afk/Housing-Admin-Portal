@@ -65,19 +65,49 @@ module.exports = async function handler(req, res) {
       reportstatus: 'Report Status'
     };
 
+    const systemFields = ['id', 'created_at', 'timestamp', 'notes', 'leadStatus', 'assigned_company_id', 'assigned_solicitor_id', 'member_id', 'active'];
+
+    // 1. First append all fields in the desired order
+    const processedKeys = new Set();
+    
     leadViewOrder.forEach(key => {
       let value = lead[key];
+      processedKeys.add(key);
       
       // Fallbacks
-      if (value === undefined || value === null) {
+      if (value === undefined || value === null || value === '') {
         if (key === 'dateOfBirth') value = lead.dob || lead.birthDate || lead.date_of_birth;
-        if (key === 'tenantType') value = lead.tenant_type || lead.councilTenant || lead.housingAssociation;
-        if (key === 'livingDuration') value = lead.tenancyDuration || lead.living_duration;
-        if (key === 'damp') value = lead.hasDampMould;
+        else if (key === 'tenantType') value = lead.tenant_type || lead.councilTenant || lead.housingAssociation;
+        else if (key === 'livingDuration') value = lead.tenancyDuration || lead.living_duration;
+        else if (key === 'damp') value = lead.hasDampMould;
       }
 
       if (value !== null && value !== undefined && value !== '') {
+        processedKeys.add('dob'); processedKeys.add('birthDate'); processedKeys.add('date_of_birth');
+        processedKeys.add('tenant_type'); processedKeys.add('councilTenant'); processedKeys.add('housingAssociation');
+        processedKeys.add('tenancyDuration'); processedKeys.add('living_duration');
+        processedKeys.add('hasDampMould');
+
         const label = leadFieldLabels[key] || key.replace(/_/g, ' ').toUpperCase();
+        paragraphs.push(
+          new Paragraph({
+            children: [
+              new TextRun({ text: `${label}: `, bold: true, color: "1E293B" }),
+              new TextRun({ text: String(value) })
+            ],
+            spacing: { after: 200 }
+          })
+        );
+      }
+    });
+
+    // 2. Append any remaining non-system fields that were not in the order list
+    Object.keys(lead).forEach(key => {
+      if (processedKeys.has(key) || systemFields.includes(key)) return;
+      
+      const value = lead[key];
+      if (value !== null && value !== undefined && value !== '') {
+        const label = key.replace(/_/g, ' ').toUpperCase();
         paragraphs.push(
           new Paragraph({
             children: [
