@@ -1,89 +1,1417 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Housing Disrepair - Admin</title>
+    <title>HDR CRM — Housing Disrepair Admin</title>
+    <meta name="description" content="Housing Disrepair CRM — Professional admin portal for lead management, solicitor firms, and analytics.">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
     <style>
-        :root { --primary: #2563eb; --bg: #f8fafc; --sidebar: #ffffff; --text: #1e293b; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
-        body { background: var(--bg); display: flex; color: var(--text); min-height: 100vh; }
-        #sidebar { width: 280px; background: var(--sidebar); height: 100vh; position: fixed; border-right: 1px solid #e2e8f0; padding: 30px 20px; z-index: 100; }
-        .logo { font-size: 18px; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 10px; margin-bottom: 40px; }
-        .nav-item { padding: 12px 16px; margin-bottom: 8px; border-radius: 8px; cursor: pointer; color: #64748b; font-weight: 500; transition: 0.3s; display: flex; align-items: center; gap: 12px; }
-        .nav-item:hover { background: #f1f5f9; color: var(--primary); }
-        .nav-item.active { background: #eff6ff; color: var(--primary); }
-        #main-content { margin-left: 280px; width: calc(100% - 280px); padding: 40px; }
-        .view-container { display: none; width: 100%; max-width: 1200px; margin: 0 auto; }
-        .view-container.active { display: block; animation: fadeIn 0.4s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .stat-card { background: white; padding: 25px; border-radius: 16px; border: 1px solid #e2e8f0; flex: 1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-        .stat-val { font-size: 28px; font-weight: 700; margin-top: 10px; }
-        .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #64748b; font-weight: 600; }
-        .chart-container { background: white; padding: 25px; border-radius: 20px; border: 1px solid #e2e8f0; height: 350px; margin-top: 30px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-        table { width: 100%; border-collapse: separate; border-spacing: 0 8px; margin-top: 20px; }
-        th { text-align: left; padding: 12px 20px; color: #64748b; font-size: 12px; text-transform: uppercase; }
-        td { padding: 16px 20px; background: white; border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
-        td:first-child { border-left: 1px solid #f1f5f9; border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
-        td:last-child { border-right: 1px solid #f1f5f9; border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
-        .status-select { padding: 6px 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 13px; outline: none; }
-        .btn-action { padding: 8px 16px; border-radius: 8px; border: none; background: #f1f5f9; cursor: pointer; transition: 0.2s; font-size: 13px; font-weight: 600; }
-        #modalOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; backdrop-filter: blur(4px); }
-        #modalBox { background: white; width: 100%; max-width: 700px; border-radius: 24px; padding: 35px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
-        .edit-input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; margin-top: 5px; outline: none; }
+        /* ═══════════════════════════════════════
+           DESIGN TOKENS — Apple-inspired System
+        ═══════════════════════════════════════ */
+        :root {
+            /* Primary Accent — Apple Blue */
+            --blue:        #0A84FF;
+            --blue-hover:  #0071E3;
+            --blue-light:  rgba(10,132,255,.10);
+            --blue-ring:   rgba(10,132,255,.30);
+
+            /* Semantic colours */
+            --green:       #30D158;
+            --green-light: rgba(48,209,88,.12);
+            --orange:      #FF9F0A;
+            --orange-light:rgba(255,159,10,.12);
+            --red:         #FF453A;
+            --red-light:   rgba(255,69,58,.12);
+            --purple:      #BF5AF2;
+            --purple-light:rgba(191,90,242,.12);
+            --yellow:      #FFD60A;
+            --indigo:      #5E5CE6;
+
+            /* Backgrounds — layered depth */
+            --bg:          #F2F2F7;          /* iOS-style system background */
+            --surface-1:   #FFFFFF;          /* Cards, sidebar */
+            --surface-2:   #F2F2F7;          /* Nested areas */
+            --surface-3:   #E5E5EA;          /* Dividers */
+
+            /* Text */
+            --label-1:     #1C1C1E;          /* Primary */
+            --label-2:     #3C3C43;          /* Secondary */
+            --label-3:     #636366;          /* Tertiary */
+            --label-4:     #AEAEB2;          /* Quaternary */
+
+            /* Border */
+            --border:      rgba(60,60,67,.12);
+            --border-med:  rgba(60,60,67,.20);
+
+            /* Sidebar */
+            --sidebar-w:   260px;
+            --sidebar-bg:  #FFFFFF;
+
+            /* Radii */
+            --r-sm:  8px;
+            --r-md:  12px;
+            --r-lg:  16px;
+            --r-xl:  20px;
+
+            /* Shadows — layered */
+            --shadow-xs: 0 1px 2px rgba(0,0,0,.06);
+            --shadow-sm: 0 2px 8px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+            --shadow-md: 0 4px 16px rgba(0,0,0,.10), 0 2px 4px rgba(0,0,0,.06);
+            --shadow-lg: 0 12px 40px rgba(0,0,0,.14), 0 4px 12px rgba(0,0,0,.08);
+            --shadow-xl: 0 24px 64px rgba(0,0,0,.18), 0 8px 24px rgba(0,0,0,.10);
+
+            /* Motion */
+            --ease: cubic-bezier(.25,.1,.25,1);
+            --ease-spring: cubic-bezier(.34,1.56,.64,1);
+        }
+
+        /* ═══════════════════════════════════════
+           RESET & BASE
+        ═══════════════════════════════════════ */
+        *, *::before, *::after {
+            margin: 0; padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+            background: var(--bg);
+            color: var(--label-1);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* ═══════════════════════════════════════
+           SIDEBAR
+        ═══════════════════════════════════════ */
+        #sidebar {
+            width: var(--sidebar-w);
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            z-index: 50;
+            flex-shrink: 0;
+        }
+
+        .sidebar-header {
+            padding: 28px 20px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo-lockup {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(145deg, #0A84FF 0%, #0050D0 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(10,132,255,.35);
+            flex-shrink: 0;
+        }
+
+        .logo-icon svg {
+            width: 20px;
+            height: 20px;
+            fill: white;
+        }
+
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--label-1);
+            letter-spacing: -0.3px;
+            line-height: 1.2;
+        }
+
+        .logo-sub {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--label-4);
+            letter-spacing: 0.2px;
+            text-transform: uppercase;
+        }
+
+        /* Sidebar navigation */
+        .nav-section {
+            padding: 16px 12px 0;
+        }
+
+        .nav-section-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--label-4);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            padding: 0 8px;
+            margin-bottom: 6px;
+        }
+
+        .nav-items {
+            flex: 1;
+            padding: 8px 12px;
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            padding: 10px 12px;
+            margin-bottom: 2px;
+            border-radius: var(--r-sm);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+            font-size: 14px;
+            color: var(--label-3);
+            transition: all 0.18s var(--ease);
+            position: relative;
+            user-select: none;
+        }
+
+        .nav-item .nav-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            transition: all 0.18s var(--ease);
+            flex-shrink: 0;
+        }
+
+        .nav-item .nav-icon svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        .nav-item:hover {
+            color: var(--label-1);
+            background: var(--surface-2);
+        }
+
+        .nav-item:hover .nav-icon {
+            background: var(--surface-3);
+        }
+
+        .nav-item.active {
+            color: var(--blue);
+            background: var(--blue-light);
+            font-weight: 600;
+        }
+
+        .nav-item.active .nav-icon {
+            background: var(--blue);
+            color: white;
+            box-shadow: 0 3px 8px rgba(10,132,255,.35);
+        }
+
+        .nav-item.active .nav-icon svg {
+            fill: white;
+        }
+
+        /* Sidebar footer */
+        .sidebar-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .user-pill {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: var(--r-sm);
+            background: var(--surface-2);
+        }
+
+        .user-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--blue) 0%, var(--indigo) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .user-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .user-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--label-1);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-role {
+            font-size: 10px;
+            color: var(--label-4);
+            font-weight: 500;
+        }
+
+        /* ═══════════════════════════════════════
+           MAIN CONTENT AREA
+        ═══════════════════════════════════════ */
+        #main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow-y: auto;
+            background: var(--bg);
+        }
+
+        /* ═══════════════════════════════════════
+           TOP BAR
+        ═══════════════════════════════════════ */
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            height: 56px;
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            flex-shrink: 0;
+        }
+
+        .topbar-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--label-1);
+            letter-spacing: -0.3px;
+        }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .topbar-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            background: var(--green-light);
+            font-size: 11px;
+            font-weight: 600;
+            color: #248237;
+        }
+
+        .topbar-badge .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--green);
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(0.8); }
+        }
+
+        /* ═══════════════════════════════════════
+           VIEW CONTAINERS
+        ═══════════════════════════════════════ */
+        .view-container {
+            display: none;
+            padding: 28px 32px 40px;
+            animation: viewIn 0.3s var(--ease) both;
+        }
+
+        .view-container.active {
+            display: block;
+        }
+
+        @keyframes viewIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0);  }
+        }
+
+        /* ═══════════════════════════════════════
+           PAGE HEADER
+        ═══════════════════════════════════════ */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+
+        .page-header-left h1 {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--label-1);
+            letter-spacing: -0.6px;
+            line-height: 1.2;
+        }
+
+        .page-header-left p {
+            font-size: 13px;
+            color: var(--label-3);
+            margin-top: 3px;
+            font-weight: 400;
+        }
+
+        /* ═══════════════════════════════════════
+           BUTTONS
+        ═══════════════════════════════════════ */
+        .btn-action {
+            background: var(--blue);
+            color: white;
+            border: none;
+            padding: 9px 18px;
+            border-radius: var(--r-sm);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s var(--ease);
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            font-family: inherit;
+            box-shadow: 0 2px 8px rgba(10,132,255,.30);
+            letter-spacing: -0.1px;
+        }
+
+        .btn-action:hover {
+            background: var(--blue-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(10,132,255,.40);
+        }
+
+        .btn-action:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 4px rgba(10,132,255,.25);
+        }
+
+        .btn-action.btn-green {
+            background: var(--green);
+            box-shadow: 0 2px 8px rgba(48,209,88,.30);
+        }
+
+        .btn-action.btn-green:hover {
+            background: #28B84E;
+            box-shadow: 0 4px 14px rgba(48,209,88,.40);
+        }
+
+        .btn-outline {
+            background: var(--surface-1);
+            border: 1px solid var(--border-med);
+            color: var(--label-2);
+            padding: 9px 16px;
+            border-radius: var(--r-sm);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.18s var(--ease);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: inherit;
+        }
+
+        .btn-outline:hover {
+            background: var(--surface-2);
+            border-color: var(--border-med);
+            color: var(--label-1);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-xs);
+        }
+
+        .btn-small {
+            padding: 5px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s var(--ease);
+            font-family: inherit;
+        }
+
+        .btn-small.danger {
+            color: var(--red);
+            border-color: rgba(255,69,58,.25);
+            background: var(--red-light);
+            border: 1px solid rgba(255,69,58,.25);
+        }
+
+        .btn-small.danger:hover {
+            background: rgba(255,69,58,.18);
+        }
+
+        /* Icon buttons */
+        .icon-btn {
+            background: var(--surface-1);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            border-radius: var(--r-sm);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--label-3);
+            transition: all 0.18s var(--ease);
+            font-family: inherit;
+        }
+
+        .icon-btn:hover {
+            background: var(--blue-light);
+            color: var(--blue);
+            border-color: rgba(10,132,255,.30);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-xs);
+        }
+
+        .icon-btn svg {
+            width: 15px;
+            height: 15px;
+            fill: currentColor;
+        }
+
+        /* ═══════════════════════════════════════
+           DASHBOARD STATS CARDS
+        ═══════════════════════════════════════ */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--surface-1);
+            border-radius: var(--r-lg);
+            padding: 20px 22px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: box-shadow 0.2s var(--ease);
+        }
+
+        .stat-card:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .stat-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stat-icon svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        .stat-icon.blue  { background: var(--blue-light);   color: var(--blue);   }
+        .stat-icon.green { background: var(--green-light);  color: #228B35; }
+        .stat-icon.red   { background: var(--red-light);    color: var(--red);    }
+        .stat-icon.purple{ background: var(--purple-light); color: var(--purple); }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--label-1);
+            letter-spacing: -1.5px;
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--label-3);
+            letter-spacing: 0.1px;
+        }
+
+        /* Dashboard chart grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .dashboard-card {
+            background: var(--surface-1);
+            border-radius: var(--r-lg);
+            padding: 22px 22px 20px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            transition: box-shadow 0.2s var(--ease);
+        }
+
+        .dashboard-card:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--label-1);
+            letter-spacing: -0.2px;
+            margin-bottom: 18px;
+        }
+
+        .circle-chart-wrapper {
+            position: relative;
+            width: 130px;
+            height: 130px;
+            margin: 0 auto 16px;
+        }
+
+        .circle-inner-text {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        .circle-value {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--label-1);
+            letter-spacing: -1px;
+            line-height: 1;
+        }
+
+        .circle-label {
+            font-size: 11px;
+            color: var(--label-3);
+            font-weight: 500;
+            margin-top: 3px;
+        }
+
+        .bar-chart-container {
+            height: 180px;
+            width: 100%;
+            position: relative;
+        }
+
+        .card-footer {
+            margin-top: auto;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .card-footer-val {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--label-1);
+            letter-spacing: -0.5px;
+        }
+
+        .card-footer-label {
+            font-size: 11px;
+            color: var(--label-3);
+            font-weight: 500;
+            margin-top: 2px;
+        }
+
+        .metric-split {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+            justify-content: center;
+            height: 160px;
+        }
+
+        .metric-split-item {
+            text-align: center;
+        }
+
+        .metric-big {
+            font-size: 52px;
+            font-weight: 800;
+            letter-spacing: -2px;
+            line-height: 1;
+        }
+
+        .metric-big.blue   { color: var(--blue); }
+        .metric-big.green  { color: var(--green); }
+
+        .metric-sub {
+            font-size: 12px;
+            color: var(--label-3);
+            font-weight: 600;
+            margin-top: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .metric-divider {
+            width: 1px;
+            height: 80px;
+            background: var(--border-med);
+        }
+
+        /* ═══════════════════════════════════════
+           PANEL — table container
+        ═══════════════════════════════════════ */
+        .panel {
+            background: var(--surface-1);
+            border-radius: var(--r-lg);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .panel-header {
+            padding: 16px 22px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            background: var(--surface-1);
+        }
+
+        /* ═══════════════════════════════════════
+           FILTERS / CONTROLS BAR
+        ═══════════════════════════════════════ */
+        .controls-bar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+            flex: 1;
+        }
+
+        .search-wrap {
+            position: relative;
+            flex: 1;
+            min-width: 220px;
+        }
+
+        .search-wrap svg {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 14px;
+            height: 14px;
+            fill: var(--label-4);
+            pointer-events: none;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 9px 14px 9px 34px;
+            border-radius: var(--r-sm);
+            border: 1px solid var(--border-med);
+            font-size: 13px;
+            outline: none;
+            background: var(--surface-1);
+            color: var(--label-1);
+            font-family: inherit;
+            transition: all 0.18s var(--ease);
+        }
+
+        .search-input:focus {
+            border-color: var(--blue);
+            box-shadow: 0 0 0 3px var(--blue-ring);
+            background: var(--surface-1);
+        }
+
+        .search-input::placeholder { color: var(--label-4); }
+
+        .modern-select {
+            padding: 9px 32px 9px 12px;
+            border-radius: var(--r-sm);
+            border: 1px solid var(--border-med);
+            font-size: 13px;
+            outline: none;
+            background: var(--surface-1);
+            color: var(--label-1);
+            font-family: inherit;
+            transition: all 0.18s var(--ease);
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24'%3E%3Cpath fill='%23AEAEB2' d='M7 10l5 5 5-5H7z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            cursor: pointer;
+        }
+
+        .modern-select:focus {
+            border-color: var(--blue);
+            box-shadow: 0 0 0 3px var(--blue-ring);
+        }
+
+        .modern-input {
+            padding: 9px 12px;
+            border-radius: var(--r-sm);
+            border: 1px solid var(--border-med);
+            font-size: 13px;
+            outline: none;
+            background: var(--surface-1);
+            color: var(--label-1);
+            font-family: inherit;
+            transition: all 0.18s var(--ease);
+        }
+
+        .modern-input:focus {
+            border-color: var(--blue);
+            box-shadow: 0 0 0 3px var(--blue-ring);
+        }
+
+        /* ═══════════════════════════════════════
+           TABLE
+        ═══════════════════════════════════════ */
+        .table-responsive {
+            overflow-x: auto;
+            width: 100%;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            white-space: nowrap;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px 20px;
+            color: var(--label-3);
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface-2);
+        }
+
+        td {
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+            color: var(--label-2);
+            font-weight: 500;
+            transition: background 0.12s var(--ease);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: rgba(10,132,255,.025);
+        }
+
+        /* Row number */
+        td:first-child {
+            color: var(--label-4);
+            font-size: 12px;
+        }
+
+        td strong {
+            color: var(--label-1);
+            font-weight: 600;
+        }
+
+        /* ═══════════════════════════════════════
+           STATUS BADGES
+        ═══════════════════════════════════════ */
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            outline: none;
+            letter-spacing: 0.3px;
+            font-family: inherit;
+        }
+
+        select.status-badge {
+            padding-right: 26px;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 9px;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+
+        .status-badge[data-color="new"]     { background: rgba(10,132,255,.12);  color: #0566CC; border: 1px solid rgba(10,132,255,.25);   }
+        .status-badge[data-color="warning"] { background: rgba(255,159,10,.12);  color: #C47A00; border: 1px solid rgba(255,159,10,.25);   }
+        .status-badge[data-color="success"] { background: rgba(48,209,88,.12);   color: #228B35; border: 1px solid rgba(48,209,88,.25);    }
+        .status-badge[data-color="danger"]  { background: rgba(255,69,58,.12);   color: #CC3328; border: 1px solid rgba(255,69,58,.25);    }
+        .status-badge[data-color="purple"]  { background: rgba(191,90,242,.12);  color: #8A3FC0; border: 1px solid rgba(191,90,242,.25);   }
+        .status-badge[data-color="gray"]    { background: rgba(60,60,67,.07);    color: var(--label-3); border: 1px solid var(--border); }
+
+        /* ═══════════════════════════════════════
+           ACTION BUTTONS IN TABLE
+        ═══════════════════════════════════════ */
+        .action-group {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .act-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s var(--ease);
+            font-family: inherit;
+            border: 1px solid transparent;
+            letter-spacing: 0.1px;
+        }
+
+        .act-btn svg {
+            width: 12px;
+            height: 12px;
+            fill: currentColor;
+            flex-shrink: 0;
+        }
+
+        .act-btn.view   { background: var(--blue-light);   color: var(--blue);   border-color: rgba(10,132,255,.20); }
+        .act-btn.edit   { background: var(--orange-light); color: #B06600;       border-color: rgba(255,159,10,.20); }
+        .act-btn.notes  { background: var(--purple-light); color: var(--purple); border-color: rgba(191,90,242,.20); }
+        .act-btn.dl     { background: var(--green-light);  color: #228B35;       border-color: rgba(48,209,88,.20);  }
+
+        .act-btn:hover  { transform: translateY(-1px); filter: brightness(0.92); box-shadow: 0 2px 6px rgba(0,0,0,.08); }
+        .act-btn:active { transform: translateY(0); }
+
+        /* ═══════════════════════════════════════
+           MODALS — Frosted Glass Style
+        ═══════════════════════════════════════ */
+        #modalOverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.40);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+            animation: overlayIn 0.2s var(--ease);
+        }
+
+        @keyframes overlayIn {
+            from { background: rgba(0,0,0,0); }
+            to   { background: rgba(0,0,0,.40); }
+        }
+
+        #modalBox {
+            background: rgba(255,255,255,0.96);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            width: 100%;
+            max-width: 760px;
+            border-radius: var(--r-xl);
+            padding: 28px 30px 30px;
+            box-shadow: var(--shadow-xl), 0 0 0 1px rgba(255,255,255,.5) inset;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: modalIn 0.28s var(--ease-spring);
+        }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to   { opacity: 1; transform: scale(1)    translateY(0);    }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 22px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--label-1);
+            letter-spacing: -0.4px;
+        }
+
+        .close-btn {
+            background: var(--surface-2);
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            font-size: 16px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--label-3);
+            transition: all 0.18s var(--ease);
+            font-family: inherit;
+        }
+
+        .close-btn:hover {
+            background: var(--red-light);
+            color: var(--red);
+            transform: rotate(90deg);
+        }
+
+        /* ═══════════════════════════════════════
+           FORM ELEMENTS (inside modal)
+        ═══════════════════════════════════════ */
+        .form-grid {
+            display: grid;
+            gap: 18px;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group.full {
+            grid-column: span 2;
+        }
+
+        .form-group label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--label-3);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px 13px;
+            border-radius: var(--r-sm);
+            border: 1px solid var(--border-med);
+            font-size: 13px;
+            outline: none;
+            background: var(--surface-1);
+            color: var(--label-1);
+            transition: all 0.18s var(--ease);
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            border-color: var(--blue);
+            box-shadow: 0 0 0 3px var(--blue-ring);
+        }
+
+        /* ═══════════════════════════════════════
+           EMPTY STATES
+        ═══════════════════════════════════════ */
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--label-4);
+        }
+
+        .empty-state svg {
+            width: 40px;
+            height: 40px;
+            fill: var(--surface-3);
+            margin-bottom: 12px;
+        }
+
+        .empty-state p {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        /* ═══════════════════════════════════════
+           SCROLLBAR STYLING
+        ═══════════════════════════════════════ */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border-med); border-radius: 99px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--label-4); }
+
+        /* ═══════════════════════════════════════
+           RESPONSIVE
+        ═══════════════════════════════════════ */
+        @media (max-width: 900px) {
+            :root { --sidebar-w: 220px; }
+            .stats-row { grid-template-columns: 1fr 1fr; }
+            .dashboard-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        @media (max-width: 680px) {
+            #sidebar { display: none; }
+            .view-container { padding: 16px 16px 32px; }
+            .topbar { padding: 0 16px; }
+            .stats-row { grid-template-columns: 1fr 1fr; }
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .form-grid { grid-template-columns: 1fr; }
+            .form-group.full { grid-column: span 1; }
+        }
     </style>
 </head>
+
 <body onload="initDashboard()">
+
+    <!-- ═══════════════════ SIDEBAR ═══════════════════ -->
     <div id="sidebar">
-        <div class="logo">🏘️ Housing Admin</div>
-        <div class="nav-item active" onclick="switchView('dashboard')">🏠 Dashboard</div>
-        <div class="nav-item" onclick="switchView('companies')">🏢 Company CRM</div>
-        <div class="nav-item" onclick="switchView('leads')">📋 Leads Management</div>
+        <div class="sidebar-header">
+            <div class="logo-lockup">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+                </div>
+                <div class="logo-text">
+                    <span class="logo-name">HDR CRM</span>
+                    <span class="logo-sub">Admin Portal</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="nav-items" style="padding-top:16px;">
+            <div class="nav-item active" id="nav-dashboard" onclick="switchView('dashboard')">
+                <div class="nav-icon">
+                    <svg viewBox="0 0 24 24"><path d="M4 13h6v8H4v-8zm0-9h6v6H4V4zm8 11h8v6h-8v-6zm0-11h8v9h-8V4z"/></svg>
+                </div>
+                <span>Dashboard</span>
+            </div>
+            <div class="nav-item" id="nav-companies" onclick="switchView('companies')">
+                <div class="nav-icon">
+                    <svg viewBox="0 0 24 24"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>
+                </div>
+                <span>Solicitors</span>
+            </div>
+            <div class="nav-item" id="nav-leads" onclick="switchView('leads')">
+                <div class="nav-icon">
+                    <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+                </div>
+                <span>Lead Management</span>
+            </div>
+        </div>
+
+
     </div>
 
+    <!-- ═══════════════════ MAIN CONTENT ═══════════════════ -->
     <div id="main-content">
+
+        <!-- Sticky top bar -->
+        <div class="topbar">
+            <span class="topbar-title" id="topbarTitle">Dashboard</span>
+            <div class="topbar-actions">
+                <div class="topbar-badge">
+                    <span class="dot"></span>
+                    Live
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── DASHBOARD VIEW ─── -->
         <div id="dashboardView" class="view-container active">
-            <h1 style="margin-bottom:30px;">Campaign Insights</h1>
-            <div style="display:flex; gap:20px;">
-                <div class="stat-card"><div class="stat-label">Total Leads</div><div class="stat-val" id="dashboardTotal">--</div></div>
-                <div class="stat-card"><div class="stat-label">Active Solicitors</div><div class="stat-val" id="dashboardActive">--</div></div>
+            <div class="page-header">
+                <div class="page-header-left">
+                    <h1>Overview</h1>
+                    <p>Real-time metrics for your housing disrepair pipeline</p>
+                </div>
             </div>
-            <div class="chart-container"><h3>Monthly Performance</h3><canvas id="leadsFlowChart"></canvas></div>
+
+            <!-- Stat cards row -->
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14l4-4h12c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>
+                    </div>
+                    <div class="stat-value" id="dashboardTotal">0</div>
+                    <div class="stat-label">Total Leads</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+                    </div>
+                    <div class="stat-value" id="dashboardAccepted">0</div>
+                    <div class="stat-label">Accepted Leads</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon red">
+                        <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+                    </div>
+                    <div class="stat-value" id="dashboardRejected">0</div>
+                    <div class="stat-label">Rejected Leads</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon purple">
+                        <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm4.24 16L12 15.45 7.77 18l1.12-4.81-3.73-3.23 4.92-.42L12 5l1.92 4.53 4.92.42-3.73 3.23L16.23 18z"/></svg>
+                    </div>
+                    <div class="stat-value" id="dashboardConvRate">0%</div>
+                    <div class="stat-label">Conversion Rate</div>
+                </div>
+            </div>
+
+            <!-- Charts grid -->
+            <div class="dashboard-grid">
+                <div class="dashboard-card" style="grid-column: span 2;">
+                    <div class="card-title">Lead Volume by Month</div>
+                    <div class="bar-chart-container">
+                        <canvas id="leadsFlowChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <div class="card-title">Stage Distribution</div>
+                    <div class="circle-chart-wrapper">
+                        <canvas id="statusDonutChart"></canvas>
+                        <div class="circle-inner-text">
+                            <span class="circle-value" id="dashboardTotalDonut">0</span>
+                            <span class="circle-label">Total</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <div class="card-title">Conversion Gauge</div>
+                    <div class="circle-chart-wrapper">
+                        <canvas id="conversionDonutChart"></canvas>
+                        <div class="circle-inner-text">
+                            <span class="circle-value" id="dashboardConvRateDonut">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <div class="card-title">Company &amp; Solicitor Metrics</div>
+                    <div class="metric-split">
+                        <div class="metric-split-item">
+                            <div class="metric-big blue" id="dashboardActive">0</div>
+                            <div class="metric-sub">Registered Firms</div>
+                        </div>
+                        <div class="metric-divider"></div>
+                        <div class="metric-split-item">
+                            <div class="metric-big green" id="dashboardSolicitorsCount">0</div>
+                            <div class="metric-sub">Active Solicitors</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
+        <!-- ─── COMPANIES / SOLICITORS VIEW ─── -->
         <div id="companiesView" class="view-container">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h1>Company Management</h1>
-                <button class="btn-action" style="background:var(--primary); color:white;" onclick="window.openAddCompanyModal()">+ Add Firm</button>
+            <div class="page-header">
+                <div class="page-header-left">
+                    <h1>Solicitors</h1>
+                    <p>Manage law firms and their assigned members</p>
+                </div>
+                <button class="btn-action" onclick="window.openAddCompanyModal()">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                    Add Firm
+                </button>
             </div>
-            <table id="companyTable">
-                <thead><tr><th>Name</th><th>Type</th><th>Contact</th><th>Postcode</th><th>Status</th><th>Actions</th></tr></thead>
-                <tbody></tbody>
-            </table>
+
+            <div class="panel">
+                <div class="table-responsive">
+                    <table id="companyTable">
+                        <thead>
+                            <tr>
+                                <th>Company Name</th>
+                                <th>Type</th>
+                                <th>Main Contact</th>
+                                <th>Email / Postcode</th>
+                                <th>Website</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="companyMembersSection" style="display:none;">
+                <div class="page-header" style="margin-top:8px;">
+                    <div class="page-header-left">
+                        <h1 id="membersSectionTitle" style="font-size:20px;">Solicitors for [Company]</h1>
+                    </div>
+                    <button class="btn-outline" style="color:var(--blue); border-color:rgba(10,132,255,.3);" onclick="window.openAddMemberModal()">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                        Add Solicitor
+                    </button>
+                </div>
+                <div class="panel">
+                    <div class="table-responsive">
+                        <table id="membersTable">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Job Title</th>
+                                    <th>Email</th>
+                                    <th>Mobile</th>
+                                    <th>Landline</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div id="membersView" class="view-container">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h1 id="membersViewTitle">Team Members</h1>
-                <button class="btn-action" style="background:#10b981; color:white;" id="addMemberBtn">+ Add Member</button>
-            </div>
-            <table id="membersTable">
-                <thead><tr><th>Name</th><th>Job Title</th><th>Email</th><th>Mobile</th><th>Landline</th><th>Actions</th></tr></thead>
-                <tbody></tbody>
-            </table>
-        </div>
-
+        <!-- ─── LEADS VIEW ─── -->
         <div id="leadsView" class="view-container">
-            <h1>Leads Management</h1>
-            <table id="submissionTable">
-                <thead><tr><th>#</th><th>Name</th><th>Phone</th><th>Date</th><th>Status</th><th>Action</th></tr></thead>
-                <tbody></tbody>
-            </table>
+            <div class="page-header">
+                <div class="page-header-left">
+                    <h1>Lead Management</h1>
+                    <p>View, filter, and manage all incoming housing disrepair leads</p>
+                </div>
+                <button class="btn-action btn-green" onclick="window.exportExcel()">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
+                    Export CSV / Excel
+                </button>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="controls-bar">
+                        <div class="search-wrap">
+                            <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                            <input type="text" id="searchLead" class="search-input"
+                                placeholder="Search name, phone, email…" onkeyup="window.renderFilteredLeads()">
+                        </div>
+                        <select id="filterCompany" class="modern-select" onchange="window.renderFilteredLeads()">
+                            <option value="All">All Solicitors</option>
+                        </select>
+                        <select id="filterStatus" class="modern-select" onchange="window.renderFilteredLeads()">
+                            <option value="All">All Statuses</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table id="submissionTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Client Name</th>
+                                <th>Phone</th>
+                                <th>Date</th>
+                                <th>Assigned Solicitor</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
+
+    </div><!-- /#main-content -->
+
+    <!-- Universal Modal -->
+    <div id="modalOverlay">
+        <div id="modalBox"></div>
     </div>
 
-    <div id="modalOverlay"><div id="modalBox"></div></div>
     <script src="dashboard.js"></script>
+
+    <script>
+        // Override switchView to also update topbar title
+        const _origSwitch = window.switchView;
+        window.switchView = function(view) {
+            const titles = { dashboard: 'Dashboard', companies: 'Solicitors', leads: 'Lead Management' };
+            document.getElementById('topbarTitle').textContent = titles[view] || 'Dashboard';
+            _origSwitch(view);
+        };
+
+        // Sync new dashboard stats boxes
+        const _origCalc = window.calculateDashboardStats || null;
+        // The dashboardTotalDonut and dashboardConvRateDonut mirrors are synced via initCharts calls
+        // We hook into the DOM after initDashboard is done to copy values
+        // Sync new dashboard stats boxes via standard functions
+        function syncDonutStats() {
+            const total = document.getElementById('dashboardTotal')?.innerText;
+            const conv  = document.getElementById('dashboardConvRate')?.innerText;
+            if (document.getElementById('dashboardTotalDonut'))
+                document.getElementById('dashboardTotalDonut').innerText = total || '0';
+            if (document.getElementById('dashboardConvRateDonut'))
+                document.getElementById('dashboardConvRateDonut').innerText = conv || '0%';
+        }
+        // Stats are updated in calculateDashboardStats, so we'll call sync once here
+        window.addEventListener('load', syncDonutStats);
+
+    </script>
+
 </body>
 </html>
