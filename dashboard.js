@@ -29,32 +29,32 @@ const leadViewOrder = [
 ];
 
 const leadFieldLabels = {
-    name: 'Name',
-    phone: 'Phone Number',
-    email: 'Email Address',
-    dateOfBirth: 'Date of Birth (DOB)',
-    address: 'Address',
-    postcode: 'Postcode',
-    tenantType: 'Tenant Type',
-    livingDuration: 'Living Duration',
-    damp: 'Damp',
-    damplocation: 'Damp Location',
-    damprooms: 'Damp Rooms',
-    dampsurface: 'Damp Surface',
-    leak: 'Leak',
-    leaklocation: 'Leak Location',
-    leaksource: 'Leak Source',
-    leakdamage: 'Leak Damage',
-    heatingmainissue: 'Heating Main Issue',
-    structurallocation: 'Structural Location',
-    reported: 'Reported',
-    reportcount: 'Report Count',
-    reportfirst: 'Report First',
-    reportresponse: 'Report Response',
-    reportattempt: 'Report Attempt',
-    reportstatus: 'Report Status',
-    leadStatus: 'Lead Status',
-    timestamp: 'Submission Date'
+    name: 'NAME',
+    phone: 'PHONE',
+    email: 'EMAIL',
+    dateOfBirth: 'DATEOFBIRTH',
+    address: 'ADDRESS',
+    postcode: 'POSTCODE',
+    tenantType: 'TENANTTYPE',
+    livingDuration: 'LIVINGDURATION',
+    damp: 'DAMP',
+    damplocation: 'DAMPLOCATION',
+    damprooms: 'DAMPROOMS',
+    dampsurface: 'DAMPSURFACE',
+    leak: 'LEAK',
+    leaklocation: 'LEAKLOCATION',
+    leaksource: 'LEAKSOURCE',
+    leakdamage: 'LEAKDAMAGE',
+    heatingmainissue: 'HEATINGMAINISSUE',
+    structurallocation: 'STRUCTURALLOCATION',
+    reported: 'REPORTED',
+    reportcount: 'REPORTCOUNT',
+    reportfirst: 'REPORTFIRST',
+    reportresponse: 'REPORTRESPONSE',
+    reportattempt: 'REPORTATTEMPT',
+    reportstatus: 'REPORTSTATUS',
+    leadStatus: 'LEAD STATUS',
+    timestamp: 'SUBMISSION DATE'
 };
 
 window.switchView = function(view) {
@@ -532,9 +532,9 @@ window.openViewModal = function(id) {
 
             if(typeof value === 'object' && value !== null) value = JSON.stringify(value);
             
-            html += `<div style="margin-bottom:16px; break-inside: avoid;">
-                        <label style="font-size:10px; color:#6B7280; text-transform:uppercase; font-weight:700; display:block; margin-bottom:4px;">${label}</label>
-                        <div style="font-size:14px; color:#111827; font-weight:500; background:#F9FAFB; padding:8px 12px; border-radius:8px; border:1px solid #F3F4F6;">${value}</div>
+            html += `<div style="margin-bottom:20px; break-inside: avoid;">
+                        <label style="font-size:11px; color:#94A3B8; font-weight:700; display:block; margin-bottom:4px; letter-spacing: 0.5px;">${label}</label>
+                        <div style="font-size:16px; color:#1E293B; font-weight:600; line-height: 1.4;">${value}</div>
                      </div>`;
         }
     });
@@ -545,9 +545,9 @@ window.openViewModal = function(id) {
         let value = s[key];
         if (value !== null && value !== undefined && value !== '') {
             if(typeof value === 'object') value = JSON.stringify(value);
-            html += `<div style="margin-bottom:16px; break-inside: avoid;">
-                        <label style="font-size:10px; color:#6B7280; text-transform:uppercase; font-weight:700; display:block; margin-bottom:4px;">${key.replace(/_/g, ' ')}</label>
-                        <div style="font-size:14px; color:#111827; font-weight:500; background:#F9FAFB; padding:8px 12px; border-radius:8px; border:1px solid #F3F4F6;">${value}</div>
+            html += `<div style="margin-bottom:20px; break-inside: avoid;">
+                        <label style="font-size:11px; color:#94A3B8; font-weight:700; display:block; margin-bottom:4px; letter-spacing: 0.5px;">${key.replace(/_/g, ' ').toUpperCase()}</label>
+                        <div style="font-size:16px; color:#1E293B; font-weight:600; line-height: 1.4;">${value}</div>
                      </div>`;
         }
     });

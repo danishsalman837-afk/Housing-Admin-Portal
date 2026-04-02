@@ -88,35 +88,37 @@ module.exports = async function handler(req, res) {
         processedKeys.add('tenancyDuration'); processedKeys.add('living_duration');
         processedKeys.add('hasDampMould');
 
-        const label = leadFieldLabels[key] || key.replace(/_/g, ' ').toUpperCase();
-        paragraphs.push(
-          new Paragraph({
-            children: [
-              new TextRun({ text: `${label}: `, bold: true, color: "1E293B" }),
-              new TextRun({ text: String(value) })
-            ],
-            spacing: { after: 200 }
-          })
-        );
+        const label = (leadFieldLabels[key] || key.replace(/_/g, ' ')).toUpperCase();
+        
+        // Add Label
+        paragraphs.push(new Paragraph({
+          children: [new TextRun({ text: label, size: 18, color: "94A3B8", bold: true })],
+          spacing: { before: 200 }
+        }));
+        // Add Value
+        paragraphs.push(new Paragraph({
+          children: [new TextRun({ text: String(value), size: 24, color: "1E293B", bold: true })],
+          spacing: { after: 100 }
+        }));
       }
     });
 
-    // 2. Append any remaining non-system fields that were not in the order list
+    // 2. Append any remaining non-system fields
     Object.keys(lead).forEach(key => {
       if (processedKeys.has(key) || systemFields.includes(key)) return;
       
       const value = lead[key];
       if (value !== null && value !== undefined && value !== '') {
         const label = key.replace(/_/g, ' ').toUpperCase();
-        paragraphs.push(
-          new Paragraph({
-            children: [
-              new TextRun({ text: `${label}: `, bold: true, color: "1E293B" }),
-              new TextRun({ text: String(value) })
-            ],
-            spacing: { after: 200 }
-          })
-        );
+        
+        paragraphs.push(new Paragraph({
+          children: [new TextRun({ text: label, size: 18, color: "94A3B8", bold: true })],
+          spacing: { before: 200 }
+        }));
+        paragraphs.push(new Paragraph({
+          children: [new TextRun({ text: String(value), size: 24, color: "1E293B", bold: true })],
+          spacing: { after: 100 }
+        }));
       }
     });
 
