@@ -19,46 +19,42 @@ function getStatusColor(status) {
 }
 
 const leadViewOrder = [
-  'name', 'email', 'phone', 'dateOfBirth', 'address', 'postcode',
-  'tenantType', 'tenancyDuration', 'hasDampMould', 'dampLocation', 'roomsAffected',
-  'affectedSurface', 'issueDuration', 'issueCause', 'damageBelongings', 'healthProblems',
-  'hasLeaks', 'leakLocation', 'leakSource', 'leakStart', 'leakOngoing', 'leakDamage',
-  'cracksDamage', 'faultyElectrics', 'heatingIssues', 'structuralDamage', 'reportedOverMonth',
-  'rentalArrears', 'arrearsAmount', 'additionalNotes', 'leadStatus', 'timestamp'
+    'name', 'phone', 'email', 'dateOfBirth', 'address', 'postcode',
+    'tenantType', 'livingDuration', 
+    'damp', 'damplocation', 'damprooms', 'dampsurface',
+    'leak', 'leaklocation', 'leaksource', 'leakdamage',
+    'heatingmainissue', 'structurallocation',
+    'reported', 'reportcount', 'reportfirst', 'reportresponse', 'reportattempt', 'reportstatus',
+    'leadStatus', 'timestamp'
 ];
 
 const leadFieldLabels = {
-  name: 'Name',
-  email: 'Email Address',
-  phone: 'Phone Number',
-  dateOfBirth: 'Date of Birth (DOB)',
-  address: 'Address',
-  postcode: 'Postcode',
-  tenantType: 'Council/Housing Association Tenant?',
-  tenancyDuration: 'How long living in property?',
-  hasDampMould: 'Any damp or mould?',
-  dampLocation: 'Where is damp/mould located?',
-  roomsAffected: 'How many rooms affected?',
-  affectedSurface: 'Wall/Ceiling/Floor?',
-  issueDuration: 'How long issue present?',
-  issueCause: 'Cause (leak/rain/pipe/roof)?',
-  damageBelongings: 'Belongings damaged?',
-  healthProblems: 'Health problems caused?',
-  hasLeaks: 'Any leaks?',
-  leakLocation: 'Leak coming from?',
-  leakSource: 'From roof/ceiling/pipe/bathroom/kitchen?',
-  leakStart: 'When did leak start?',
-  leakOngoing: 'Is leak still ongoing?',
-  leakDamage: 'Damage to walls/ceiling/floor?',
-  cracksDamage: 'Cracks or structural damage?',
-  faultyElectrics: 'Faulty electrics?',
-  heatingIssues: 'Heating/Boiler issues?',
-  structuralDamage: 'Cracks/structural damage?',
-  reportedOverMonth: 'Reported over a month ago without fix?',
-  rentalArrears: 'Rental arrears (<£1000)?',
-  arrearsAmount: 'Arrears amount',
-  additionalNotes: 'Additional Notes',
-  leadStatus: 'Lead Status'
+    name: 'Name',
+    phone: 'Phone Number',
+    email: 'Email Address',
+    dateOfBirth: 'Date of Birth (DOB)',
+    address: 'Address',
+    postcode: 'Postcode',
+    tenantType: 'Tenant Type',
+    livingDuration: 'Living Duration',
+    damp: 'Damp',
+    damplocation: 'Damp Location',
+    damprooms: 'Damp Rooms',
+    dampsurface: 'Damp Surface',
+    leak: 'Leak',
+    leaklocation: 'Leak Location',
+    leaksource: 'Leak Source',
+    leakdamage: 'Leak Damage',
+    heatingmainissue: 'Heating Main Issue',
+    structurallocation: 'Structural Location',
+    reported: 'Reported',
+    reportcount: 'Report Count',
+    reportfirst: 'Report First',
+    reportresponse: 'Report Response',
+    reportattempt: 'Report Attempt',
+    reportstatus: 'Report Status',
+    leadStatus: 'Lead Status',
+    timestamp: 'Submission Date'
 };
 
 window.switchView = function(view) {
@@ -334,54 +330,7 @@ window.openAddCompanyModal = function(existingCompany = null) {
     document.getElementById('modalOverlay').style.display = 'flex';
 };
 
-window.openViewModal = function(id) {
-    const item = submissionsData.find(s => String(s.id) === String(id));
-    if (!item) return;
-    let html = '<div style="max-height:400px; overflow-y:auto; padding:10px;">';
-    leadViewOrder.forEach(k => {
-        if (k === 'id') return;
-        const label = leadFieldLabels[k] || k;
-        let value = item[k];
-        if (value === undefined && k === 'dateOfBirth') value = item.dob || item.birthDate;
-        if (value === undefined && k === 'tenantType') value = item.councilTenant || item.housingAssociation;
-        if (value === undefined && k === 'affectedSurface') value = item.onWalls || item.onCeiling || item.onFloor;
-        html += `<div style="margin-bottom:10px;"><label style="font-size:10px; font-weight:800; color:#64748b; text-transform:uppercase;">${label}</label><div style="padding:10px; background:#f8fafc; border-radius:8px;">${value || '---'}</div></div>`;
-    });
-    html += '</div>';
-    const modalHtml = `
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <h2>Lead Details</h2>
-        <div>
-          <button class="btn-action" onclick="window.openEditModal('${id}')" style="margin-right:10px;">Edit</button>
-          <button class="btn-action" onclick="document.getElementById('modalOverlay').style.display='none'">Close</button>
-        </div>
-      </div>
-      ${html}`;
-    document.getElementById('modalBox').innerHTML = modalHtml;
-    document.getElementById('modalOverlay').style.display = 'flex';
-};
 
-window.openEditModal = function(id) {
-    const item = submissionsData.find(s => String(s.id) === String(id));
-    if (!item) return;
-    let html = '<div style="max-height:420px; overflow-y:auto; padding:10px;">';
-    leadViewOrder.forEach(k => {
-        if (k === 'id') return;
-        const label = leadFieldLabels[k] || k;
-        const value = item[k] || '';
-        html += `<div style="margin-bottom:10px;"><label style="font-size:11px; font-weight:700; color:#334155;">${label}</label><input class="edit-input" id="edit-${k}" value="${String(value).replace(/"/g, '&quot;')}" /></div>`;
-    });
-    html += '</div>';
-    const modalHtml = `
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <h2>Edit Lead</h2>
-        <button class="btn-action" onclick="document.getElementById('modalOverlay').style.display='none'">Close</button>
-      </div>
-      ${html}
-      <div style="text-align:right;"><button class="btn-action" style="background:#10b981;color:#fff;" onclick="window.saveLeadEdits('${id}')">Save Changes</button></div>`;
-    document.getElementById('modalBox').innerHTML = modalHtml;
-    document.getElementById('modalOverlay').style.display = 'flex';
-};
 
 window.saveLeadEdits = async function(id) {
     const updates = {};
@@ -557,22 +506,37 @@ window.openViewModal = function(id) {
     const s = submissionsData.find(x => String(x.id) === String(id));
     if(!s) return;
     
-    let dataHtml = '';
-    const ignoreKeys = ['id', 'created_at', 'notes', 'leadStatus', 'assigned_company_id', 'assigned_solicitor_id'];
-    Object.keys(s).forEach(key => {
-        if(ignoreKeys.includes(key)) return;
-        if(typeof s[key] === 'object' && s[key] !== null) {
-            dataHtml += `<div style="margin-bottom:12px;"><label style="font-size:11px; color:#6B7280; text-transform:uppercase;">${key.replace(/_/g, ' ')}</label><div style="font-size:14px; color:#111827; font-weight:500;">${JSON.stringify(s[key])}</div></div>`;
-        } else {
-            dataHtml += `<div style="margin-bottom:12px;"><label style="font-size:11px; color:#6B7280; text-transform:uppercase;">${key.replace(/_/g, ' ')}</label><div style="font-size:14px; color:#111827; font-weight:500;">${s[key] || '--'}</div></div>`;
+    let html = '<div style="column-count: 2; column-gap: 32px; max-height: 450px; overflow-y: auto; padding: 4px;">';
+    leadViewOrder.forEach(key => {
+        const label = leadFieldLabels[key] || key.replace(/_/g, ' ');
+        let value = s[key];
+        
+        // Comprehensive fallback for different naming conventions
+        if (value === undefined || value === null) {
+            if (key === 'dateOfBirth') value = s.dob || s.birthDate || s.date_of_birth;
+            if (key === 'tenantType') value = s.tenant_type || s.councilTenant || s.housingAssociation;
+            if (key === 'livingDuration') value = s.tenancyDuration || s.living_duration || s.livingduration;
+            if (key === 'damp') value = s.hasDampMould || s.damp_issue;
         }
+
+        if(typeof value === 'object' && value !== null) value = JSON.stringify(value);
+        
+        html += `<div style="margin-bottom:16px; break-inside: avoid;">
+                    <label style="font-size:10px; color:#6B7280; text-transform:uppercase; font-weight:700; display:block; margin-bottom:4px;">${label}</label>
+                    <div style="font-size:14px; color:#111827; font-weight:500; background:#F9FAFB; padding:8px 12px; border-radius:8px; border:1px solid #F3F4F6;">${value || '--'}</div>
+                 </div>`;
     });
+    html += '</div>';
 
     document.getElementById('modalBox').innerHTML = `
-        <div class="modal-header"><h2>Lead Profile: ${s.name || s.first_name || 'Client'}</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>
-        <div style="column-count: 2; column-gap: 32px;">
-            ${dataHtml}
+        <div class="modal-header">
+            <h2>Lead Details: ${s.name || s.first_name || 'Client'}</h2>
+            <div>
+                <button class="btn-action" style="margin-right:8px;" onclick="window.openEditLeadModal('${s.id}')">Edit Profile</button>
+                <button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button>
+            </div>
         </div>
+        ${html}
     `;
     document.getElementById('modalOverlay').style.display = 'flex';
 };
@@ -581,34 +545,30 @@ window.openEditLeadModal = function(id) {
     const s = submissionsData.find(x => String(x.id) === String(id));
     if(!s) return;
 
-    // Show all data fields except for system/internal elements
-    const ignoreKeys = ['id', 'created_at', 'notes', 'leadStatus', 'assigned_company_id', 'assigned_solicitor_id', 'timestamp'];
-    let html = '<div class="form-grid" id="editLeadForm">';
-    
-    Object.keys(s).forEach(k => {
-        if(ignoreKeys.includes(k)) return;
+    let html = '<div class="form-grid" id="editLeadForm" style="max-height: 450px; overflow-y: auto; padding: 10px;">';
+    leadViewOrder.forEach(k => {
+        if (['id', 'timestamp'].includes(k)) return;
+        const label = leadFieldLabels[k] || k.replace(/_/g, ' ');
         
-        let displayValue = s[k] === null || s[k] === undefined ? '' : s[k];
-        if(typeof displayValue === 'object') {
-            displayValue = JSON.stringify(displayValue);
+        let displayValue = s[k];
+        if (displayValue === undefined || displayValue === null) {
+             if (k === 'dateOfBirth') displayValue = s.dob || s.birthDate;
+             if (k === 'tenantType') displayValue = s.councilTenant || s.housingAssociation;
         }
+        if (displayValue === null || displayValue === undefined) displayValue = '';
+        if (typeof displayValue === 'object') displayValue = JSON.stringify(displayValue);
         
-        // Escape characters for HTML
         displayValue = String(displayValue).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         
-        // If text is long, use an auto-scaling text area
-        if (displayValue.length > 50 || k.length > 30) {
-            html += `<div class="form-group full"><label>${k.replace(/_/g, ' ')}</label>
-                     <textarea class="modern-input edit-inp" data-field="${k}" rows="3">${displayValue}</textarea></div>`;
-        } else {
-            html += `<div class="form-group"><label>${k.replace(/_/g, ' ')}</label>
-                     <input type="text" class="modern-input edit-inp" data-field="${k}" value="${displayValue}"></div>`;
-        }
+        const isFullWidth = displayValue.length > 50 || k === 'address';
+        
+        html += `<div class="form-group ${isFullWidth ? 'full' : ''}"><label>${label}</label>
+                 <input type="text" class="modern-input edit-inp" data-field="${k}" value="${displayValue}"></div>`;
     });
     
     html += `</div>
              <div style="margin-top:24px; display:flex; justify-content:flex-end; gap:10px;">
-                <button class="btn-outline" style="padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:600;" onclick="document.getElementById('modalOverlay').style.display='none'">Cancel</button>
+                <button class="btn-outline" style="padding:10px 20px; border-radius:8px;" onclick="window.openViewModal('${s.id}')">Back to Profile</button>
                 <button class="btn-action" onclick="window.saveLeadEdits('${s.id}')">Save Changes</button>
              </div>`;
 
