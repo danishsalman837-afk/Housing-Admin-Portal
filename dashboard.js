@@ -234,7 +234,6 @@ function renderTable(data) {
                     </button>
                 </div>
             </td>`;
-        tr.innerHTML = `<td>${index+1}</td><td><strong>${item.name || "---"}</strong></td><td>${item.phone || "---"}</td><td>${item.timestamp ? new Date(item.timestamp).toLocaleDateString() : '---'}</td><td><select class="status-select" onchange="window.handleStatusUpdate('${item.id}', this)">${leadStatuses.map(s => `<option value="${s}" ${item.leadStatus === s ? 'selected' : ''}>${s}</option>`).join('')}</select></td><td><button class="btn-action" onclick="window.openViewModal('${item.id}')">View</button> <button class="btn-action" onclick="window.openEditModal('${item.id}')">Edit</button></td>`;
         tbody.appendChild(tr);
     });
 }
@@ -274,7 +273,7 @@ window.renderCompanies = function() {
         if (nameDisp === 'undefined' || nameDisp.includes('undefined')) nameDisp = 'Unnamed Solicitor';
         
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td><strong>${nameDisp}</strong></td><td>${c.type || '--'}</td><td>${c.main_contact || '--'}</td><td>${c.postcode || '--'}</td><td>${c.website || '--'}</td>
+        tr.innerHTML = `<td><strong>${nameDisp}</strong></td><td>${c.type || '--'}</td><td>${c.main_contact || '--'}</td><td>${c.postcode || '--'}</td><td>${c.website || '--'}</td><td>${c.active ? 'Yes' : 'No'}</td>
             <td>
                 <div class="action-group">
                     <button class="act-btn edit" onclick="window.viewCompanyEditModal('${c.id}')" title="Edit Company">
@@ -293,8 +292,9 @@ window.renderCompanies = function() {
 window.openAddCompanyModal = function(existingCompany = null) {
     const isEdit = !!existingCompany;
     const c = existingCompany || {};
-    
-     document.getElementById('modalBox').innerHTML = `
+    const activeChecked = c.active === false ? '' : 'checked';
+
+    document.getElementById('modalBox').innerHTML = `
         <div class="modal-header"><h2>${isEdit ? 'Edit Company' : 'Add Company'}</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>
         <div class="form-grid">
             <div class="form-group"><label>Company Name</label><input type="text" id="cName" class="modern-input" value="${c.name || ''}" placeholder="Name"></div>
@@ -314,9 +314,13 @@ window.openAddCompanyModal = function(existingCompany = null) {
             <div class="form-group"><label>Town / City</label><input type="text" id="cTown" class="modern-input" value="${c.town || ''}"></div>
             <div class="form-group"><label>County</label><input type="text" id="cCounty" class="modern-input" value="${c.county || ''}"></div>
             <div class="form-group"><label>Postcode</label><input type="text" id="cPostcode" class="modern-input" value="${c.postcode || ''}"></div>
+            <div class="form-group"><label>Active</label><input type="checkbox" id="cActive" ${activeChecked} style="transform: scale(1.2); margin-left: 8px;"></div>
         </div>
         <button class="btn-action" style="margin-top:20px; width:100%; justify-content:center;" onclick="window.saveNewCompany('${c.id || ''}')">Save Company</button>
     `;
+    document.getElementById('modalOverlay').style.display = 'flex';
+};
+
 window.openViewModal = function(id) {
     const item = submissionsData.find(s => String(s.id) === String(id));
     if (!item) return;
@@ -399,7 +403,8 @@ window.saveNewCompany = async function(id) {
         town: document.getElementById('cTown').value,
         county: document.getElementById('cCounty').value,
         postcode: document.getElementById('cPostcode').value,
-        website: document.getElementById('cWebsite').value
+        website: document.getElementById('cWebsite').value,
+        active: document.getElementById('cActive') ? document.getElementById('cActive').checked : true
     };
     if (id) payload.id = id;
 
