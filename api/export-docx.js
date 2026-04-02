@@ -29,13 +29,59 @@ module.exports = async function handler(req, res) {
       })
     ];
 
-    Object.entries(lead).forEach(([key, value]) => {
-      if (value !== null && value !== '') {
-        const titleKey = key.replace(/_/g, ' ').toUpperCase();
+    const leadViewOrder = [
+      'name', 'phone', 'email', 'dateOfBirth', 'address', 'postcode',
+      'tenantType', 'livingDuration', 
+      'damp', 'damplocation', 'damprooms', 'dampsurface',
+      'leak', 'leaklocation', 'leaksource', 'leakdamage',
+      'heatingmainissue', 'structurallocation',
+      'reported', 'reportcount', 'reportfirst', 'reportresponse', 'reportattempt', 'reportstatus'
+    ];
+
+    const leadFieldLabels = {
+      name: 'Name',
+      phone: 'Phone Number',
+      email: 'Email Address',
+      dateOfBirth: 'Date of Birth (DOB)',
+      address: 'Address',
+      postcode: 'Postcode',
+      tenantType: 'Tenant Type',
+      livingDuration: 'Living Duration',
+      damp: 'Damp',
+      damplocation: 'Damp Location',
+      damprooms: 'Damp Rooms',
+      dampsurface: 'Damp Surface',
+      leak: 'Leak',
+      leaklocation: 'Leak Location',
+      leaksource: 'Leak Source',
+      leakdamage: 'Leak Damage',
+      heatingmainissue: 'Heating Main Issue',
+      structurallocation: 'Structural Location',
+      reported: 'Reported',
+      reportcount: 'Report Count',
+      reportfirst: 'Report First',
+      reportresponse: 'Report Response',
+      reportattempt: 'Report Attempt',
+      reportstatus: 'Report Status'
+    };
+
+    leadViewOrder.forEach(key => {
+      let value = lead[key];
+      
+      // Fallbacks
+      if (value === undefined || value === null) {
+        if (key === 'dateOfBirth') value = lead.dob || lead.birthDate || lead.date_of_birth;
+        if (key === 'tenantType') value = lead.tenant_type || lead.councilTenant || lead.housingAssociation;
+        if (key === 'livingDuration') value = lead.tenancyDuration || lead.living_duration;
+        if (key === 'damp') value = lead.hasDampMould;
+      }
+
+      if (value !== null && value !== undefined && value !== '') {
+        const label = leadFieldLabels[key] || key.replace(/_/g, ' ').toUpperCase();
         paragraphs.push(
           new Paragraph({
             children: [
-              new TextRun({ text: `${titleKey}: `, bold: true, color: "1E293B" }),
+              new TextRun({ text: `${label}: `, bold: true, color: "1E293B" }),
               new TextRun({ text: String(value) })
             ],
             spacing: { after: 200 }
