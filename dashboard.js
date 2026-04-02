@@ -58,8 +58,7 @@ const leadFieldLabels = {
   rentalArrears: 'Rental arrears (<£1000)?',
   arrearsAmount: 'Arrears amount',
   additionalNotes: 'Additional Notes',
-  leadStatus: 'Lead Status',
-  timestamp: 'Created At'
+  leadStatus: 'Lead Status'
 };
 
 window.switchView = function(view) {
@@ -95,6 +94,9 @@ function calculateDashboardStats() {
     setEl('dashboardSolicitorsCount', membersData.length);
     setEl('dashboardAccepted',        acceptedCount);
     setEl('dashboardRejected',        rejectedCount);
+
+    const activeCompaniesCount = companiesData.filter(c => c.active !== false).length;
+    setEl('dashboardActive',          activeCompaniesCount);
 
     let convRate = total > 0 ? ((acceptedCount / total) * 100).toFixed(1) : '0';
     setEl('dashboardConvRate',       convRate + '%');
@@ -234,7 +236,6 @@ function renderTable(data) {
                     </button>
                 </div>
             </td>`;
-        tr.innerHTML = `<td>${index+1}</td><td><strong>${item.name || "---"}</strong></td><td>${item.phone || "---"}</td><td>${item.timestamp ? new Date(item.timestamp).toLocaleDateString() : '---'}</td><td><select class="status-select" onchange="window.handleStatusUpdate('${item.id}', this)">${leadStatuses.map(s => `<option value="${s}" ${item.leadStatus === s ? 'selected' : ''}>${s}</option>`).join('')}</select></td><td><button class="btn-action" onclick="window.openViewModal('${item.id}')">View</button> <button class="btn-action" onclick="window.openEditModal('${item.id}')">Edit</button></td>`;
         tbody.appendChild(tr);
     });
 }
@@ -275,6 +276,7 @@ window.renderCompanies = function() {
         
         const tr = document.createElement('tr');
         tr.innerHTML = `<td><strong>${nameDisp}</strong></td><td>${c.type || '--'}</td><td>${c.main_contact || '--'}</td><td>${c.postcode || '--'}</td><td>${c.website || '--'}</td>
+            <td style="text-align:center;"><input type="checkbox" ${c.active === false ? '' : 'checked'} onchange="window.toggleCompanyActive('${c.id}', this.checked)" /></td>
             <td>
                 <div class="action-group">
                     <button class="act-btn edit" onclick="window.viewCompanyEditModal('${c.id}')" title="Edit Company">
@@ -314,9 +316,19 @@ window.openAddCompanyModal = function(existingCompany = null) {
             <div class="form-group"><label>Town / City</label><input type="text" id="cTown" class="modern-input" value="${c.town || ''}"></div>
             <div class="form-group"><label>County</label><input type="text" id="cCounty" class="modern-input" value="${c.county || ''}"></div>
             <div class="form-group"><label>Postcode</label><input type="text" id="cPostcode" class="modern-input" value="${c.postcode || ''}"></div>
+            <div class="form-group" style="display:flex; align-items:center; gap:12px;">
+                <label style="min-width:90px;">Active</label>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <input type="checkbox" id="cActive" ${c.active === false ? '' : 'checked'} />
+                    <span style="color:#64748b; font-size:13px;">Mark company as active</span>
+                </div>
+            </div>
         </div>
         <button class="btn-action" style="margin-top:20px; width:100%; justify-content:center;" onclick="window.saveNewCompany('${c.id || ''}')">Save Company</button>
     `;
+    document.getElementById('modalOverlay').style.display = 'flex';
+};
+
 window.openViewModal = function(id) {
     const item = submissionsData.find(s => String(s.id) === String(id));
     if (!item) return;
@@ -401,6 +413,11 @@ window.saveNewCompany = async function(id) {
         postcode: document.getElementById('cPostcode').value,
         website: document.getElementById('cWebsite').value
     };
+    // include active flag (default true if checkbox not present)
+    try {
+        const chk = document.getElementById('cActive');
+        payload.active = chk ? chk.checked : true;
+    } catch(e) { payload.active = true; }
     if (id) payload.id = id;
 
     try {
@@ -420,6 +437,18 @@ window.saveNewCompany = async function(id) {
         renderCompanies();
         calculateDashboardStats();
     } catch(e) { console.error(e); alert("Network Error: " + e.message); }
+};
+
+window.toggleCompanyActive = async function(id, isActive) {
+    try {
+        const res = await fetch('/api/companies', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ id, active: isActive }) });
+        const updated = await res.json();
+        if (!res.ok || updated.error) { return alert('Failed to update company status: ' + (updated.error || 'Unknown')); }
+        const idx = companiesData.findIndex(c => String(c.id) === String(id));
+        if (idx > -1) companiesData[idx] = updated;
+        renderCompanies();
+        calculateDashboardStats();
+    } catch (e) { console.error(e); alert('Network Error: ' + e.message); }
 };
 
 window.viewCompanyMembers = function(companyId) {

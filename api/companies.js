@@ -33,11 +33,12 @@ module.exports = async function handler(req, res) {
         if (error) return res.status(500).json({ error: error.message });
         return res.status(200).json(data[0]);
     } else {
-        // Create new
-        const { data, error } = await supabase
-            .from('companies')
-            .insert([fields])
-            .select();
+      // Create new
+      if (fields.active === undefined) fields.active = true;
+      const { data, error } = await supabase
+        .from('companies')
+        .insert([fields])
+        .select();
         if (error) return res.status(500).json({ error: error.message });
         return res.status(200).json(data[0]);
     }
