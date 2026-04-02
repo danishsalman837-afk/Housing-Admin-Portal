@@ -532,7 +532,6 @@ window.openViewModal = function(id) {
         <div class="modal-header">
             <h2>Lead Details: ${s.name || s.first_name || 'Client'}</h2>
             <div>
-                <button class="btn-action" style="margin-right:8px;" onclick="window.openEditLeadModal('${s.id}')">Edit Profile</button>
                 <button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button>
             </div>
         </div>
