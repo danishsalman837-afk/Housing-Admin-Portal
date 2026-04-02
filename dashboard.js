@@ -90,13 +90,13 @@ function calculateDashboardStats() {
     const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
     setEl('dashboardTotal',           total);
     setEl('dashboardTotalDonut',      total);
-    setEl('dashboardActive',          companiesData.length);
-    setEl('dashboardSolicitorsCount', membersData.length);
+    setEl('dashboardActive',          companiesData.filter(c => c.is_active !== false).length);
+    setEl('dashboardSolicitorsCount', membersData.filter(m => {
+        const comp = companiesData.find(c => String(c.id) === String(m.company_id));
+        return comp && comp.is_active !== false;
+    }).length);
     setEl('dashboardAccepted',        acceptedCount);
     setEl('dashboardRejected',        rejectedCount);
-
-    const activeCompaniesCount = companiesData.filter(c => c.active !== false).length;
-    setEl('dashboardActive',          activeCompaniesCount);
 
     let convRate = total > 0 ? ((acceptedCount / total) * 100).toFixed(1) : '0';
     setEl('dashboardConvRate',       convRate + '%');
@@ -163,7 +163,7 @@ function initFilters() {
     if (companySelect && companySelect.options.length <= 1) {
         // Clear all except first option if re-initializing
         companySelect.innerHTML = '<option value="All">All Solicitors</option>';
-        companiesData.forEach(c => {
+        companiesData.filter(c => c.is_active !== false).forEach(c => {
             const opt = document.createElement('option');
             opt.value = c.id; 
             opt.innerText = c.name || c.company_name || 'Unnamed Solicitor';
@@ -201,9 +201,13 @@ function renderTable(data) {
     data.forEach((item, index) => {
         const tr = document.createElement("tr");
 
-        let compOptions = `<option value="">Unassigned</option>` + companiesData.map(c => {
+        let compOptions = `<option value="">Unassigned</option>` + companiesData.filter(c => {
+            // Only show active companies, or the currently assigned (even if inactive)
+            return c.is_active !== false || String(item.assigned_company_id) === String(c.id);
+        }).map(c => {
             let cName = c.name || c.company_name || 'Unnamed Solicitor';
             if (cName.includes('undefined')) cName = 'Unnamed Solicitor';
+            if (c.is_active === false) cName += ' (Inactive)';
             return `<option value="${c.id}" ${String(item.assigned_company_id) === String(c.id) ? 'selected' : ''}>${cName}</option>`;
         }).join('');
 
@@ -274,9 +278,12 @@ window.renderCompanies = function() {
         let nameDisp = c.name || c.company_name || 'Unnamed Solicitor';
         if (nameDisp === 'undefined' || nameDisp.includes('undefined')) nameDisp = 'Unnamed Solicitor';
         
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td><strong>${nameDisp}</strong></td><td>${c.type || '--'}</td><td>${c.main_contact || '--'}</td><td>${c.postcode || '--'}</td><td>${c.website || '--'}</td>
-            <td style="text-align:center;"><input type="checkbox" ${c.active === false ? '' : 'checked'} onchange="window.toggleCompanyActive('${c.id}', this.checked)" /></td>
+        const isActive = c.is_active !== false;
+        const statusBadge = isActive 
+            ? `<div class="status-badge" data-color="success">Active</div>`
+            : `<div class="status-badge" data-color="gray">Inactive</div>`;
+
+        tr.innerHTML = `<td><strong>${nameDisp}</strong></td><td>${c.type || '--'}</td><td>${statusBadge}</td><td>${c.main_contact || '--'}</td><td>${c.postcode || '--'}</td><td>${c.website || '--'}</td>
             <td>
                 <div class="action-group">
                     <button class="act-btn edit" onclick="window.viewCompanyEditModal('${c.id}')" title="Edit Company">
@@ -316,12 +323,9 @@ window.openAddCompanyModal = function(existingCompany = null) {
             <div class="form-group"><label>Town / City</label><input type="text" id="cTown" class="modern-input" value="${c.town || ''}"></div>
             <div class="form-group"><label>County</label><input type="text" id="cCounty" class="modern-input" value="${c.county || ''}"></div>
             <div class="form-group"><label>Postcode</label><input type="text" id="cPostcode" class="modern-input" value="${c.postcode || ''}"></div>
-            <div class="form-group" style="display:flex; align-items:center; gap:12px;">
-                <label style="min-width:90px;">Active</label>
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <input type="checkbox" id="cActive" ${c.active === false ? '' : 'checked'} />
-                    <span style="color:#64748b; font-size:13px;">Mark company as active</span>
-                </div>
+            <div class="form-group" style="flex-direction:row; align-items:center; gap:8px; padding-top:8px;">
+                <input type="checkbox" id="cIsActive" ${c.is_active !== false ? 'checked' : ''} style="width:18px; height:18px; cursor:pointer;">
+                <label for="cIsActive" style="margin:0; cursor:pointer;">Company is Active</label>
             </div>
         </div>
         <button class="btn-action" style="margin-top:20px; width:100%; justify-content:center;" onclick="window.saveNewCompany('${c.id || ''}')">Save Company</button>
@@ -411,13 +415,9 @@ window.saveNewCompany = async function(id) {
         town: document.getElementById('cTown').value,
         county: document.getElementById('cCounty').value,
         postcode: document.getElementById('cPostcode').value,
-        website: document.getElementById('cWebsite').value
+        website: document.getElementById('cWebsite').value,
+        is_active: document.getElementById('cIsActive').checked
     };
-    // include active flag (default true if checkbox not present)
-    try {
-        const chk = document.getElementById('cActive');
-        payload.active = chk ? chk.checked : true;
-    } catch(e) { payload.active = true; }
     if (id) payload.id = id;
 
     try {
@@ -435,7 +435,9 @@ window.saveNewCompany = async function(id) {
         
         document.getElementById('modalOverlay').style.display='none';
         renderCompanies();
+        initFilters();
         calculateDashboardStats();
+        if(document.getElementById('leadsView').classList.contains('active')) renderFilteredLeads();
     } catch(e) { console.error(e); alert("Network Error: " + e.message); }
 };
 
