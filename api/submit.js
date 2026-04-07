@@ -9,15 +9,31 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: "No data received. Ensure you are sending fields like name, phone, etc." });
   }
 
-  // Normalize field names (e.g. from Dialers or old form names)
-  if (data.dob && !data.dateOfBirth) data.dateOfBirth = data.dob;
-  if (data.Name && !data.name) data.name = data.Name;
-  if (data.Phone && !data.phone) data.phone = data.Phone;
-  if (data.livingDuration && !data.tenancyDuration) data.tenancyDuration = data.livingDuration;
-  if (data.damp && !data.hasDampMould) data.hasDampMould = data.damp;
-  if (data.leak && !data.hasLeaks) data.hasLeaks = data.leak;
-  if (data.reported && !data.reportedOverMonth) data.reportedOverMonth = data.reported;
-  if (data.arrears && !data.rentalArrears) data.rentalArrears = data.arrears;
+  // Normalize (maps form names to database column names)
+  const mapping = {
+      dateOfBirth: 'dob',
+      tenancyDuration: 'livingDuration',
+      hasDampMould: 'damp',
+      roomsAffected: 'dampRooms',
+      affectedSurface: 'dampSurface',
+      issueDuration: 'dampDuration',
+      issueCause: 'dampCause',
+      damageBelongings: 'dampDamage',
+      healthProblems: 'dampHealth',
+      hasLeaks: 'leak',
+      cracksDamage: 'leakCracks',
+      faultyElectrics: 'issues_electrics',
+      heatingIssues: 'issues_heating',
+      structuralDamage: 'issues_structural',
+      reportedOverMonth: 'reported',
+      rentalArrears: 'arrears'
+  };
+  for (const [formKey, dbKey] of Object.entries(mapping)) {
+      if (data[formKey] !== undefined) {
+          if (data[dbKey] === undefined) data[dbKey] = data[formKey];
+          delete data[formKey];
+      }
+  }
 
   if (!assertEnv('service', res)) return;
   const supabase = createSupabaseClient('service');
