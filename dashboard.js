@@ -22,9 +22,9 @@ const leadViewOrder = [
     'name', 'email', 'phone', 'dateOfBirth', 'address', 'postcode',
     'tenantType', 'tenancyDuration',
     'hasDampMould', 'dampLocation', 'roomsAffected', 'affectedSurface', 'issueDuration', 'issueCause', 'damageBelongings', 'healthProblems',
-    'hasLeaks', 'leakLocation', 'leakSource', 'leakStart', 'leakDamage', 'cracksDamage', 'leakBelongings',
+    'hasLeaks', 'leakLocation', 'leakSource', 'leakStart', 'leakDamage', 'cracksDamage', 
     'faultyElectrics', 'heatingIssues', 'structuralDamage',
-    'reportedOverMonth', 'reportCount', 'reportFirst', 'reportResponse', 'reportAttempt', 'reportStatus',
+    'reportedOverMonth', 
     'rentalArrears', 'arrearsAmount', 'additionalNotes'
 ];
 
@@ -51,16 +51,10 @@ const leadFieldLabels = {
     leakStart: 'Leak Start / Ongoing?',
     leakDamage: 'Leak Damage',
     cracksDamage: 'Cracks/Structural Damage (Leaks)',
-    leakBelongings: 'Damaged Belongings (Leaks)',
     faultyElectrics: 'Faulty Electrics?',
     heatingIssues: 'Heating / Boiler Issues?',
     structuralDamage: 'Cracks or Structural Damages?',
     reportedOverMonth: 'Reported >1 Month Ago?',
-    reportCount: 'Notification Count',
-    reportFirst: 'First Reported Date',
-    reportResponse: 'Landlord Response',
-    reportAttempt: 'Repair Attempted?',
-    reportStatus: 'Issue Still Unresolved?',
     rentalArrears: 'Rental Arrears?',
     arrearsAmount: 'Arrears Amount',
     additionalNotes: 'Additional Notes'
@@ -636,20 +630,22 @@ window.saveLeadEdits = async function (id) {
     inputs.forEach(inp => updates[inp.getAttribute('data-field')] = inp.value);
 
     try {
-        const res = await fetch('/api/update', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(updates)
+        const res = await fetch('/api/update', { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify(updates) 
         });
-        if (!res.ok) throw new Error("Server error " + res.status);
-
+        
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error || "Server error " + res.status);
+        
         const lead = submissionsData.find(s => String(s.id) === String(id));
         if (lead) Object.assign(lead, updates);
-        document.getElementById('modalOverlay').style.display = 'none';
+        document.getElementById('modalOverlay').style.display='none';
         renderFilteredLeads();
-    } catch (e) {
+    } catch(e) { 
         console.error("Save Error", e);
-        alert("Failed to save changes. Please try again.");
+        alert("Failed to save changes: " + e.message);
     }
 };
 
