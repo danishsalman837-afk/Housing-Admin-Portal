@@ -63,19 +63,20 @@ function normalizeLead(lead) {
   // Snake case to camelCase for dashboard/form consistency
   n('first_name', 'name');
   n('mobile_number', 'phone');
-  n('damp_location', 'dampLocation');
-  n('leak_location', 'leakLocation');
-  n('leak_source', 'leakSource');
-  n('leak_start', 'leakStart');
-  n('leak_damage', 'leakDamage');
-  n('leak_belongings', 'leakBelongings');
-  n('report_count', 'reportCount');
-  n('report_first', 'reportFirst');
-  n('report_response', 'reportResponse');
-  n('report_attempt', 'reportAttempt');
-  n('report_status', 'reportStatus');
-  n('arrears_amount', 'arrearsAmount');
-  n('additional_notes', 'additionalNotes');
+  // Fields that are already camelCase in DB or fixed lowercase/snake_case
+  n('dampLocation', 'dampLocation'); 
+  n('leakLocation', 'leakLocation');
+  n('leakSource', 'leakSource');
+  n('leakStart', 'leakStart');
+  n('leakDamage', 'leakDamage');
+  n('leakBelongings', 'leakBelongings');
+  n('reportCount', 'reportCount');
+  n('reportFirst', 'reportFirst');
+  n('reportResponse', 'reportResponse');
+  n('reportAttempt', 'reportAttempt');
+  n('reportStatus', 'reportStatus');
+  n('arrearsAmount', 'arrearsAmount');
+  n('additionalNotes', 'additionalNotes');
   
   return lead;
 }

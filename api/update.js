@@ -28,19 +28,19 @@ module.exports = async function handler(req, res) {
         structuralDamage: 'issues_structural',
         reportedOverMonth: 'reported',
         rentalArrears: 'arrears',
-        dampLocation: 'damp_location',
-        leakLocation: 'leak_location',
-        leakSource: 'leak_source',
-        leakStart: 'leak_start',
-        leakDamage: 'leak_damage',
-        leakBelongings: 'leak_belongings',
-        reportCount: 'report_count',
-        reportFirst: 'report_first',
-        reportResponse: 'report_response',
-        reportAttempt: 'report_attempt',
-        reportStatus: 'report_status',
-        arrearsAmount: 'arrears_amount',
-        additionalNotes: 'additional_notes'
+        dampLocation: 'dampLocation',
+        leakLocation: 'leakLocation',
+        leakSource: 'leakSource',
+        leakStart: 'leakStart',
+        leakDamage: 'leakDamage',
+        leakBelongings: 'leakBelongings',
+        reportCount: 'reportCount',
+        reportFirst: 'reportFirst',
+        reportResponse: 'reportResponse',
+        reportAttempt: 'reportAttempt',
+        reportStatus: 'reportStatus',
+        arrearsAmount: 'arrearsAmount',
+        additionalNotes: 'additionalNotes'
     };
     for (const [formKey, dbKey] of Object.entries(mapping)) {
         if (updates[formKey] !== undefined) {
