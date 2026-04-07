@@ -9,8 +9,18 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: "No data received. Ensure you are sending fields like name, phone, etc." });
   }
 
-  if (!assertEnv('anon', res)) return;
-  const supabase = createSupabaseClient('anon');
+  // Normalize field names (e.g. from Dialers or old form names)
+  if (data.dob && !data.dateOfBirth) data.dateOfBirth = data.dob;
+  if (data.Name && !data.name) data.name = data.Name;
+  if (data.Phone && !data.phone) data.phone = data.Phone;
+  if (data.livingDuration && !data.tenancyDuration) data.tenancyDuration = data.livingDuration;
+  if (data.damp && !data.hasDampMould) data.hasDampMould = data.damp;
+  if (data.leak && !data.hasLeaks) data.hasLeaks = data.leak;
+  if (data.reported && !data.reportedOverMonth) data.reportedOverMonth = data.reported;
+  if (data.arrears && !data.rentalArrears) data.rentalArrears = data.arrears;
+
+  if (!assertEnv('service', res)) return;
+  const supabase = createSupabaseClient('service');
 
   try {
     let isUpdate = false;

@@ -5,8 +5,8 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  if (!assertEnv('anon', res)) return;
-  const supabase = createSupabaseClient('anon');
+  if (!assertEnv('service', res)) return;
+  const supabase = createSupabaseClient('service');
 
   try {
     const data = req.body;
@@ -14,6 +14,14 @@ module.exports = async function handler(req, res) {
     if (!data.phone) {
         return res.status(400).json({ error: "Phone number is required to save progress." });
     }
+
+    // Normalize (handles transition from old form names)
+    if (data.dob && !data.dateOfBirth) data.dateOfBirth = data.dob;
+    if (data.livingDuration && !data.tenancyDuration) data.tenancyDuration = data.livingDuration;
+    if (data.damp && !data.hasDampMould) data.hasDampMould = data.damp;
+    if (data.leak && !data.hasLeaks) data.hasLeaks = data.leak;
+    if (data.reported && !data.reportedOverMonth) data.reportedOverMonth = data.reported;
+    if (data.arrears && !data.rentalArrears) data.rentalArrears = data.arrears;
 
     // Attempt to update existing with this phone number or insert new
     // We search for most recent record with this phone
@@ -41,6 +49,7 @@ module.exports = async function handler(req, res) {
         // Insert
         // Ensure status is 'Agent Saved' for new drafts
         data.leadStatus = 'Agent Saved';
+        if (!data.timestamp) data.timestamp = new Date().toISOString();
         response = await supabase
             .from('submissions')
             .insert([data])

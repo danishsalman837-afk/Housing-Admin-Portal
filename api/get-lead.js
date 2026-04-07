@@ -10,8 +10,8 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'Phone number is required' });
   }
 
-  if (!assertEnv('anon', res)) return;
-  const supabase = createSupabaseClient('anon');
+  if (!assertEnv('service', res)) return;
+  const supabase = createSupabaseClient('service');
 
   try {
     // Fetch the most recent submission with this phone number
@@ -27,7 +27,28 @@ module.exports = async function handler(req, res) {
       return res.status(500).json({ error: error.message });
     }
 
-    return res.status(200).json(data && data.length > 0 ? data[0] : null);
+    if (data && data.length > 0) {
+      const lead = data[0];
+      // Normalize for the form
+      if (lead.dob && !lead.dateOfBirth) lead.dateOfBirth = lead.dob;
+      if (lead.livingDuration && !lead.tenancyDuration) lead.tenancyDuration = lead.livingDuration;
+      if (lead.damp && !lead.hasDampMould) lead.hasDampMould = lead.damp;
+      if (lead.dampRooms && !lead.roomsAffected) lead.roomsAffected = lead.dampRooms;
+      if (lead.dampSurface && !lead.affectedSurface) lead.affectedSurface = lead.dampSurface;
+      if (lead.dampDuration && !lead.issueDuration) lead.issueDuration = lead.dampDuration;
+      if (lead.dampCause && !lead.issueCause) lead.issueCause = lead.dampCause;
+      if (lead.dampDamage && !lead.damageBelongings) lead.damageBelongings = lead.dampDamage;
+      if (lead.dampHealth && !lead.healthProblems) lead.healthProblems = lead.dampHealth;
+      if (lead.leak && !lead.hasLeaks) lead.hasLeaks = lead.leak;
+      if (lead.leakCracks && !lead.cracksDamage) lead.cracksDamage = lead.leakCracks;
+      if (lead.issues_electrics && !lead.faultyElectrics) lead.faultyElectrics = lead.issues_electrics;
+      if (lead.issues_heating && !lead.heatingIssues) lead.heatingIssues = lead.issues_heating;
+      if (lead.issues_structural && !lead.structuralDamage) lead.structuralDamage = lead.issues_structural;
+      if (lead.reported && !lead.reportedOverMonth) lead.reportedOverMonth = lead.reported;
+      if (lead.arrears && !lead.rentalArrears) lead.rentalArrears = lead.arrears;
+      return res.status(200).json(lead);
+    }
+    return res.status(200).json(null);
   } catch (err) {
     console.error("Unexpected error:", err);
     return res.status(500).json({ error: "An unexpected error occurred." });

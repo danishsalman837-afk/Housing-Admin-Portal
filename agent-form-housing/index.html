@@ -218,8 +218,8 @@
         <label for="phone">Phone Number:</label>
         <input type="tel" id="phone" name="phone" placeholder="e.g. 07123 456789" required>
 
-        <label for="dob">Date of Birth (DOB):</label>
-        <input type="text" id="dob" name="dob" class="dob-input" placeholder="DD / MM / YYYY" maxlength="14">
+      <label for="dob">Date of Birth (DOB):</label>
+      <input type="text" id="dob" name="dateOfBirth" class="dob-input" placeholder="DD / MM / YYYY" maxlength="14">
 
       <label>Address</label>
       <textarea name="address" rows="2" required></textarea>
@@ -235,13 +235,13 @@
       </select>
 
       <label>How long have you been living in the property?</label>
-      <input type="text" name="livingDuration" required>
+      <input type="text" name="tenancyDuration" required>
     </div>
 
     <!-- Damp / Mould -->
     <div class="section">
       <label>Is there any damp or mould in the property?</label>
-      <select name="damp" id="damp" required>
+      <select name="hasDampMould" id="damp" required>
         <option value="">Select</option>
         <option value="No">No</option>
         <option value="Yes">Yes</option>
@@ -252,7 +252,7 @@
         <input type="text" name="dampLocation">
 
         <label>How many rooms are affected?</label>
-        <select name="dampRooms">
+        <select name="roomsAffected">
           <option value="">Select</option>
           <option value="1">1</option>
           <option value="2">2</option>
@@ -262,26 +262,26 @@
         </select>
 
         <label>Is it on the walls, ceiling, or floor?</label>
-        <input type="text" name="dampSurface">
+        <input type="text" name="affectedSurface">
 
         <label>How long have you had this issue?</label>
-        <input type="text" name="dampDuration">
+        <input type="text" name="issueDuration">
 
         <label>Do you know what caused it (leak, rain, pipe, roof)?</label>
-        <input type="text" name="dampCause">
+        <input type="text" name="issueCause">
 
         <label>Has it damaged any belongings (bed, sofa, clothes, etc.)?</label>
-        <input type="text" name="dampDamage">
+        <input type="text" name="damageBelongings">
 
         <label>Has it caused any health problems (breathing, asthma, allergies, skin issues)?</label>
-        <input type="text" name="dampHealth">
+        <input type="text" name="healthProblems">
       </div>
     </div>
 
     <!-- Leaks -->
     <div class="section">
       <label>Do you have any leaks in the property?</label>
-      <select name="leak" id="leak" required>
+      <select name="hasLeaks" id="leak" required>
         <option value="">Select</option>
         <option value="No">No</option>
         <option value="Yes">Yes</option>
@@ -301,7 +301,7 @@
         <input type="text" name="leakDamage">
 
         <label>Any cracks or structural damage?</label>
-        <input type="text" name="leakCracks">
+        <input type="text" name="cracksDamage">
 
         <label>Has it damaged your belongings?</label>
         <input type="text" name="leakBelongings">
@@ -309,12 +309,12 @@
     </div>
 
     <!-- Electrics / Heating / Structural -->
-    <div class='section'><label>Are there any Faulty Electrics in the property?</label><select name='issues_electrics' required><option value=''>Select</option><option value='No'>No</option><option value='Yes'>Yes</option></select></div><div class='section'><label>Are there any Heating / Boiler Issues?</label><select name='issues_heating' required><option value=''>Select</option><option value='No'>No</option><option value='Yes'>Yes</option></select></div><div class='section'><label>Are there any Cracks or Structural Damages?</label><select name='issues_structural' required><option value=''>Select</option><option value='No'>No</option><option value='Yes'>Yes</option></select></div>
+    <div class='section'><label>Are there any Faulty Electrics in the property?</label><select name='faultyElectrics' required><option value=''>Select</option><option value='No'>No</option><option value='Yes'>Yes</option></select></div><div class='section'><label>Are there any Heating / Boiler Issues?</label><select name='heatingIssues' required><option value=''>Select</option><option value='No'>No</option><option value='Yes'>Yes</option></select></div><div class='section'><label>Are there any Cracks or Structural Damages?</label><select name='structuralDamage' required><option value=''>Select</option><option value='No'>No</option><option value='Yes'>Yes</option></select></div>
 
     <!-- Reporting -->
     <div class="section">
       <label>Have you reported all the disrepairs over a month ago and have no date for it to be fixed?</label>
-      <select name="reported" id="reported" required>
+      <select name="reportedOverMonth" id="reported" required>
         <option value="">Select</option>
         <option value="No">No</option>
         <option value="Yes">Yes</option>
@@ -341,7 +341,7 @@
     <!-- Rental arrears -->
     <div class="section">
       <label>Are you in rental arrears? (Must be less than £1000)</label>
-      <select name="arrears" id="arrears" required>
+      <select name="rentalArrears" id="arrears" required>
         <option value="">Select</option>
         <option value="No">No</option>
         <option value="Yes">Yes</option>
