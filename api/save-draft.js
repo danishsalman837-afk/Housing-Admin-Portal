@@ -28,7 +28,10 @@ module.exports = async function handler(req, res) {
 
     let response;
     if (existing && existing.length > 0) {
-        // Update
+        // Ensure status is 'Agent Saved' for drafts so they don't hit the dashboard yet
+        if (!data.leadStatus || data.leadStatus === 'Agent Saved') {
+            data.leadStatus = 'Agent Saved';
+        }
         response = await supabase
             .from('submissions')
             .update(data)
@@ -36,8 +39,8 @@ module.exports = async function handler(req, res) {
             .select();
     } else {
         // Insert
-        // Ensure default status for saved
-        if (!data.leadStatus) data.leadStatus = 'New Lead';
+        // Ensure status is 'Agent Saved' for new drafts
+        data.leadStatus = 'Agent Saved';
         response = await supabase
             .from('submissions')
             .insert([data])

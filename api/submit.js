@@ -32,6 +32,10 @@ module.exports = async function handler(req, res) {
     if (isUpdate) {
       const updateData = { ...data };
       delete updateData.id;
+      // Mark as New Lead upon submission if it was saved/null
+      if (!updateData.leadStatus || updateData.leadStatus === 'Agent Saved') {
+        updateData.leadStatus = 'New Lead';
+      }
 
       const { error: updateError } = await supabase
         .from('submissions')
@@ -44,7 +48,9 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ success: true, message: "Lead updated successfully!" });
     } else {
       // Add a default status if not provided
-      if (!data.leadStatus) data.leadStatus = 'New Lead';
+      if (!data.leadStatus || data.leadStatus === 'Agent Saved') {
+          data.leadStatus = 'New Lead';
+      }
       
       // Add a timestamp if missing
       if (!data.timestamp) data.timestamp = new Date().toISOString();

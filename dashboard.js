@@ -247,6 +247,9 @@ function renderTable(data) {
                     <button class="act-btn dl" onclick="window.exportDocx('${item.id}')" title="Download Word Doc">
                         <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg> Download
                     </button>
+                    <button class="act-btn" style="background:rgba(255,69,58,.10);color:#CC3328;border-color:rgba(255,69,58,.20);" onclick="window.archiveLead('${item.id}')" title="Delete Lead (Archive)">
+                        <svg viewBox="0 0 24 24" style="fill:currentColor; width:14px; height:14px;"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg> Delete
+                    </button>
                 </div>
             </td>`;
         tbody.appendChild(tr);
@@ -710,6 +713,26 @@ window.saveNewNote = async function(id) {
         console.error(e);
         s.notes = originalNotes; // revert mapping
         alert("Failed to save note to server.");
+    }
+};
+
+window.archiveLead = async function(id) {
+    if(!confirm("Are you sure you want to delete this lead from the dashboard?\n\n(It will be removed from this view but remain archived in the database)")) return;
+    try {
+        const res = await fetch('/api/update', { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify({ id, leadStatus: 'Archived' }) 
+        });
+        if (!res.ok) throw new Error("Failed to archive lead");
+        
+        // Remove locally and refresh
+        submissionsData = submissionsData.filter(s => String(s.id) !== String(id));
+        renderFilteredLeads();
+        calculateDashboardStats();
+    } catch(e) { 
+        console.error("Archive Error", e);
+        alert("Could not update lead status. Please try again.");
     }
 };
 
