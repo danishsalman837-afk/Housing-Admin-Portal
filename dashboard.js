@@ -20,7 +20,7 @@ function getStatusColor(status) {
 
 const leadViewOrder = [
     'name', 'phone', 'email', 'dateOfBirth', 'address', 'postcode',
-    'tenantType', 'livingDuration', 
+    'tenantType', 'livingDuration',
     'damp', 'damplocation', 'damprooms', 'dampsurface',
     'leak', 'leaklocation', 'leaksource', 'leakdamage',
     'heatingmainissue', 'structurallocation',
@@ -57,7 +57,7 @@ const leadFieldLabels = {
     timestamp: 'SUBMISSION DATE'
 };
 
-window.switchView = function(view) {
+window.switchView = function (view) {
     document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     const navItems = document.querySelectorAll('.nav-item');
@@ -81,23 +81,23 @@ function calculateDashboardStats() {
     const total = submissionsData.length;
     const acceptedCount = submissionsData.filter(s => s.leadStatus === 'Accepted').length;
     const rejectedCount = submissionsData.filter(s => s.leadStatus === 'Rejected').length;
-    
+
     // Update text references
     const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
-    setEl('dashboardTotal',           total);
-    setEl('dashboardTotalDonut',      total);
-    setEl('dashboardActive',          companiesData.filter(c => c.is_active !== false).length);
+    setEl('dashboardTotal', total);
+    setEl('dashboardTotalDonut', total);
+    setEl('dashboardActive', companiesData.filter(c => c.is_active !== false).length);
     setEl('dashboardSolicitorsCount', membersData.filter(m => {
         const comp = companiesData.find(c => String(c.id) === String(m.company_id));
         return comp && comp.is_active !== false;
     }).length);
-    setEl('dashboardAccepted',        acceptedCount);
-    setEl('dashboardRejected',        rejectedCount);
+    setEl('dashboardAccepted', acceptedCount);
+    setEl('dashboardRejected', rejectedCount);
 
     let convRate = total > 0 ? ((acceptedCount / total) * 100).toFixed(1) : '0';
-    setEl('dashboardConvRate',       convRate + '%');
-    setEl('dashboardConvRateDonut',  convRate + '%');
-    
+    setEl('dashboardConvRate', convRate + '%');
+    setEl('dashboardConvRateDonut', convRate + '%');
+
     initCharts(submissionsData, acceptedCount, total);
 }
 
@@ -114,12 +114,13 @@ function initCharts(data, acceptedCount, totalCount) {
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         let monthlyCounts = Array(12).fill(0);
         data.forEach(item => {
-            if (item.timestamp) { const date = new Date(item.timestamp); if(!isNaN(date)) monthlyCounts[date.getMonth()]++; }
+            if (item.timestamp) { const date = new Date(item.timestamp); if (!isNaN(date)) monthlyCounts[date.getMonth()]++; }
         });
         charts.flow = new Chart(ctxFlow, {
             type: 'bar', // Highlevel "Funnel" / Opportunity Value style
             data: { labels: months, datasets: [{ label: 'Leads Received', data: monthlyCounts, backgroundColor: '#3B82F6', borderRadius: 4 }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+            options: {
+                responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
                 scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: '#F2F3F5' } } }
             }
         });
@@ -135,7 +136,7 @@ function initCharts(data, acceptedCount, totalCount) {
 
     if (ctxConv) {
         let remainder = totalCount - acceptedCount;
-        if(totalCount === 0) remainder = 1; // So we can show a grey circle when empty
+        if (totalCount === 0) remainder = 1; // So we can show a grey circle when empty
         charts.conv = new Chart(ctxConv, {
             type: 'doughnut',
             data: { datasets: [{ data: [acceptedCount, remainder], backgroundColor: ['#10B981', '#E5E6EB'], borderWidth: 0 }] },
@@ -157,18 +158,18 @@ function initFilters() {
     }
 
     if (companySelect && companySelect.options.length <= 1) {
-        // Clear all except first option if re-initializing
+        // Clear all except first option if re-initializing. Only include active companies.
         companySelect.innerHTML = '<option value="All">All Solicitors</option>';
-        companiesData.filter(c => c.is_active !== false).forEach(c => {
+        companiesData.filter(c => c.is_active !== false && c.active !== false).forEach(c => {
             const opt = document.createElement('option');
-            opt.value = c.id; 
+            opt.value = c.id;
             opt.innerText = c.name || c.company_name || 'Unnamed Solicitor';
             companySelect.appendChild(opt);
         });
     }
 }
 
-window.renderFilteredLeads = function() {
+window.renderFilteredLeads = function () {
     const statusFilter = document.getElementById('filterStatus')?.value || 'All';
     const companyFilter = document.getElementById('filterCompany')?.value || 'All';
     const searchVal = (document.getElementById('searchLead')?.value || '').toLowerCase();
@@ -177,12 +178,12 @@ window.renderFilteredLeads = function() {
         let matchStatus = statusFilter === 'All' || item.leadStatus === statusFilter;
         let matchCompany = companyFilter === 'All' || String(item.assigned_company_id || '') === String(companyFilter);
         let matchSearch = true;
-        
-        if(searchVal) {
-            const textToSearch = `${item.name||''} ${item.email||''} ${item.phone||''}`.toLowerCase();
+
+        if (searchVal) {
+            const textToSearch = `${item.name || ''} ${item.email || ''} ${item.phone || ''}`.toLowerCase();
             matchSearch = textToSearch.includes(searchVal);
         }
-        
+
         return matchStatus && matchCompany && matchSearch;
     });
 
@@ -197,19 +198,26 @@ function renderTable(data) {
     data.forEach((item, index) => {
         const tr = document.createElement("tr");
 
-        let compOptions = `<option value="">Unassigned</option>` + companiesData.filter(c => {
-            // Only show active companies, or the currently assigned (even if inactive)
-            return c.is_active !== false || String(item.assigned_company_id) === String(c.id);
-        }).map(c => {
+        let compOptions = '<option value="">Unassigned</option>';
+        const activeCompanies = companiesData.filter(c => c.is_active !== false && c.active !== false);
+        compOptions += activeCompanies.map(c => {
             let cName = c.name || c.company_name || 'Unnamed Solicitor';
-            if (cName.includes('undefined')) cName = 'Unnamed Solicitor';
-            if (c.is_active === false) cName += ' (Inactive)';
+            if (cName === 'undefined' || cName.includes('undefined')) cName = 'Unnamed Solicitor';
             return `<option value="${c.id}" ${String(item.assigned_company_id) === String(c.id) ? 'selected' : ''}>${cName}</option>`;
         }).join('');
+        // If this lead is currently assigned to a company that is now inactive, show it (so users can see current assignment).
+        if (item.assigned_company_id && !activeCompanies.find(a => String(a.id) === String(item.assigned_company_id))) {
+            const assignedCompany = companiesData.find(c => String(c.id) === String(item.assigned_company_id));
+            if (assignedCompany) {
+                let aName = assignedCompany.name || assignedCompany.company_name || 'Unnamed Solicitor';
+                if (aName === 'undefined' || aName.includes('undefined')) aName = 'Unnamed Solicitor';
+                compOptions += `<option value="${assignedCompany.id}" selected>${aName} (Inactive)</option>`;
+            }
+        }
 
-        const statusSelectTheme = getStatusColor(item.leadStatus || 'New Lead');
+            const statusSelectTheme = getStatusColor(item.leadStatus || 'New Lead');
 
-        tr.innerHTML = `
+            tr.innerHTML = `
             <td>${index + 1}</td>
             <td><strong>${item.name || item.first_name || "---"}</strong></td>
             <td>${item.phone || item.mobile_number || "---"}</td>
@@ -236,51 +244,60 @@ function renderTable(data) {
                     </button>
                 </div>
             </td>`;
-        tbody.appendChild(tr);
-    });
-}
+            tbody.appendChild(tr);
+        });
+    }
 
-window.handleFieldUpdate = async function(id, fieldName, value) {
-    try {
-        const updateParams = { id };
-        updateParams[fieldName] = value;
-        await fetch('/api/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updateParams) });
-        const lead = submissionsData.find(s => String(s.id) === String(id));
-        if (lead) lead[fieldName] = value;
-        if(fieldName === 'leadStatus') calculateDashboardStats();
-    } catch (e) { console.error(e); }
-};
+window.handleFieldUpdate = async function (id, fieldName, value) {
+            try {
+                const updateParams = { id };
+                updateParams[fieldName] = value;
+                await fetch('/api/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updateParams) });
+                const lead = submissionsData.find(s => String(s.id) === String(id));
+                if (lead) lead[fieldName] = value;
+                if (fieldName === 'leadStatus') calculateDashboardStats();
+            } catch (e) { console.error(e); }
+        };
 
-window.exportDocx = function(id) { window.open('/api/export-docx?id=' + id, '_blank'); };
-window.exportExcel = function() {
-    const status = document.getElementById('filterStatus')?.value || 'All';
-    const company = document.getElementById('filterCompany')?.value || 'All';
-    window.open('/api/export-xlsx?status=' + status + '&company=' + company, '_blank');
-};
+    window.exportDocx = function (id) { window.open('/api/export-docx?id=' + id, '_blank'); };
+    window.exportExcel = function () {
+        const status = document.getElementById('filterStatus')?.value || 'All';
+        const company = document.getElementById('filterCompany')?.value || 'All';
+        window.open('/api/export-xlsx?status=' + status + '&company=' + company, '_blank');
+    };
 
 
-// 🏢 COMPANY CRM
-window.viewCompanyEditModal = function(id) {
-    const c = companiesData.find(x => String(x.id) === String(id));
-    if(!c) return;
-    openAddCompanyModal(c);
-};
+    // 🏢 COMPANY CRM
+    window.viewCompanyEditModal = function (id) {
+        const c = companiesData.find(x => String(x.id) === String(id));
+        if (!c) return;
+        openAddCompanyModal(c);
+    };
 
-window.renderCompanies = function() {
-    const tbody = document.querySelector("#companyTable tbody");
-    if (!tbody) return;
-    tbody.innerHTML = '';
-    companiesData.forEach((c) => {
-        let nameDisp = c.name || c.company_name || 'Unnamed Solicitor';
-        if (nameDisp === 'undefined' || nameDisp.includes('undefined')) nameDisp = 'Unnamed Solicitor';
-        
-        const isActive = c.is_active !== false;
-        const statusBadge = isActive 
-            ? `<div class="status-badge" data-color="success">Active</div>`
-            : `<div class="status-badge" data-color="gray">Inactive</div>`;
+    window.renderCompanies = function () {
+        const tbody = document.querySelector("#companyTable tbody");
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        companiesData.forEach((c) => {
+            let nameDisp = c.name || c.company_name || 'Unnamed Solicitor';
+            if (nameDisp === 'undefined' || nameDisp.includes('undefined')) nameDisp = 'Unnamed Solicitor';
 
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td><strong>${nameDisp}</strong></td><td>${c.type || '--'}</td><td>${statusBadge}</td><td>${c.main_contact || '--'}</td><td>${c.postcode || '--'}</td><td>${c.website || '--'}</td>
+            const isActive = c.is_active !== false;
+            const statusBadge = isActive
+                ? `<div class="status-badge" data-color="success">Active</div>`
+                : `<div class="status-badge" data-color="gray">Inactive</div>`;
+
+            const tr = document.createElement('tr');
+            const isActiveComp = c.is_active !== false && c.active !== false;
+            tr.innerHTML = `<td><strong>${nameDisp}</strong></td><td>${c.type || '--'}</td><td>${c.main_contact || '--'}</td><td>${c.postcode || '--'}</td><td>${c.website || '--'}</td>
+            <td style="text-align:center;">
+                <div style="display:flex; align-items:center; gap:10px; justify-content:center;">
+                    <div style="font-weight:700; color:${!isActiveComp ? '#94A3B8' : '#0B74FF'}; font-size:13px;">${!isActiveComp ? 'Inactive' : 'Active'}</div>
+                    <label style="display:inline-flex; align-items:center;">
+                        <input type="checkbox" aria-label="Toggle active" ${!isActiveComp ? '' : 'checked'} onchange="window.toggleCompanyActive('${c.id}', this.checked)" />
+                    </label>
+                </div>
+            </td>
             <td>
                 <div class="action-group">
                     <button class="act-btn edit" onclick="window.viewCompanyEditModal('${c.id}')" title="Edit Company">
@@ -301,7 +318,7 @@ window.openAddCompanyModal = function(existingCompany = null) {
     const c = existingCompany || {};
     
      document.getElementById('modalBox').innerHTML = `
-        <div class="modal-header"><h2>${isEdit ? 'Edit Company' : 'Add Company'}</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>
+                < div class="modal-header" ><h2>${isEdit ? 'Edit Company' : 'Add Company'}</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div >
         <div class="form-grid">
             <div class="form-group"><label>Company Name</label><input type="text" id="cName" class="modern-input" value="${c.name || ''}" placeholder="Name"></div>
             <div class="form-group">
@@ -326,7 +343,7 @@ window.openAddCompanyModal = function(existingCompany = null) {
             </div>
         </div>
         <button class="btn-action" style="margin-top:20px; width:100%; justify-content:center;" onclick="window.saveNewCompany('${c.id || ''}')">Save Company</button>
-    `;
+            `;
     document.getElementById('modalOverlay').style.display = 'flex';
 };
 
@@ -336,7 +353,7 @@ window.saveLeadEdits = async function(id) {
     const updates = {};
     leadViewOrder.forEach(k => {
         if (k === 'id') return;
-        const el = document.getElementById(`edit-${k}`);
+        const el = document.getElementById(`edit - ${ k } `);
         if (el) updates[k] = el.value;
     });
     try {
@@ -424,7 +441,7 @@ window.viewCompanyMembers = function(companyId) {
         let mName = ((m.first_name || '') + ' ' + (m.last_name || '')).trim();
         if (!mName || mName.includes('undefined')) mName = 'Unknown Member';
         
-        tbody.innerHTML += `<tr><td><strong>${mName}</strong></td><td>${m.job_title || '--'}</td><td>${m.email || '--'}</td><td>${m.mobile || '--'}</td><td>${m.landline || '--'}</td>
+        tbody.innerHTML += `< tr ><td><strong>${mName}</strong></td><td>${m.job_title || '--'}</td><td>${m.email || '--'}</td><td>${m.mobile || '--'}</td><td>${m.landline || '--'}</td>
             <td>
                 <div class="action-group">
                     <button class="act-btn edit" title="Edit Member" onclick="window.openAddMemberModal('${m.id}')">
@@ -434,7 +451,7 @@ window.viewCompanyMembers = function(companyId) {
                         <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg> Delete
                     </button>
                 </div>
-            </td></tr>`;
+            </td></tr > `;
     });
 };
 
@@ -443,17 +460,17 @@ window.openAddMemberModal = function(editId = null) {
     const m = membersData.find(x => String(x.id) === String(editId)) || {};
 
     document.getElementById('modalBox').innerHTML = `
-        <div class="modal-header"><h2>${editId ? 'Edit Member' : 'Add Member'}</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>
+                < div class="modal-header" ><h2>${editId ? 'Edit Member' : 'Add Member'}</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div >
         <div class="form-grid">
             <div class="form-group"><label>First Name</label><input type="text" id="mFirstName" class="modern-input" value="${m.first_name || ''}"></div>
             <div class="form-group"><label>Last Name</label><input type="text" id="mLastName" class="modern-input" value="${m.last_name || ''}"></div>
             <div class="form-group"><label>Email Address</label><input type="text" id="mEmail" class="modern-input" value="${m.email || ''}"></div>
             <div class="form-group"><label>Job Title</label><input type="text" id="mJobTitle" class="modern-input" value="${m.job_title || ''}"></div>
-            <div class="form-group"><label>Mobile Base</label><input type="text" id="mMobile" class="modern-input" value="${m.mobile || ''}"></div>
+            <div class="form-group"><label>Mobile </label><input type="text" id="mMobile" class="modern-input" value="${m.mobile || ''}"></div>
             <div class="form-group"><label>Landline</label><input type="text" id="mLandline" class="modern-input" value="${m.landline || ''}"></div>
         </div>
         <button class="btn-action" style="margin-top:24px; width:100%; justify-content:center; padding:12px;" onclick="window.saveNewMember('${m.id || ''}')">Save Member</button>
-    `;
+            `;
     document.getElementById('modalOverlay').style.display = 'flex';
 }
 
@@ -509,7 +526,7 @@ window.openViewModal = function(id) {
     const systemFields = ['id', 'created_at', 'notes', 'leadStatus', 'assigned_company_id', 'assigned_solicitor_id', 'member_id', 'active', 'timestamp'];
     const processedKeys = new Set();
     
-    let html = '<div style="column-count: 2; column-gap: 32px; max-height: 450px; overflow-y: auto; padding: 4px;">';
+    let html = '<div class="form-grid" style="max-height: 450px; overflow-y: auto; padding: 10px;">';
     
     leadViewOrder.forEach(key => {
         processedKeys.add(key);
@@ -532,9 +549,9 @@ window.openViewModal = function(id) {
 
             if(typeof value === 'object' && value !== null) value = JSON.stringify(value);
             
-            html += `<div style="margin-bottom:20px; break-inside: avoid;">
+            html += `<div style="margin-bottom:12px; overflow-wrap: anywhere; break-inside: avoid;">
                         <label style="font-size:11px; color:#94A3B8; font-weight:700; display:block; margin-bottom:4px; letter-spacing: 0.5px;">${label}</label>
-                        <div style="font-size:16px; color:#1E293B; font-weight:600; line-height: 1.4;">${value}</div>
+                        <div style="font-size:14px; color:#111827; font-weight:500; line-height: 1.4;">${value}</div>
                      </div>`;
         }
     });
@@ -545,9 +562,9 @@ window.openViewModal = function(id) {
         let value = s[key];
         if (value !== null && value !== undefined && value !== '') {
             if(typeof value === 'object') value = JSON.stringify(value);
-            html += `<div style="margin-bottom:20px; break-inside: avoid;">
+            html += `<div style="margin-bottom:12px; overflow-wrap: anywhere; break-inside: avoid;">
                         <label style="font-size:11px; color:#94A3B8; font-weight:700; display:block; margin-bottom:4px; letter-spacing: 0.5px;">${key.replace(/_/g, ' ').toUpperCase()}</label>
-                        <div style="font-size:16px; color:#1E293B; font-weight:600; line-height: 1.4;">${value}</div>
+                        <div style="font-size:14px; color:#111827; font-weight:500; line-height: 1.4;">${value}</div>
                      </div>`;
         }
     });
@@ -555,14 +572,10 @@ window.openViewModal = function(id) {
     html += '</div>';
 
     document.getElementById('modalBox').innerHTML = `
-        <div class="modal-header">
-            <h2>Lead Details: ${s.name || s.first_name || 'Client'}</h2>
-            <div>
-                <button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button>
-            </div>
-        </div>
-        ${html}
-    `;
+        <div class="modal-header"><h2>Lead Profile: ${s.name || s.first_name || 'Client'}</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>
+        </div >
+                ${ html }
+            `;
     document.getElementById('modalOverlay').style.display = 'flex';
 };
 
@@ -587,17 +600,17 @@ window.openEditLeadModal = function(id) {
         
         const isFullWidth = displayValue.length > 50 || k === 'address';
         
-        html += `<div class="form-group ${isFullWidth ? 'full' : ''}"><label>${label}</label>
+        html += `< div class="form-group ${isFullWidth ? 'full' : ''}" ><label>${label}</label>
                  <input type="text" class="modern-input edit-inp" data-field="${k}" value="${displayValue}"></div>`;
     });
     
-    html += `</div>
-             <div style="margin-top:24px; display:flex; justify-content:flex-end; gap:10px;">
-                <button class="btn-outline" style="padding:10px 20px; border-radius:8px;" onclick="window.openViewModal('${s.id}')">Back to Profile</button>
-                <button class="btn-action" onclick="window.saveLeadEdits('${s.id}')">Save Changes</button>
-             </div>`;
+    html += `</div >
+                <div style="margin-top:24px; display:flex; justify-content:flex-end; gap:10px;">
+                    <button class="btn-outline" style="padding:10px 20px; border-radius:8px;" onclick="window.openViewModal('${s.id}')">Back to Profile</button>
+                    <button class="btn-action" onclick="window.saveLeadEdits('${s.id}')">Save Changes</button>
+                </div>`;
 
-    document.getElementById('modalBox').innerHTML = `<div class="modal-header"><h2>Edit Lead Data</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>${html}`;
+    document.getElementById('modalBox').innerHTML = `< div class="modal-header" ><h2>Edit Lead Data</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div > ${ html } `;
     document.getElementById('modalOverlay').style.display = 'flex';
 };
 
@@ -628,25 +641,25 @@ window.openNotesModal = function(id) {
     if(!Array.isArray(notesArray)) notesArray = [];
     
     let notesHtml = notesArray.map(n => `
-        <div style="background:#F9FAFB; border:1px solid #E5E7EB; padding:12px; border-radius:8px; margin-bottom:8px;">
+                < div style = "background:#F9FAFB; border:1px solid #E5E7EB; padding:12px; border-radius:8px; margin-bottom:8px;" >
             <div style="font-size:11px; color:#6B7280; margin-bottom:4px;">${new Date(n.date || Date.now()).toLocaleString()}</div>
             <div style="font-size:13px; color:#111827; white-space:pre-wrap;">${n.note || JSON.stringify(n)}</div>
-        </div>
-    `).join('');
-    if(notesArray.length === 0) notesHtml = `<div style="font-size:13px; color:#9CA3AF; font-style:italic; padding:20px; text-align:center;">No internal notes yet.</div>`;
+        </div >
+                `).join('');
+    if(notesArray.length === 0) notesHtml = `< div style = "font-size:13px; color:#9CA3AF; font-style:italic; padding:20px; text-align:center;" > No internal notes yet.</div > `;
 
     document.getElementById('modalBox').innerHTML = `
-        <div class="modal-header"><h2>Internal Notes: ${s.name || s.first_name || 'Client'}</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>
-        <div style="display:flex; flex-direction:column; gap:16px;">
-            <div style="max-height: 350px; overflow-y:auto; background:#FFF; border:1px solid #E2E8F0; padding:16px; border-radius:8px;">
-                ${notesHtml}
-            </div>
-            <div>
-                <textarea id="newNoteEditor" placeholder="Type a new internal note..." style="width:100%; height:100px; padding:12px; border-radius:8px; border:1px solid #E2E8F0; outline:none; font-family:inherit; resize:vertical; background:#F8FAFC;"></textarea>
-                <button class="btn-action" style="margin-top:12px; width:100%; justify-content:center;" onclick="window.saveNewNote('${s.id}')">Add Note</button>
-            </div>
-        </div>
-    `;
+                < div class="modal-header" ><h2>Internal Notes: ${s.name || s.first_name || 'Client'}</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div >
+                    <div style="display:flex; flex-direction:column; gap:16px;">
+                        <div style="max-height: 350px; overflow-y:auto; background:#FFF; border:1px solid #E2E8F0; padding:16px; border-radius:8px;">
+                            ${notesHtml}
+                        </div>
+                        <div>
+                            <textarea id="newNoteEditor" placeholder="Type a new internal note..." style="width:100%; height:100px; padding:12px; border-radius:8px; border:1px solid #E2E8F0; outline:none; font-family:inherit; resize:vertical; background:#F8FAFC;"></textarea>
+                            <button class="btn-action" style="margin-top:12px; width:100%; justify-content:center;" onclick="window.saveNewNote('${s.id}')">Add Note</button>
+                        </div>
+                    </div>
+            `;
     document.getElementById('modalOverlay').style.display = 'flex';
 };
 
