@@ -1,4 +1,4 @@
-const { createSupabaseClient, assertEnv } = require("./supabaseClient");
+const { createSupabaseClient, assertEnv, normalizeLead } = require("./supabaseClient");
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -28,24 +28,7 @@ module.exports = async function handler(req, res) {
     }
 
     if (data && data.length > 0) {
-      const lead = data[0];
-      // Normalize for the form
-      if (lead.dob && !lead.dateOfBirth) lead.dateOfBirth = lead.dob;
-      if (lead.livingDuration && !lead.tenancyDuration) lead.tenancyDuration = lead.livingDuration;
-      if (lead.damp && !lead.hasDampMould) lead.hasDampMould = lead.damp;
-      if (lead.dampRooms && !lead.roomsAffected) lead.roomsAffected = lead.dampRooms;
-      if (lead.dampSurface && !lead.affectedSurface) lead.affectedSurface = lead.dampSurface;
-      if (lead.dampDuration && !lead.issueDuration) lead.issueDuration = lead.dampDuration;
-      if (lead.dampCause && !lead.issueCause) lead.issueCause = lead.dampCause;
-      if (lead.dampDamage && !lead.damageBelongings) lead.damageBelongings = lead.dampDamage;
-      if (lead.dampHealth && !lead.healthProblems) lead.healthProblems = lead.dampHealth;
-      if (lead.leak && !lead.hasLeaks) lead.hasLeaks = lead.leak;
-      if (lead.leakCracks && !lead.cracksDamage) lead.cracksDamage = lead.leakCracks;
-      if (lead.issues_electrics && !lead.faultyElectrics) lead.faultyElectrics = lead.issues_electrics;
-      if (lead.issues_heating && !lead.heatingIssues) lead.heatingIssues = lead.issues_heating;
-      if (lead.issues_structural && !lead.structuralDamage) lead.structuralDamage = lead.issues_structural;
-      if (lead.reported && !lead.reportedOverMonth) lead.reportedOverMonth = lead.reported;
-      if (lead.arrears && !lead.rentalArrears) lead.rentalArrears = lead.arrears;
+      const lead = normalizeLead(data[0]);
       return res.status(200).json(lead);
     }
     return res.status(200).json(null);

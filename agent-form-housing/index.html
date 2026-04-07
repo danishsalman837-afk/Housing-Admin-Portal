@@ -427,7 +427,7 @@
                       const form = document.getElementById("disrepairForm");
                       Object.keys(lead).forEach(key => {
                           const input = form.querySelector(`[name="${key}"]`);
-                          if (input && lead[key] !== null) {
+                          if (input && lead[key] !== null && lead[key] !== undefined) {
                               input.value = lead[key];
                               // Trigger any change events for conditional fields
                               input.dispatchEvent(new Event('change'));

@@ -26,7 +26,20 @@ module.exports = async function handler(req, res) {
       heatingIssues: 'issues_heating',
       structuralDamage: 'issues_structural',
       reportedOverMonth: 'reported',
-      rentalArrears: 'arrears'
+      rentalArrears: 'arrears',
+      dampLocation: 'damp_location',
+      leakLocation: 'leak_location',
+      leakSource: 'leak_source',
+      leakStart: 'leak_start',
+      leakDamage: 'leak_damage',
+      leakBelongings: 'leak_belongings',
+      reportCount: 'report_count',
+      reportFirst: 'report_first',
+      reportResponse: 'report_response',
+      reportAttempt: 'report_attempt',
+      reportStatus: 'report_status',
+      arrearsAmount: 'arrears_amount',
+      additionalNotes: 'additional_notes'
   };
   for (const [formKey, dbKey] of Object.entries(mapping)) {
       if (data[formKey] !== undefined) {

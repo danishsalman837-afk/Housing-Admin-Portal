@@ -34,4 +34,50 @@ function createSupabaseClient(role = "service") {
   return createClient(url, key);
 }
 
-module.exports = { createSupabaseClient, assertEnv };
+function normalizeLead(lead) {
+  if (!lead) return lead;
+  const n = (dbKey, formKey) => { 
+    if (lead[dbKey] !== undefined && lead[dbKey] !== null) {
+      if (lead[formKey] === undefined || lead[formKey] === null) {
+        lead[formKey] = lead[dbKey];
+      }
+    }
+  };
+  n('dob', 'dateOfBirth');
+  n('livingDuration', 'tenancyDuration');
+  n('damp', 'hasDampMould');
+  n('dampRooms', 'roomsAffected');
+  n('dampSurface', 'affectedSurface');
+  n('dampDuration', 'issueDuration');
+  n('dampCause', 'issueCause');
+  n('dampDamage', 'damageBelongings');
+  n('dampHealth', 'healthProblems');
+  n('leak', 'hasLeaks');
+  n('leakCracks', 'cracksDamage');
+  n('issues_electrics', 'faultyElectrics');
+  n('issues_heating', 'heatingIssues');
+  n('issues_structural', 'structuralDamage');
+  n('reported', 'reportedOverMonth');
+  n('arrears', 'rentalArrears');
+  
+  // Snake case to camelCase for dashboard/form consistency
+  n('first_name', 'name');
+  n('mobile_number', 'phone');
+  n('damp_location', 'dampLocation');
+  n('leak_location', 'leakLocation');
+  n('leak_source', 'leakSource');
+  n('leak_start', 'leakStart');
+  n('leak_damage', 'leakDamage');
+  n('leak_belongings', 'leakBelongings');
+  n('report_count', 'reportCount');
+  n('report_first', 'reportFirst');
+  n('report_response', 'reportResponse');
+  n('report_attempt', 'reportAttempt');
+  n('report_status', 'reportStatus');
+  n('arrears_amount', 'arrearsAmount');
+  n('additional_notes', 'additionalNotes');
+  
+  return lead;
+}
+
+module.exports = { createSupabaseClient, assertEnv, normalizeLead };
