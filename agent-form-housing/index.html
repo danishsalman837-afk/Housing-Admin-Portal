@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Housing Disrepair Form</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 40px 20px;
+      max-width: 900px;
+      margin: 0 auto;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+    }
+
+    h1 {
+      color: #1a3a52;
+      text-align: center;
+      font-size: 32px;
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+
+    form {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .section {
+      margin-bottom: clamp(15px, 4vw, 35px);
+      padding: clamp(15px, 5vw, 25px);
+      border: none;
+      border-left: 5px solid #1a3a52;
+      border-radius: 8px;
+      background-color: #f8f9fa;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    .section:first-of-type {
+      border-left-color: #0066cc;
+    }
+
+    label {
+      display: block;
+      margin-top: 18px;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #2d3748;
+      font-size: 14px;
+      letter-spacing: 0.3px;
+    }
+
+    /* Masked DOB Input */
+    .dob-input {
+      letter-spacing: 2px;
+      font-weight: 700;
+      color: #1e40af;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 12px 15px;
+      margin-top: 6px;
+      border: 2px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: all 0.3s ease;
+      background-color: #ffffff;
+    }
+
+    input[type="text"]:focus,
+    input[type="email"]:focus,
+    input[type="tel"]:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #0066cc;
+      background-color: #f0f7ff;
+      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+      font-family: inherit;
+    }
+
+    input[type="checkbox"] {
+      margin-right: 8px;
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: #0066cc;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px 20px;
+      margin-top: 30px;
+      background: linear-gradient(135deg, #0066cc 0%, #004999 100%);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 102, 204, 0.3);
+    }
+
+    button:hover {
+      background: linear-gradient(135deg, #0052a3 0%, #003d7a 100%);
+      box-shadow: 0 6px 20px rgba(0, 102, 204, 0.4);
+      transform: translateY(-2px);
+    }
+
+    button:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 10px rgba(0, 102, 204, 0.3);
+    }
+
+    #electricsQuestions {
+      border-left: 3px solid #ff6b6b;
+      background-color: #fff5f5;
+      padding: 15px;
+      border-radius: 6px;
+      margin-left: 0;
+      margin-top: 15px;
+    }
+
+    #heatingQuestions {
+      border-left: 3px solid #4c6ef5;
+      background-color: #f0f3ff;
+      padding: 15px;
+      border-radius: 6px;
+      margin-left: 0;
+      margin-top: 15px;
+    }
+
+    #structuralQuestions {
+      border-left: 3px solid #12b886;
+      background-color: #f0fdf5;
+      padding: 15px;
+      border-radius: 6px;
+      margin-left: 0;
+      margin-top: 15px;
+    }
+
+    /* Optimized for Laptop & Large Screens */
+    @media (min-width: 1200px) {
+      body { padding: 60px 20px; }
+      form { padding: 50px; }
+    }
+
+    /* Optimized for Tablets */
+    @media (max-width: 900px) {
+      body { padding: 30px 15px; }
+      h1 { font-size: 28px; }
+    }
+
+    /* Optimized for Phones */
+    @media (max-width: 600px) {
+      body { padding: 10px; }
+      h1 { font-size: 20px; margin-bottom: 20px; text-align: left; }
+      form { padding: 15px; border-radius: 8px; box-shadow: none; border: 1px solid #e2e8f0; }
+      .section { 
+        padding: 15px; 
+        margin-bottom: 15px; 
+        border-left-width: 3px; 
+      }
+      
+      label { font-size: 13px; margin-top: 12px; }
+      input, select, textarea { 
+        padding: 12px; 
+        font-size: 16px; 
+      }
+      
+      button { 
+        padding: 16px; 
+        font-size: 16px; 
+        border-radius: 8px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Housing Disrepair Form</h1>
+  <form id="disrepairForm">
+
+    <!-- Contact Details Auto-Fetched -->
+
+    <!-- Basic Details -->
+    <div class="section">
+      <label>Name</label>
+      <input type="text" name="name" required>
+
+        <label for="email">Email Address:</label>
+        <input type="email" id="email" name="email" placeholder="e.g. name@example.com">
+
+        <label for="phone">Phone Number:</label>
+        <input type="tel" id="phone" name="phone" placeholder="e.g. 07123 456789" required>
+
+        <label for="dob">Date of Birth (DOB):</label>
+        <input type="text" id="dob" name="dob" class="dob-input" placeholder="DD / MM / YYYY" maxlength="14">
+
+      <label>Address</label>
+      <textarea name="address" rows="2" required></textarea>
+
+      <label>Postcode</label>
+      <input type="text" name="postcode" placeholder="e.g. SW1A 1AA" required>
+
+      <label>Are you a council tenant or a housing association tenant?</label>
+      <select name="tenantType" required>
+        <option value="">Select</option>
+        <option value="Council Tenant">Council Tenant</option>
+        <option value="Housing Association Tenant">Housing Association Tenant</option>
+      </select>
+
+      <label>How long have you been living in the property?</label>
+      <input type="text" name="livingDuration" required>
+    </div>
+
+    <!-- Damp / Mould -->
+    <div class="section">
+      <label>Is there any damp or mould in the property?</label>
+      <select name="damp" id="damp" required>
+        <option value="">Select</option>
+        <option value="No">No</option>
+        <option value="Yes">Yes</option>
+      </select>
+
+      <div id="dampDetails" class="hidden">
+        <label>Where exactly is the damp or mould located?</label>
+        <input type="text" name="dampLocation">
+
+        <label>How many rooms are affected?</label>
+        <select name="dampRooms">
+          <option value="">Select</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+        </select>
+
+        <label>Is it on the walls, ceiling, or floor?</label>
+        <input type="text" name="dampSurface">
+
+        <label>How long have you had this issue?</label>
+        <input type="text" name="dampDuration">
+
+        <label>Do you know what caused it (leak, rain, pipe, roof)?</label>
+        <input type="text" name="dampCause">
+
+        <label>Has it damaged any belongings (bed, sofa, clothes, etc.)?</label>
+        <input type="text" name="dampDamage">
+
+        <label>Has it caused any health problems (breathing, asthma, allergies, skin issues)?</label>
+        <input type="text" name="dampHealth">
+      </div>
+    </div>
+
+    <!-- Leaks -->
+    <div class="section">
+      <label>Do you have any leaks in the property?</label>
+      <select name="leak" id="leak" required>
+        <option value="">Select</option>
+        <option value="No">No</option>
+        <option value="Yes">Yes</option>
+      </select>
+
+      <div id="leakDetails" class="hidden">
+        <label>Where is the leak coming from?</label>
+        <input type="text" name="leakLocation">
+
+        <label>Is it from the roof, ceiling, pipe, bathroom, or kitchen?</label>
+        <input type="text" name="leakSource">
+
+        <label>When did the leak start? Is it still ongoing?</label>
+        <input type="text" name="leakStart">
+
+        <label>Has it caused damage to walls, ceiling, or floor?</label>
+        <input type="text" name="leakDamage">
+
+        <label>Any cracks or structural damage?</label>
+        <input type="text" name="leakCracks">
+
+        <label>Has it damaged your belongings?</label>
+        <input type="text" name="leakBelongings">
+      </div>
+    </div>
+
+    <!-- Electrics / Heating / Structural -->
+    <div class='section'><label>Are there any Faulty Electrics in the property?</label><select name='issues_electrics' required><option value=''>Select</option><option value='No'>No</option><option value='Yes'>Yes</option></select></div><div class='section'><label>Are there any Heating / Boiler Issues?</label><select name='issues_heating' required><option value=''>Select</option><option value='No'>No</option><option value='Yes'>Yes</option></select></div><div class='section'><label>Are there any Cracks or Structural Damages?</label><select name='issues_structural' required><option value=''>Select</option><option value='No'>No</option><option value='Yes'>Yes</option></select></div>
+
+    <!-- Reporting -->
+    <div class="section">
+      <label>Have you reported all the disrepairs over a month ago and have no date for it to be fixed?</label>
+      <select name="reported" id="reported" required>
+        <option value="">Select</option>
+        <option value="No">No</option>
+        <option value="Yes">Yes</option>
+      </select>
+
+      <div id="reportedDetails" class="hidden">
+        <label>How many times have you notified your landlord? Was it through email, text, or calls?</label>
+        <input type="text" name="reportCount">
+
+        <label>When did you first report the issue?</label>
+        <input type="text" name="reportFirst">
+
+        <label>Did the landlord or council respond?</label>
+        <input type="text" name="reportResponse">
+
+        <label>Did they attempt any repairs?</label>
+        <input type="text" name="reportAttempt">
+
+        <label>Is the issue still not resolved?</label>
+        <input type="text" name="reportStatus">
+      </div>
+    </div>
+
+    <!-- Rental arrears -->
+    <div class="section">
+      <label>Are you in rental arrears? (Must be less than £1000)</label>
+      <select name="arrears" id="arrears" required>
+        <option value="">Select</option>
+        <option value="No">No</option>
+        <option value="Yes">Yes</option>
+      </select>
+
+      <div id="arrearsDetails" class="hidden">
+        <label>If YES – confirm amount:</label>
+        <input type="text" name="arrearsAmount">
+      </div>
+    </div>
+
+    <!-- Additional Notes -->
+    <div class="section">
+      <label>Additional Notes</label>
+      <textarea name="additionalNotes"
+        placeholder="Please provide any additional information or notes that you would like to include with your application..."></textarea>
+    </div>
+
+    <div style="display: flex; gap: 15px; margin-top: 30px;">
+      <button type="button" id="saveDraftBtn" style="margin-top: 0; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);">Save Lead Data</button>
+      <button type="submit" id="submitFormBtn" style="margin-top: 0; background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">Submit Lead Finalised</button>
+    </div>
+  </form>
+
+  <script>
+    // Auto-fill contact details from URL or DB
+    window.addEventListener('DOMContentLoaded', async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const phoneVal = urlParams.get('phone') || urlParams.get('Phone');
+      
+      // 1. Initial fill from URL Params (as a starting point)
+      const fillFromURL = () => {
+          const nameVal = urlParams.get('name') || urlParams.get('Name');
+          if (nameVal) document.querySelector('[name="name"]').value = nameVal;
+
+          const emailVal = urlParams.get('email') || urlParams.get('Email');
+          if (emailVal) document.getElementById("email").value = emailVal;
+
+          if (phoneVal) document.getElementById("phone").value = phoneVal;
+
+          let dobVal = urlParams.get('dob') || urlParams.get('DOB');
+          if (dobVal) {
+            const yyyymmddMatch = dobVal.match(/^(\d{4})\D(\d{2})\D(\d{2})$/);
+            if (yyyymmddMatch) dobVal = `${yyyymmddMatch[3]} / ${yyyymmddMatch[2]} / ${yyyymmddMatch[1]}`;
+            document.getElementById("dob").value = dobVal;
+          }
+
+          const addressVal = urlParams.get('address') || urlParams.get('Address');
+          if (addressVal) document.querySelector('[name="address"]').value = addressVal;
+
+          const postcodeVal = urlParams.get('postcode') || urlParams.get('Postcode');
+          if (postcodeVal) document.querySelector('[name="postcode"]').value = postcodeVal;
+      };
+
+      fillFromURL();
+
+      // 2. Fetch from DB if phone exists (this overrides URL if saved data exists)
+      if (phoneVal) {
+          try {
+              const res = await fetch(`/api/get-lead?phone=${encodeURIComponent(phoneVal)}`);
+              if (res.ok) {
+                  const lead = await res.json();
+                  if (lead) {
+                      console.log("Loading saved data from database:", lead);
+                      // Fill the form with DB data
+                      const form = document.getElementById("disrepairForm");
+                      Object.keys(lead).forEach(key => {
+                          const input = form.querySelector(`[name="${key}"]`);
+                          if (input && lead[key] !== null) {
+                              input.value = lead[key];
+                              // Trigger any change events for conditional fields
+                              input.dispatchEvent(new Event('change'));
+                          }
+                      });
+                  }
+              }
+          } catch (err) {
+              console.error("Failed to load saved lead data:", err);
+          }
+      }
+    });
+
+    // Smart Masked DOB
+    const dobInput = document.getElementById('dob');
+    dobInput.addEventListener('input', function(e) {
+      let v = this.value.replace(/\D/g,'');
+      if (v.length > 8) v = v.substring(0,8);
+      let out = "";
+      if (v.length > 0) out += v.substring(0,2);
+      if (v.length >= 3) out += " / " + v.substring(2,4);
+      if (v.length >= 5) out += " / " + v.substring(4,8);
+      this.value = out;
+    });
+
+    // Show/hide details based on Yes/No
+    function toggleDetails(selectId, detailId) {
+      const select = document.getElementById(selectId);
+      const details = document.getElementById(detailId);
+      if (select && details) {
+          select.addEventListener("change", () => {
+            details.classList.toggle("hidden", select.value !== "Yes");
+          });
+          // Also check initially
+          details.classList.toggle("hidden", select.value !== "Yes");
+      }
+    }
+
+
+    toggleDetails("damp", "dampDetails");
+    toggleDetails("leak", "leakDetails");
+    toggleDetails("reported", "reportedDetails");
+    toggleDetails("arrears", "arrearsDetails");
+
+    // "Save Lead Data" Logic (only saves)
+    document.getElementById("saveDraftBtn").addEventListener("click", function() {
+        const formData = new FormData(document.getElementById("disrepairForm"));
+        const data = Object.fromEntries(formData.entries());
+        
+        if (!data.phone) return alert("Please enter a phone number to save progress.");
+
+        fetch("/api/save-draft", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+        })
+        .then(res => res.json())
+        .then(resData => {
+            if (resData.success) {
+                alert("Progress saved successfully!");
+            } else {
+                alert("Error saving: " + (resData.error || "Unknown"));
+            }
+        })
+        .catch(err => alert("Network Error: " + err.message));
+    });
+
+    // Form submit (Finalize)
+    document.getElementById("disrepairForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const data = Object.fromEntries(formData.entries());
+
+      // Finalized leads can have a status here if needed, or by setting it in api/submit.js
+      fetch("/api/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      })
+      .then(async response => {
+          if (response.ok) {
+            alert("Lead Finalised and Submitted successfully!");
+            document.getElementById("disrepairForm").reset();
+            // Reset detail views
+            ["dampDetails", "leakDetails", "reportedDetails", "arrearsDetails"].forEach(id => {
+                document.getElementById(id).classList.add("hidden");
+            });
+          } else {
+            let errorMsg = response.statusText;
+            try { const errData = await response.json(); errorMsg = errData.error || errorMsg; } catch (e) { }
+            alert("Error submitting: " + errorMsg);
+          }
+      })
+      .catch(error => { alert("Submission error. Please try again."); });
+    });
+  </script>
+</body>
+
+</html>
