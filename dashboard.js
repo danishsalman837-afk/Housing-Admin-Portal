@@ -19,43 +19,49 @@ function getStatusColor(status) {
 }
 
 const leadViewOrder = [
-    'name', 'email', 'phone', 'dateOfBirth', 'address', 'postcode',
-    'tenantType', 'tenancyDuration',
-    'hasDampMould', 'dampLocation', 'roomsAffected', 'affectedSurface', 'issueDuration', 'issueCause', 'damageBelongings', 'healthProblems',
-    'hasLeaks', 'leakLocation', 'leakSource', 'leakStart', 'leakDamage', 'cracksDamage', 
-    'faultyElectrics', 'heatingIssues', 'structuralDamage',
-    'reportedOverMonth', 
-    'rentalArrears', 'arrearsAmount', 'additionalNotes'
+    'name', 'email', 'phone', 'dob', 'address', 'postcode',
+    'tenantType', 'livingDuration',
+    'damp', 'damplocation', 'damprooms', 'dampsurface', 'dampduration', 'dampcause', 'dampdamage', 'damphealth',
+    'leak', 'leaklocation', 'leaksource', 'leakstart', 'leakdamage', 'leakcracks', 'leakbelongings',
+    'issues_electrics', 'issues_heating', 'issues_structural',
+    'reported', 'reportcount', 'reportfirst', 'reportresponse', 'reportattempt', 'reportstatus',
+    'arrears', 'arrearsAmount', 'additionalNotes'
 ];
 
 const leadFieldLabels = {
     name: 'Name',
     email: 'Email Address',
     phone: 'Phone Number',
-    dateOfBirth: 'Date of Birth',
+    dob: 'Date of Birth',
     address: 'Address',
     postcode: 'Postcode',
     tenantType: 'Tenant Type',
-    tenancyDuration: 'Tenancy Duration',
-    hasDampMould: 'Damp or Mould?',
-    dampLocation: 'Damp/Mould Location',
-    roomsAffected: 'Rooms Affected',
-    affectedSurface: 'Affected Surfaces',
-    issueDuration: 'Issue Duration',
-    issueCause: 'Issue Cause',
-    damageBelongings: 'Damaged Belongings (Damp)',
-    healthProblems: 'Health Problems',
-    hasLeaks: 'Leaks?',
-    leakLocation: 'Leak Location',
-    leakSource: 'Leak Source',
-    leakStart: 'Leak Start / Ongoing?',
-    leakDamage: 'Leak Damage',
-    cracksDamage: 'Cracks/Structural Damage (Leaks)',
-    faultyElectrics: 'Faulty Electrics?',
-    heatingIssues: 'Heating / Boiler Issues?',
-    structuralDamage: 'Cracks or Structural Damages?',
-    reportedOverMonth: 'Reported >1 Month Ago?',
-    rentalArrears: 'Rental Arrears?',
+    livingDuration: 'Tenancy Duration',
+    damp: 'Damp or Mould?',
+    damplocation: 'Damp/Mould Location',
+    damprooms: 'Rooms Affected',
+    dampsurface: 'Affected Surfaces',
+    dampduration: 'Issue Duration',
+    dampcause: 'Issue Cause',
+    dampdamage: 'Damaged Belongings (Damp)',
+    damphealth: 'Health Problems',
+    leak: 'Leaks?',
+    leaklocation: 'Leak Location',
+    leaksource: 'Leak Source',
+    leakstart: 'Leak Start / Ongoing?',
+    leakdamage: 'Leak Damage',
+    leakcracks: 'Cracks/Structural Damage (Leaks)',
+    leakbelongings: 'Damaged Belongings (Leaks)',
+    issues_electrics: 'Faulty Electrics?',
+    issues_heating: 'Heating / Boiler Issues?',
+    issues_structural: 'Cracks or Structural Damages?',
+    reported: 'Reported >1 Month Ago?',
+    reportcount: 'Notification Count',
+    reportfirst: 'First Reported Date',
+    reportresponse: 'Landlord Response',
+    reportattempt: 'Repair Attempted?',
+    reportstatus: 'Issue Still Unresolved?',
+    arrears: 'Rental Arrears?',
     arrearsAmount: 'Arrears Amount',
     additionalNotes: 'Additional Notes'
 };
@@ -393,7 +399,7 @@ window.openViewModal = function (id) {
         let label = leadFieldLabels[key] || key.replace(/_/g, ' ');
         let val = s[key];
 
-        if (key === 'dateOfBirth') val = formatDob(val);
+        if (key === 'dob' || key === 'dateOfBirth') val = formatDob(val);
         if (typeof val === 'object' && val !== null) val = JSON.stringify(val);
 
         dataHtml += `
