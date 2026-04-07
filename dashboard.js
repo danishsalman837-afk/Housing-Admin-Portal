@@ -5,13 +5,12 @@ let charts = {};
 let selectedCompanyId = null;
 
 const leadStatuses = [
-    'New Lead', 'Agent Saved', 'Transferred', 'Accepted', 'Rejected',
+    'New Lead', 'Transferred', 'Accepted', 'Rejected',
     'Not Yet Invoiced', 'Invoice Raised', 'Paid', 'Test Lead', 'Archived'
 ];
 
 function getStatusColor(status) {
     if (status === 'New Lead') return 'new';
-    if (status === 'Agent Saved') return 'warning';
     if (status === 'Accepted' || status === 'Paid') return 'success';
     if (status === 'Rejected') return 'danger';
     if (status === 'Archived') return 'gray';
