@@ -366,7 +366,24 @@
     </div>
   </form>
 
+  <!-- Toast Notification Container -->
+  <div id="toast" style="visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 1000; left: 50%; bottom: 30px; transform: translateX(-50%); font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.2); transition: opacity 0.5s, visibility 0.5s; opacity: 0;"></div>
+
   <script>
+    // Toast Function
+    function showToast(message, isError = false) {
+      const toast = document.getElementById("toast");
+      toast.innerText = message;
+      toast.style.backgroundColor = isError ? "#ef4444" : "#10b981"; // Red for error, Green for success
+      toast.style.visibility = "visible";
+      toast.style.opacity = "1";
+      
+      setTimeout(() => {
+        toast.style.opacity = "0";
+        setTimeout(() => { toast.style.visibility = "hidden"; }, 500);
+      }, 3000);
+    }
+
     // Auto-fill contact details from URL or DB
     window.addEventListener('DOMContentLoaded', async () => {
       const urlParams = new URLSearchParams(window.location.search);
@@ -460,7 +477,7 @@
         const formData = new FormData(document.getElementById("disrepairForm"));
         const data = Object.fromEntries(formData.entries());
         
-        if (!data.phone) return alert("Please enter a phone number to save progress.");
+        if (!data.phone) return showToast("Please enter a phone number to save progress.", true);
 
         fetch("/api/save-draft", {
             method: "POST",
@@ -470,12 +487,12 @@
         .then(res => res.json())
         .then(resData => {
             if (resData.success) {
-                alert("Progress saved successfully!");
+                showToast("The lead data is been saved sucessfully");
             } else {
-                alert("Error saving: " + (resData.error || "Unknown"));
+                showToast("Error saving: " + (resData.error || "Unknown"), true);
             }
         })
-        .catch(err => alert("Network Error: " + err.message));
+        .catch(err => showToast("Network Error: " + err.message, true));
     });
 
     // Form submit (Finalize)
@@ -484,7 +501,6 @@
       const formData = new FormData(this);
       const data = Object.fromEntries(formData.entries());
 
-      // Finalized leads can have a status here if needed, or by setting it in api/submit.js
       fetch("/api/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -492,7 +508,7 @@
       })
       .then(async response => {
           if (response.ok) {
-            alert("Lead Finalised and Submitted successfully!");
+            showToast("lead data is been submitted");
             document.getElementById("disrepairForm").reset();
             // Reset detail views
             ["dampDetails", "leakDetails", "reportedDetails", "arrearsDetails"].forEach(id => {
@@ -501,10 +517,10 @@
           } else {
             let errorMsg = response.statusText;
             try { const errData = await response.json(); errorMsg = errData.error || errorMsg; } catch (e) { }
-            alert("Error submitting: " + errorMsg);
+            showToast("Error submitting: " + errorMsg, true);
           }
       })
-      .catch(error => { alert("Submission error. Please try again."); });
+      .catch(error => { showToast("Submission error. Please try again.", true); });
     });
   </script>
 </body>

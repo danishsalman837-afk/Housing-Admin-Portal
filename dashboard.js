@@ -19,45 +19,49 @@ function getStatusColor(status) {
 }
 
 const leadViewOrder = [
-    'name', 'phone', 'email', 'dateOfBirth', 'address', 'postcode',
-    'tenantType', 'livingDuration',
-    'damp', 'damplocation', 'damprooms', 'dampsurface',
-    'leak', 'leaklocation', 'leaksource', 'leakdamage',
-    'heatingmainissue', 'structurallocation',
-    'reported', 'reportcount', 'reportfirst', 'reportresponse', 'reportattempt', 'reportstatus',
-    'leadStatus', 'timestamp'
+  'name', 'email', 'phone', 'dateOfBirth', 'address', 'postcode',
+  'tenantType', 'tenancyDuration', 'hasDampMould', 'dampLocation', 'roomsAffected',
+  'affectedSurface', 'issueDuration', 'issueCause', 'damageBelongings', 'healthProblems',
+  'hasLeaks', 'leakLocation', 'leakSource', 'leakStart', 'leakOngoing', 'leakDamage',
+  'cracksDamage', 'faultyElectrics', 'heatingIssues', 'structuralDamage', 'reportedOverMonth',
+  'rentalArrears', 'arrearsAmount', 'additionalNotes', 'leadStatus', 'timestamp'
 ];
 
 const leadFieldLabels = {
-    name: 'NAME',
-    phone: 'PHONE',
-    email: 'EMAIL',
-    dateOfBirth: 'DATEOFBIRTH',
-    address: 'ADDRESS',
-    postcode: 'POSTCODE',
-    tenantType: 'TENANTTYPE',
-    livingDuration: 'LIVINGDURATION',
-    damp: 'DAMP',
-    damplocation: 'DAMPLOCATION',
-    damprooms: 'DAMPROOMS',
-    dampsurface: 'DAMPSURFACE',
-    leak: 'LEAK',
-    leaklocation: 'LEAKLOCATION',
-    leaksource: 'LEAKSOURCE',
-    leakdamage: 'LEAKDAMAGE',
-    heatingmainissue: 'HEATINGMAINISSUE',
-    structurallocation: 'STRUCTURALLOCATION',
-    reported: 'REPORTED',
-    reportcount: 'REPORTCOUNT',
-    reportfirst: 'REPORTFIRST',
-    reportresponse: 'REPORTRESPONSE',
-    reportattempt: 'REPORTATTEMPT',
-    reportstatus: 'REPORTSTATUS',
-    leadStatus: 'LEAD STATUS',
-    timestamp: 'SUBMISSION DATE'
+  name: 'Name',
+  email: 'Email Address',
+  phone: 'Phone Number',
+  dateOfBirth: 'Date of Birth (DOB)',
+  address: 'Address',
+  postcode: 'Postcode',
+  tenantType: 'Council/Housing Association Tenant?',
+  tenancyDuration: 'How long living in property?',
+  hasDampMould: 'Any damp or mould?',
+  dampLocation: 'Where is damp/mould located?',
+  roomsAffected: 'How many rooms affected?',
+  affectedSurface: 'Wall/Ceiling/Floor?',
+  issueDuration: 'How long issue present?',
+  issueCause: 'Cause (leak/rain/pipe/roof)?',
+  damageBelongings: 'Belongings damaged?',
+  healthProblems: 'Health problems caused?',
+  hasLeaks: 'Any leaks?',
+  leakLocation: 'Leak coming from?',
+  leakSource: 'From roof/ceiling/pipe/bathroom/kitchen?',
+  leakStart: 'When did leak start?',
+  leakOngoing: 'Is leak still ongoing?',
+  leakDamage: 'Damage to walls/ceiling/floor?',
+  cracksDamage: 'Cracks or structural damage?',
+  faultyElectrics: 'Faulty electrics?',
+  heatingIssues: 'Heating/Boiler issues?',
+  structuralDamage: 'Cracks/structural damage?',
+  reportedOverMonth: 'Reported over a month ago without fix?',
+  rentalArrears: 'Rental arrears (<£1000)?',
+  arrearsAmount: 'Arrears amount',
+  additionalNotes: 'Additional Notes',
+  leadStatus: 'Lead Status'
 };
 
-window.switchView = function (view) {
+window.switchView = function(view) {
     document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     const navItems = document.querySelectorAll('.nav-item');
@@ -81,23 +85,23 @@ function calculateDashboardStats() {
     const total = submissionsData.length;
     const acceptedCount = submissionsData.filter(s => s.leadStatus === 'Accepted').length;
     const rejectedCount = submissionsData.filter(s => s.leadStatus === 'Rejected').length;
-
+    
     // Update text references
     const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
-    setEl('dashboardTotal', total);
-    setEl('dashboardTotalDonut', total);
-    setEl('dashboardActive', companiesData.filter(c => c.is_active !== false).length);
-    setEl('dashboardSolicitorsCount', membersData.filter(m => {
-        const comp = companiesData.find(c => String(c.id) === String(m.company_id));
-        return comp && comp.is_active !== false;
-    }).length);
-    setEl('dashboardAccepted', acceptedCount);
-    setEl('dashboardRejected', rejectedCount);
+    setEl('dashboardTotal',           total);
+    setEl('dashboardTotalDonut',      total);
+    setEl('dashboardActive',          companiesData.length);
+    setEl('dashboardSolicitorsCount', membersData.length);
+    setEl('dashboardAccepted',        acceptedCount);
+    setEl('dashboardRejected',        rejectedCount);
+
+    const activeCompaniesCount = companiesData.filter(c => c.active !== false).length;
+    setEl('dashboardActive',          activeCompaniesCount);
 
     let convRate = total > 0 ? ((acceptedCount / total) * 100).toFixed(1) : '0';
-    setEl('dashboardConvRate', convRate + '%');
-    setEl('dashboardConvRateDonut', convRate + '%');
-
+    setEl('dashboardConvRate',       convRate + '%');
+    setEl('dashboardConvRateDonut',  convRate + '%');
+    
     initCharts(submissionsData, acceptedCount, total);
 }
 
@@ -114,13 +118,12 @@ function initCharts(data, acceptedCount, totalCount) {
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         let monthlyCounts = Array(12).fill(0);
         data.forEach(item => {
-            if (item.timestamp) { const date = new Date(item.timestamp); if (!isNaN(date)) monthlyCounts[date.getMonth()]++; }
+            if (item.timestamp) { const date = new Date(item.timestamp); if(!isNaN(date)) monthlyCounts[date.getMonth()]++; }
         });
         charts.flow = new Chart(ctxFlow, {
             type: 'bar', // Highlevel "Funnel" / Opportunity Value style
             data: { labels: months, datasets: [{ label: 'Leads Received', data: monthlyCounts, backgroundColor: '#3B82F6', borderRadius: 4 }] },
-            options: {
-                responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
                 scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: '#F2F3F5' } } }
             }
         });
@@ -136,7 +139,7 @@ function initCharts(data, acceptedCount, totalCount) {
 
     if (ctxConv) {
         let remainder = totalCount - acceptedCount;
-        if (totalCount === 0) remainder = 1; // So we can show a grey circle when empty
+        if(totalCount === 0) remainder = 1; // So we can show a grey circle when empty
         charts.conv = new Chart(ctxConv, {
             type: 'doughnut',
             data: { datasets: [{ data: [acceptedCount, remainder], backgroundColor: ['#10B981', '#E5E6EB'], borderWidth: 0 }] },
@@ -160,7 +163,7 @@ function initFilters() {
     if (companySelect && companySelect.options.length <= 1) {
         // Clear all except first option if re-initializing. Only include active companies.
         companySelect.innerHTML = '<option value="All">All Solicitors</option>';
-        companiesData.filter(c => c.is_active !== false && c.active !== false).forEach(c => {
+        companiesData.filter(c => c.active !== false).forEach(c => {
             const opt = document.createElement('option');
             opt.value = c.id;
             opt.innerText = c.name || c.company_name || 'Unnamed Solicitor';
@@ -169,7 +172,7 @@ function initFilters() {
     }
 }
 
-window.renderFilteredLeads = function () {
+window.renderFilteredLeads = function() {
     const statusFilter = document.getElementById('filterStatus')?.value || 'All';
     const companyFilter = document.getElementById('filterCompany')?.value || 'All';
     const searchVal = (document.getElementById('searchLead')?.value || '').toLowerCase();
@@ -178,12 +181,12 @@ window.renderFilteredLeads = function () {
         let matchStatus = statusFilter === 'All' || item.leadStatus === statusFilter;
         let matchCompany = companyFilter === 'All' || String(item.assigned_company_id || '') === String(companyFilter);
         let matchSearch = true;
-
-        if (searchVal) {
-            const textToSearch = `${item.name || ''} ${item.email || ''} ${item.phone || ''}`.toLowerCase();
+        
+        if(searchVal) {
+            const textToSearch = `${item.name||''} ${item.email||''} ${item.phone||''}`.toLowerCase();
             matchSearch = textToSearch.includes(searchVal);
         }
-
+        
         return matchStatus && matchCompany && matchSearch;
     });
 
@@ -198,8 +201,10 @@ function renderTable(data) {
     data.forEach((item, index) => {
         const tr = document.createElement("tr");
 
+        // Build company options: only show active companies for assignment.
+        // If the current item is already assigned to an inactive company, include it (marked Inactive).
         let compOptions = '<option value="">Unassigned</option>';
-        const activeCompanies = companiesData.filter(c => c.is_active !== false && c.active !== false);
+        const activeCompanies = companiesData.filter(c => c.active !== false);
         compOptions += activeCompanies.map(c => {
             let cName = c.name || c.company_name || 'Unnamed Solicitor';
             if (cName === 'undefined' || cName.includes('undefined')) cName = 'Unnamed Solicitor';
@@ -215,9 +220,9 @@ function renderTable(data) {
             }
         }
 
-            const statusSelectTheme = getStatusColor(item.leadStatus || 'New Lead');
+        const statusSelectTheme = getStatusColor(item.leadStatus || 'New Lead');
 
-            tr.innerHTML = `
+        tr.innerHTML = `
             <td>${index + 1}</td>
             <td><strong>${item.name || item.first_name || "---"}</strong></td>
             <td>${item.phone || item.mobile_number || "---"}</td>
@@ -244,57 +249,51 @@ function renderTable(data) {
                     </button>
                 </div>
             </td>`;
-            tbody.appendChild(tr);
-        });
-    }
+        tbody.appendChild(tr);
+    });
+}
 
-window.handleFieldUpdate = async function (id, fieldName, value) {
-            try {
-                const updateParams = { id };
-                updateParams[fieldName] = value;
-                await fetch('/api/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updateParams) });
-                const lead = submissionsData.find(s => String(s.id) === String(id));
-                if (lead) lead[fieldName] = value;
-                if (fieldName === 'leadStatus') calculateDashboardStats();
-            } catch (e) { console.error(e); }
-        };
+window.handleFieldUpdate = async function(id, fieldName, value) {
+    try {
+        const updateParams = { id };
+        updateParams[fieldName] = value;
+        await fetch('/api/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updateParams) });
+        const lead = submissionsData.find(s => String(s.id) === String(id));
+        if (lead) lead[fieldName] = value;
+        if(fieldName === 'leadStatus') calculateDashboardStats();
+    } catch (e) { console.error(e); }
+};
 
-    window.exportDocx = function (id) { window.open('/api/export-docx?id=' + id, '_blank'); };
-    window.exportExcel = function () {
-        const status = document.getElementById('filterStatus')?.value || 'All';
-        const company = document.getElementById('filterCompany')?.value || 'All';
-        window.open('/api/export-xlsx?status=' + status + '&company=' + company, '_blank');
-    };
+window.exportDocx = function(id) { window.open('/api/export-docx?id=' + id, '_blank'); };
+window.exportExcel = function() {
+    const status = document.getElementById('filterStatus')?.value || 'All';
+    const company = document.getElementById('filterCompany')?.value || 'All';
+    window.open('/api/export-xlsx?status=' + status + '&company=' + company, '_blank');
+};
 
 
-    // 🏢 COMPANY CRM
-    window.viewCompanyEditModal = function (id) {
-        const c = companiesData.find(x => String(x.id) === String(id));
-        if (!c) return;
-        openAddCompanyModal(c);
-    };
+// 🏢 COMPANY CRM
+window.viewCompanyEditModal = function(id) {
+    const c = companiesData.find(x => String(x.id) === String(id));
+    if(!c) return;
+    openAddCompanyModal(c);
+};
 
-    window.renderCompanies = function () {
-        const tbody = document.querySelector("#companyTable tbody");
-        if (!tbody) return;
-        tbody.innerHTML = '';
-        companiesData.forEach((c) => {
-            let nameDisp = c.name || c.company_name || 'Unnamed Solicitor';
-            if (nameDisp === 'undefined' || nameDisp.includes('undefined')) nameDisp = 'Unnamed Solicitor';
-
-            const isActive = c.is_active !== false;
-            const statusBadge = isActive
-                ? `<div class="status-badge" data-color="success">Active</div>`
-                : `<div class="status-badge" data-color="gray">Inactive</div>`;
-
-            const tr = document.createElement('tr');
-            const isActiveComp = c.is_active !== false && c.active !== false;
-            tr.innerHTML = `<td><strong>${nameDisp}</strong></td><td>${c.type || '--'}</td><td>${c.main_contact || '--'}</td><td>${c.postcode || '--'}</td><td>${c.website || '--'}</td>
+window.renderCompanies = function() {
+    const tbody = document.querySelector("#companyTable tbody");
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    companiesData.forEach((c) => {
+        let nameDisp = c.name || c.company_name || 'Unnamed Solicitor';
+        if (nameDisp === 'undefined' || nameDisp.includes('undefined')) nameDisp = 'Unnamed Solicitor';
+        
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td><strong>${nameDisp}</strong></td><td>${c.type || '--'}</td><td>${c.main_contact || '--'}</td><td>${c.postcode || '--'}</td><td>${c.website || '--'}</td>
             <td style="text-align:center;">
                 <div style="display:flex; align-items:center; gap:10px; justify-content:center;">
-                    <div style="font-weight:700; color:${!isActiveComp ? '#94A3B8' : '#0B74FF'}; font-size:13px;">${!isActiveComp ? 'Inactive' : 'Active'}</div>
+                    <div style="font-weight:700; color:${c.active === false ? '#94A3B8' : '#0B74FF'}; font-size:13px;">${c.active === false ? 'Inactive' : 'Active'}</div>
                     <label style="display:inline-flex; align-items:center;">
-                        <input type="checkbox" aria-label="Toggle active" ${!isActiveComp ? '' : 'checked'} onchange="window.toggleCompanyActive('${c.id}', this.checked)" />
+                        <input type="checkbox" aria-label="Toggle active" ${c.active === false ? '' : 'checked'} onchange="window.toggleCompanyActive('${c.id}', this.checked)" />
                     </label>
                 </div>
             </td>
@@ -318,7 +317,7 @@ window.openAddCompanyModal = function(existingCompany = null) {
     const c = existingCompany || {};
     
      document.getElementById('modalBox').innerHTML = `
-                <div class="modal-header"><h2>${isEdit ? 'Edit Company' : 'Add Company'}</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>
+        <div class="modal-header"><h2>${isEdit ? 'Edit Company' : 'Add Company'}</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>
         <div class="form-grid">
             <div class="form-group"><label>Company Name</label><input type="text" id="cName" class="modern-input" value="${c.name || ''}" placeholder="Name"></div>
             <div class="form-group">
@@ -337,23 +336,73 @@ window.openAddCompanyModal = function(existingCompany = null) {
             <div class="form-group"><label>Town / City</label><input type="text" id="cTown" class="modern-input" value="${c.town || ''}"></div>
             <div class="form-group"><label>County</label><input type="text" id="cCounty" class="modern-input" value="${c.county || ''}"></div>
             <div class="form-group"><label>Postcode</label><input type="text" id="cPostcode" class="modern-input" value="${c.postcode || ''}"></div>
-            <div class="form-group" style="flex-direction:row; align-items:center; gap:8px; padding-top:8px;">
-                <input type="checkbox" id="cIsActive" ${c.is_active !== false ? 'checked' : ''} style="width:18px; height:18px; cursor:pointer;">
-                <label for="cIsActive" style="margin:0; cursor:pointer;">Company is Active</label>
+            <div class="form-group" style="display:flex; align-items:center; gap:12px;">
+                <label style="min-width:90px;">Active</label>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <input type="checkbox" id="cActive" ${c.active === false ? '' : 'checked'} />
+                    <span style="color:#64748b; font-size:13px;">Mark company as active</span>
+                </div>
             </div>
         </div>
         <button class="btn-action" style="margin-top:20px; width:100%; justify-content:center;" onclick="window.saveNewCompany('${c.id || ''}')">Save Company</button>
-            `;
+    `;
     document.getElementById('modalOverlay').style.display = 'flex';
 };
 
+window.openViewModal = function(id) {
+    const item = submissionsData.find(s => String(s.id) === String(id));
+    if (!item) return;
+    let html = '<div style="max-height:400px; overflow-y:auto; padding:10px;">';
+    leadViewOrder.forEach(k => {
+        if (k === 'id') return;
+        const label = leadFieldLabels[k] || k;
+        let value = item[k];
+        if (value === undefined && k === 'dateOfBirth') value = item.dob || item.birthDate;
+        if (value === undefined && k === 'tenantType') value = item.councilTenant || item.housingAssociation;
+        if (value === undefined && k === 'affectedSurface') value = item.onWalls || item.onCeiling || item.onFloor;
+        html += `<div style="margin-bottom:10px;"><label style="font-size:10px; font-weight:800; color:#64748b; text-transform:uppercase;">${label}</label><div style="padding:10px; background:#f8fafc; border-radius:8px;">${value || '---'}</div></div>`;
+    });
+    html += '</div>';
+    const modalHtml = `
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2>Lead Details</h2>
+        <div>
+          <button class="btn-action" onclick="window.openEditModal('${id}')" style="margin-right:10px;">Edit</button>
+          <button class="btn-action" onclick="document.getElementById('modalOverlay').style.display='none'">Close</button>
+        </div>
+      </div>
+      ${html}`;
+    document.getElementById('modalBox').innerHTML = modalHtml;
+    document.getElementById('modalOverlay').style.display = 'flex';
+};
 
+window.openEditModal = function(id) {
+    const item = submissionsData.find(s => String(s.id) === String(id));
+    if (!item) return;
+    let html = '<div style="max-height:420px; overflow-y:auto; padding:10px;">';
+    leadViewOrder.forEach(k => {
+        if (k === 'id') return;
+        const label = leadFieldLabels[k] || k;
+        const value = item[k] || '';
+        html += `<div style="margin-bottom:10px;"><label style="font-size:11px; font-weight:700; color:#334155;">${label}</label><input class="edit-input" id="edit-${k}" value="${String(value).replace(/"/g, '&quot;')}" /></div>`;
+    });
+    html += '</div>';
+    const modalHtml = `
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2>Edit Lead</h2>
+        <button class="btn-action" onclick="document.getElementById('modalOverlay').style.display='none'">Close</button>
+      </div>
+      ${html}
+      <div style="text-align:right;"><button class="btn-action" style="background:#10b981;color:#fff;" onclick="window.saveLeadEdits('${id}')">Save Changes</button></div>`;
+    document.getElementById('modalBox').innerHTML = modalHtml;
+    document.getElementById('modalOverlay').style.display = 'flex';
+};
 
 window.saveLeadEdits = async function(id) {
     const updates = {};
     leadViewOrder.forEach(k => {
         if (k === 'id') return;
-        const el = document.getElementById(`edit - ${ k } `);
+        const el = document.getElementById(`edit-${k}`);
         if (el) updates[k] = el.value;
     });
     try {
@@ -382,9 +431,13 @@ window.saveNewCompany = async function(id) {
         town: document.getElementById('cTown').value,
         county: document.getElementById('cCounty').value,
         postcode: document.getElementById('cPostcode').value,
-        website: document.getElementById('cWebsite').value,
-        is_active: document.getElementById('cIsActive').checked
+        website: document.getElementById('cWebsite').value
     };
+    // include active flag (default true if checkbox not present)
+    try {
+        const chk = document.getElementById('cActive');
+        payload.active = chk ? chk.checked : true;
+    } catch(e) { payload.active = true; }
     if (id) payload.id = id;
 
     try {
@@ -402,9 +455,7 @@ window.saveNewCompany = async function(id) {
         
         document.getElementById('modalOverlay').style.display='none';
         renderCompanies();
-        initFilters();
         calculateDashboardStats();
-        if(document.getElementById('leadsView').classList.contains('active')) renderFilteredLeads();
     } catch(e) { console.error(e); alert("Network Error: " + e.message); }
 };
 
@@ -460,17 +511,17 @@ window.openAddMemberModal = function(editId = null) {
     const m = membersData.find(x => String(x.id) === String(editId)) || {};
 
     document.getElementById('modalBox').innerHTML = `
-                <div class="modal-header"><h2>${editId ? 'Edit Member' : 'Add Member'}</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>
+        <div class="modal-header"><h2>${editId ? 'Edit Member' : 'Add Member'}</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>
         <div class="form-grid">
             <div class="form-group"><label>First Name</label><input type="text" id="mFirstName" class="modern-input" value="${m.first_name || ''}"></div>
             <div class="form-group"><label>Last Name</label><input type="text" id="mLastName" class="modern-input" value="${m.last_name || ''}"></div>
             <div class="form-group"><label>Email Address</label><input type="text" id="mEmail" class="modern-input" value="${m.email || ''}"></div>
             <div class="form-group"><label>Job Title</label><input type="text" id="mJobTitle" class="modern-input" value="${m.job_title || ''}"></div>
-            <div class="form-group"><label>Mobile </label><input type="text" id="mMobile" class="modern-input" value="${m.mobile || ''}"></div>
+            <div class="form-group"><label>Mobile Base</label><input type="text" id="mMobile" class="modern-input" value="${m.mobile || ''}"></div>
             <div class="form-group"><label>Landline</label><input type="text" id="mLandline" class="modern-input" value="${m.landline || ''}"></div>
         </div>
         <button class="btn-action" style="margin-top:24px; width:100%; justify-content:center; padding:12px;" onclick="window.saveNewMember('${m.id || ''}')">Save Member</button>
-            `;
+    `;
     document.getElementById('modalOverlay').style.display = 'flex';
 }
 
@@ -523,59 +574,23 @@ window.openViewModal = function(id) {
     const s = submissionsData.find(x => String(x.id) === String(id));
     if(!s) return;
     
-    const systemFields = ['id', 'created_at', 'notes', 'leadStatus', 'assigned_company_id', 'assigned_solicitor_id', 'member_id', 'active', 'timestamp'];
-    const processedKeys = new Set();
-    
-    let html = '<div class="form-grid" style="max-height: 450px; overflow-y: auto; padding: 10px;">';
-    
-    leadViewOrder.forEach(key => {
-        processedKeys.add(key);
-        const label = leadFieldLabels[key] || key.replace(/_/g, ' ');
-        let value = s[key];
-        
-        // Comprehensive fallback for different naming conventions
-        if (value === undefined || value === null) {
-            if (key === 'dateOfBirth') value = s.dob || s.birthDate || s.date_of_birth;
-            else if (key === 'tenantType') value = s.tenant_type || s.councilTenant || s.housingAssociation;
-            else if (key === 'livingDuration') value = s.tenancyDuration || s.living_duration || s.livingduration;
-            else if (key === 'damp') value = s.hasDampMould || s.damp_issue;
-        }
-
-        if (value !== null && value !== undefined && value !== '') {
-            processedKeys.add('dob'); processedKeys.add('birthDate'); processedKeys.add('date_of_birth');
-            processedKeys.add('tenant_type'); processedKeys.add('councilTenant'); processedKeys.add('housingAssociation');
-            processedKeys.add('tenancyDuration'); processedKeys.add('living_duration'); processedKeys.add('livingduration');
-            processedKeys.add('hasDampMould'); processedKeys.add('damp_issue');
-
-            if(typeof value === 'object' && value !== null) value = JSON.stringify(value);
-            
-            html += `<div style="margin-bottom:12px; overflow-wrap: anywhere; break-inside: avoid;">
-                        <label style="font-size:11px; color:#94A3B8; font-weight:700; display:block; margin-bottom:4px; letter-spacing: 0.5px;">${label}</label>
-                        <div style="font-size:14px; color:#111827; font-weight:500; line-height: 1.4;">${value}</div>
-                     </div>`;
-        }
-    });
-
-    // Append any extra fields
+    let dataHtml = '';
+    const ignoreKeys = ['id', 'created_at', 'notes', 'leadStatus', 'assigned_company_id', 'assigned_solicitor_id'];
     Object.keys(s).forEach(key => {
-        if (processedKeys.has(key) || systemFields.includes(key)) return;
-        let value = s[key];
-        if (value !== null && value !== undefined && value !== '') {
-            if(typeof value === 'object') value = JSON.stringify(value);
-            html += `<div style="margin-bottom:12px; overflow-wrap: anywhere; break-inside: avoid;">
-                        <label style="font-size:11px; color:#94A3B8; font-weight:700; display:block; margin-bottom:4px; letter-spacing: 0.5px;">${key.replace(/_/g, ' ').toUpperCase()}</label>
-                        <div style="font-size:14px; color:#111827; font-weight:500; line-height: 1.4;">${value}</div>
-                     </div>`;
+        if(ignoreKeys.includes(key)) return;
+        if(typeof s[key] === 'object' && s[key] !== null) {
+            dataHtml += `<div style="margin-bottom:12px;"><label style="font-size:11px; color:#6B7280; text-transform:uppercase;">${key.replace(/_/g, ' ')}</label><div style="font-size:14px; color:#111827; font-weight:500;">${JSON.stringify(s[key])}</div></div>`;
+        } else {
+            dataHtml += `<div style="margin-bottom:12px;"><label style="font-size:11px; color:#6B7280; text-transform:uppercase;">${key.replace(/_/g, ' ')}</label><div style="font-size:14px; color:#111827; font-weight:500;">${s[key] || '--'}</div></div>`;
         }
     });
-
-    html += '</div>';
 
     document.getElementById('modalBox').innerHTML = `
         <div class="modal-header"><h2>Lead Profile: ${s.name || s.first_name || 'Client'}</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>
+        <div style="column-count: 2; column-gap: 32px;">
+            ${dataHtml}
         </div>
-                ${ html }
-            `;
+    `;
     document.getElementById('modalOverlay').style.display = 'flex';
 };
 
@@ -583,52 +598,38 @@ window.openEditLeadModal = function(id) {
     const s = submissionsData.find(x => String(x.id) === String(id));
     if(!s) return;
 
-    let html = '<div class="form-grid" id="editLeadForm" style="max-height: 450px; overflow-y: auto; padding: 10px;">';
-    const processedKeys = new Set();
-    const systemFields = ['id', 'created_at', 'notes', 'assigned_company_id', 'assigned_solicitor_id', 'member_id', 'active', 'timestamp'];
-
-    leadViewOrder.forEach(k => {
-        if (['id', 'timestamp'].includes(k)) return;
-        processedKeys.add(k);
-        const label = leadFieldLabels[k] || k.replace(/_/g, ' ');
+    // Show all data fields except for system/internal elements
+    const ignoreKeys = ['id', 'created_at', 'notes', 'leadStatus', 'assigned_company_id', 'assigned_solicitor_id', 'timestamp'];
+    let html = '<div class="form-grid" id="editLeadForm">';
+    
+    Object.keys(s).forEach(k => {
+        if(ignoreKeys.includes(k)) return;
         
-        let displayValue = s[k];
-        if (displayValue === undefined || displayValue === null) {
-             if (k === 'dateOfBirth') displayValue = s.dob || s.birthDate;
-             if (k === 'tenantType') displayValue = s.councilTenant || s.housingAssociation;
+        let displayValue = s[k] === null || s[k] === undefined ? '' : s[k];
+        if(typeof displayValue === 'object') {
+            displayValue = JSON.stringify(displayValue);
         }
-        if (displayValue === null || displayValue === undefined) displayValue = '';
-        if (typeof displayValue === 'object') displayValue = JSON.stringify(displayValue);
         
+        // Escape characters for HTML
         displayValue = String(displayValue).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         
-        const isFullWidth = displayValue.length > 50 || k === 'address';
-        
-        html += `<div class="form-group ${isFullWidth ? 'full' : ''}"><label>${label}</label>
-                 <input type="text" class="modern-input edit-inp" data-field="${k}" value="${displayValue}"></div>`;
-    });
-
-    Object.keys(s).forEach(key => {
-        if (processedKeys.has(key) || systemFields.includes(key)) return;
-        let displayValue = s[key];
-        if (displayValue === null || displayValue === undefined) displayValue = '';
-        if (typeof displayValue === 'object') displayValue = JSON.stringify(displayValue);
-        displayValue = String(displayValue).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-        
-        const isFullWidth = displayValue.length > 50;
-        const label = key.replace(/_/g, ' ').toUpperCase();
-        
-        html += `<div class="form-group ${isFullWidth ? 'full' : ''}"><label>${label}</label>
-                 <input type="text" class="modern-input edit-inp" data-field="${key}" value="${displayValue}"></div>`;
+        // If text is long, use an auto-scaling text area
+        if (displayValue.length > 50 || k.length > 30) {
+            html += `<div class="form-group full"><label>${k.replace(/_/g, ' ')}</label>
+                     <textarea class="modern-input edit-inp" data-field="${k}" rows="3">${displayValue}</textarea></div>`;
+        } else {
+            html += `<div class="form-group"><label>${k.replace(/_/g, ' ')}</label>
+                     <input type="text" class="modern-input edit-inp" data-field="${k}" value="${displayValue}"></div>`;
+        }
     });
     
     html += `</div>
-                <div style="margin-top:24px; display:flex; justify-content:flex-end; gap:10px;">
-                    <button class="btn-outline" style="padding:10px 20px; border-radius:8px;" onclick="window.openViewModal('${s.id}')">Back to Profile</button>
-                    <button class="btn-action" onclick="window.saveLeadEdits('${s.id}')">Save Changes</button>
-                </div>`;
+             <div style="margin-top:24px; display:flex; justify-content:flex-end; gap:10px;">
+                <button class="btn-outline" style="padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:600;" onclick="document.getElementById('modalOverlay').style.display='none'">Cancel</button>
+                <button class="btn-action" onclick="window.saveLeadEdits('${s.id}')">Save Changes</button>
+             </div>`;
 
-    document.getElementById('modalBox').innerHTML = `<div class="modal-header"><h2>Edit Lead Data</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div> ${ html }`;
+    document.getElementById('modalBox').innerHTML = `<div class="modal-header"><h2>Edit Lead Data</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>${html}`;
     document.getElementById('modalOverlay').style.display = 'flex';
 };
 
@@ -659,25 +660,25 @@ window.openNotesModal = function(id) {
     if(!Array.isArray(notesArray)) notesArray = [];
     
     let notesHtml = notesArray.map(n => `
-                <div style="background:#F9FAFB; border:1px solid #E5E7EB; padding:12px; border-radius:8px; margin-bottom:8px;">
+        <div style="background:#F9FAFB; border:1px solid #E5E7EB; padding:12px; border-radius:8px; margin-bottom:8px;">
             <div style="font-size:11px; color:#6B7280; margin-bottom:4px;">${new Date(n.date || Date.now()).toLocaleString()}</div>
             <div style="font-size:13px; color:#111827; white-space:pre-wrap;">${n.note || JSON.stringify(n)}</div>
         </div>
-                `).join('');
-    if(notesArray.length === 0) notesHtml = `<div style="font-size:13px; color:#9CA3AF; font-style:italic; padding:20px; text-align:center;"> No internal notes yet.</div>`;
+    `).join('');
+    if(notesArray.length === 0) notesHtml = `<div style="font-size:13px; color:#9CA3AF; font-style:italic; padding:20px; text-align:center;">No internal notes yet.</div>`;
 
     document.getElementById('modalBox').innerHTML = `
-                <div class="modal-header"><h2>Internal Notes: ${s.name || s.first_name || 'Client'}</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>
-                    <div style="display:flex; flex-direction:column; gap:16px;">
-                        <div style="max-height: 350px; overflow-y:auto; background:#FFF; border:1px solid #E2E8F0; padding:16px; border-radius:8px;">
-                            ${notesHtml}
-                        </div>
-                        <div>
-                            <textarea id="newNoteEditor" placeholder="Type a new internal note..." style="width:100%; height:100px; padding:12px; border-radius:8px; border:1px solid #E2E8F0; outline:none; font-family:inherit; resize:vertical; background:#F8FAFC;"></textarea>
-                            <button class="btn-action" style="margin-top:12px; width:100%; justify-content:center;" onclick="window.saveNewNote('${s.id}')">Add Note</button>
-                        </div>
-                    </div>
-            `;
+        <div class="modal-header"><h2>Internal Notes: ${s.name || s.first_name || 'Client'}</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>
+        <div style="display:flex; flex-direction:column; gap:16px;">
+            <div style="max-height: 350px; overflow-y:auto; background:#FFF; border:1px solid #E2E8F0; padding:16px; border-radius:8px;">
+                ${notesHtml}
+            </div>
+            <div>
+                <textarea id="newNoteEditor" placeholder="Type a new internal note..." style="width:100%; height:100px; padding:12px; border-radius:8px; border:1px solid #E2E8F0; outline:none; font-family:inherit; resize:vertical; background:#F8FAFC;"></textarea>
+                <button class="btn-action" style="margin-top:12px; width:100%; justify-content:center;" onclick="window.saveNewNote('${s.id}')">Add Note</button>
+            </div>
+        </div>
+    `;
     document.getElementById('modalOverlay').style.display = 'flex';
 };
 
