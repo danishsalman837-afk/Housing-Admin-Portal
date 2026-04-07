@@ -380,27 +380,41 @@ window.openViewModal = function(id) {
     const s = submissionsData.find(x => String(x.id) === String(id));
     if(!s) return;
     
+    const ignoreKeys = ['id', 'created_at', 'notes', 'assigned_company_id', 'assigned_solicitor_id', 'call_notes'];
     let dataHtml = '';
-    const ignoreKeys = ['id', 'created_at', 'notes', 'leadStatus', 'assigned_company_id', 'assigned_solicitor_id', 'call_notes'];
-    
-    Object.keys(s).forEach(key => {
-        if(ignoreKeys.includes(key)) return;
-        let label = key.replace(/_/g, ' ');
+    const shownKeys = new Set();
+
+    // 1. Show fields in the predefined order
+    leadViewOrder.forEach(key => {
+        if (ignoreKeys.includes(key)) return;
+        if (s[key] === undefined || s[key] === null) return;
+        
+        shownKeys.add(key);
+        let label = leadFieldLabels[key] || key.replace(/_/g, ' ');
         let val = s[key];
         
-        // Format DOB if applicable
-        if (key.toLowerCase() === 'dob' || key.toLowerCase() === 'dateofbirth') {
-            val = formatDob(val);
-        } else if (!val) {
-            val = '--';
-        }
-        
-        if(typeof s[key] === 'object' && s[key] !== null) val = JSON.stringify(s[key]);
+        if (key === 'dateOfBirth') val = formatDob(val);
+        if (typeof val === 'object' && val !== null) val = JSON.stringify(val);
         
         dataHtml += `
             <div style="margin-bottom:18px;">
                 <label style="font-size:11px; font-weight:700; color:#94A3B8; text-transform:uppercase; display:block; margin-bottom:4px;">${label}</label>
-                <div style="font-size:14px; color:#1E293B; font-weight:600; line-height:1.4; white-space:pre-wrap;">${val}</div>
+                <div style="font-size:14px; color:#1E293B; font-weight:600; line-height:1.4; white-space:pre-wrap;">${val || '--'}</div>
+            </div>`;
+    });
+
+    // 2. Show any other fields in the object that weren't in the leadViewOrder
+    Object.keys(s).forEach(key => {
+        if (ignoreKeys.includes(key) || shownKeys.has(key)) return;
+        
+        let label = leadFieldLabels[key] || key.replace(/_/g, ' ');
+        let val = s[key];
+        if (typeof val === 'object' && val !== null) val = JSON.stringify(val);
+
+        dataHtml += `
+            <div style="margin-bottom:18px;">
+                <label style="font-size:11px; font-weight:700; color:#94A3B8; text-transform:uppercase; display:block; margin-bottom:4px;">${label}</label>
+                <div style="font-size:14px; color:#1E293B; font-weight:600; line-height:1.4; white-space:pre-wrap;">${val || '--'}</div>
             </div>`;
     });
 
@@ -420,36 +434,48 @@ window.openEditLeadModal = function(id) {
     const s = submissionsData.find(x => String(x.id) === String(id));
     if(!s) return;
 
-    const ignoreKeys = ['id', 'created_at', 'notes', 'leadStatus', 'assigned_company_id', 'assigned_solicitor_id', 'call_notes'];
+    const ignoreKeys = ['id', 'created_at', 'notes', 'assigned_company_id', 'assigned_solicitor_id', 'call_notes'];
     let html = '';
-    
-    Object.keys(s).forEach(k => {
-        if(ignoreKeys.includes(k)) return;
-        
-        let displayValue = (s[k] === null || s[k] === undefined) ? '' : s[k];
-        
-        // Format DOB for display in edit box
-        if (k.toLowerCase() === 'dob' || k.toLowerCase() === 'dateofbirth') {
-            displayValue = formatDob(displayValue);
-        }
-        
-        if(typeof displayValue === 'object') displayValue = JSON.stringify(displayValue);
-        
-        // Escape special chars for attribute safety
-        let safeValue = String(displayValue).replace(/"/g, '&quot;');
-        let label = k.replace(/_/g, ' ');
+    const shownKeys = new Set();
 
-        if (String(displayValue).length > 60 || k.includes('notes') || k.includes('address') || k.includes('damage') || k.includes('issue')) {
-            html += `<div class="form-group full" style="grid-column: span 2;">
+    const createFieldHtml = (k, val) => {
+        let displayValue = (val === null || val === undefined) ? '' : val;
+        if (typeof displayValue === 'object') displayValue = JSON.stringify(displayValue);
+        
+        let safeValue = String(displayValue).replace(/"/g, '&quot;');
+        let label = leadFieldLabels[k] || k.replace(/_/g, ' ');
+
+        // If it's a long field or specific type, use textarea
+        const isLongField = String(displayValue).length > 60 || 
+                           k.toLowerCase().includes('notes') || 
+                           k.toLowerCase().includes('address') || 
+                           k.toLowerCase().includes('damage') || 
+                           k.toLowerCase().includes('issue');
+
+        if (isLongField) {
+            return `<div class="form-group full" style="grid-column: span 2;">
                         <label style="font-size:11px; font-weight:700; color:#64748B; text-transform:uppercase; margin-bottom:6px; display:block;">${label}</label>
                         <textarea class="modern-input edit-inp" data-field="${k}" rows="3" style="width:100%; min-height:80px;">${displayValue}</textarea>
                      </div>`;
         } else {
-            html += `<div class="form-group">
+            return `<div class="form-group">
                         <label style="font-size:11px; font-weight:700; color:#64748B; text-transform:uppercase; margin-bottom:6px; display:block;">${label}</label>
                         <input type="text" class="modern-input edit-inp" data-field="${k}" value="${safeValue}" style="width:100%;">
                      </div>`;
         }
+    };
+
+    // 1. Show fields in order
+    leadViewOrder.forEach(key => {
+        if (ignoreKeys.includes(key)) return;
+        shownKeys.add(key);
+        html += createFieldHtml(key, s[key]);
+    });
+
+    // 2. Show extra fields
+    Object.keys(s).forEach(key => {
+        if (ignoreKeys.includes(key) || shownKeys.has(key)) return;
+        html += createFieldHtml(key, s[key]);
     });
     
     document.getElementById('modalBox').innerHTML = `
