@@ -36,10 +36,13 @@ module.exports = async function handler(req, res) {
     };
     for (const [formKey, dbKey] of Object.entries(mapping)) {
         if (data[formKey] !== undefined) {
-            if (data[dbKey] === undefined) data[dbKey] = data[formKey];
+            data[dbKey] = data[formKey];
             delete data[formKey];
         }
     }
+
+    // Always update timestamp to keep recent activity at the top
+    data.timestamp = new Date().toISOString();
 
     // Attempt to update existing with this phone number or insert new
     // We search for most recent record with this phone

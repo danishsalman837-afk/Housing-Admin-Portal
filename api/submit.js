@@ -30,10 +30,13 @@ module.exports = async function handler(req, res) {
   };
   for (const [formKey, dbKey] of Object.entries(mapping)) {
       if (data[formKey] !== undefined) {
-          if (data[dbKey] === undefined) data[dbKey] = data[formKey];
+          data[dbKey] = data[formKey];
           delete data[formKey];
       }
   }
+
+  // Always update timestamp to keep recent activity at the top
+  data.timestamp = new Date().toISOString();
 
   if (!assertEnv('service', res)) return;
   const supabase = createSupabaseClient('service');
@@ -43,13 +46,15 @@ module.exports = async function handler(req, res) {
     let existingId = null;
 
     if (data.phone) {
-      const { data: existingLead } = await supabase
+      const { data: existing, error: findError } = await supabase
         .from('submissions')
         .select('id, leadStatus')
         .eq('phone', data.phone)
         .order('timestamp', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .limit(1);
+        
+      if (findError) return res.status(500).json({ error: findError.message });
+      const existingLead = (existing && existing.length > 0) ? existing[0] : null;
         
       if (existingLead) {
         isUpdate = true;

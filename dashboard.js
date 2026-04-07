@@ -5,14 +5,16 @@ let charts = {};
 let selectedCompanyId = null;
 
 const leadStatuses = [
-    'New Lead', 'Transferred', 'Accepted', 'Rejected',
-    'Not Yet Invoiced', 'Invoice Raised', 'Paid', 'Test Lead'
+    'New Lead', 'Agent Saved', 'Transferred', 'Accepted', 'Rejected',
+    'Not Yet Invoiced', 'Invoice Raised', 'Paid', 'Test Lead', 'Archived'
 ];
 
 function getStatusColor(status) {
     if (status === 'New Lead') return 'new';
+    if (status === 'Agent Saved') return 'warning';
     if (status === 'Accepted' || status === 'Paid') return 'success';
     if (status === 'Rejected') return 'danger';
+    if (status === 'Archived') return 'gray';
     if (status === 'Transferred') return 'purple';
     if (status === 'Invoice Raised' || status === 'Not Yet Invoiced') return 'warning';
     return 'gray';
@@ -636,20 +638,20 @@ window.saveLeadEdits = async function (id) {
     inputs.forEach(inp => updates[inp.getAttribute('data-field')] = inp.value);
 
     try {
-        const res = await fetch('/api/update', { 
-            method: 'POST', 
-            headers: { 'Content-Type': 'application/json' }, 
-            body: JSON.stringify(updates) 
+        const res = await fetch('/api/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updates)
         });
-        
+
         const result = await res.json();
         if (!res.ok) throw new Error(result.error || "Server error " + res.status);
-        
+
         const lead = submissionsData.find(s => String(s.id) === String(id));
         if (lead) Object.assign(lead, updates);
-        document.getElementById('modalOverlay').style.display='none';
+        document.getElementById('modalOverlay').style.display = 'none';
         renderFilteredLeads();
-    } catch(e) { 
+    } catch (e) {
         console.error("Save Error", e);
         alert("Failed to save changes: " + e.message);
     }
