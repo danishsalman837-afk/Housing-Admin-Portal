@@ -584,8 +584,12 @@ window.openEditLeadModal = function(id) {
     if(!s) return;
 
     let html = '<div class="form-grid" id="editLeadForm" style="max-height: 450px; overflow-y: auto; padding: 10px;">';
+    const processedKeys = new Set();
+    const systemFields = ['id', 'created_at', 'notes', 'assigned_company_id', 'assigned_solicitor_id', 'member_id', 'active', 'timestamp'];
+
     leadViewOrder.forEach(k => {
         if (['id', 'timestamp'].includes(k)) return;
+        processedKeys.add(k);
         const label = leadFieldLabels[k] || k.replace(/_/g, ' ');
         
         let displayValue = s[k];
@@ -602,6 +606,20 @@ window.openEditLeadModal = function(id) {
         
         html += `<div class="form-group ${isFullWidth ? 'full' : ''}"><label>${label}</label>
                  <input type="text" class="modern-input edit-inp" data-field="${k}" value="${displayValue}"></div>`;
+    });
+
+    Object.keys(s).forEach(key => {
+        if (processedKeys.has(key) || systemFields.includes(key)) return;
+        let displayValue = s[key];
+        if (displayValue === null || displayValue === undefined) displayValue = '';
+        if (typeof displayValue === 'object') displayValue = JSON.stringify(displayValue);
+        displayValue = String(displayValue).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        
+        const isFullWidth = displayValue.length > 50;
+        const label = key.replace(/_/g, ' ').toUpperCase();
+        
+        html += `<div class="form-group ${isFullWidth ? 'full' : ''}"><label>${label}</label>
+                 <input type="text" class="modern-input edit-inp" data-field="${key}" value="${displayValue}"></div>`;
     });
     
     html += `</div>
