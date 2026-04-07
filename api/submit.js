@@ -13,20 +13,51 @@ module.exports = async function handler(req, res) {
   const supabase = createSupabaseClient('anon');
 
   try {
-    // Add a default status if not provided
-    if (!data.leadStatus) data.leadStatus = 'New Lead';
-    
-    // Add a timestamp if missing
-    if (!data.timestamp) data.timestamp = new Date().toISOString();
+    let isUpdate = false;
+    let existingId = null;
 
-    const { error } = await supabase
-      .from('submissions')
-      .insert([data]);
+    if (data.phone) {
+      const { data: existingLead } = await supabase
+        .from('submissions')
+        .select('id')
+        .eq('phone', data.phone)
+        .maybeSingle();
+        
+      if (existingLead) {
+        isUpdate = true;
+        existingId = existingLead.id;
+      }
+    }
 
-    if (error) throw error;
+    if (isUpdate) {
+      const updateData = { ...data };
+      delete updateData.id;
 
-    console.log("Dialer Lead Saved:", data);
-    return res.status(200).json({ success: true, message: "Lead captured successfully!" });
+      const { error: updateError } = await supabase
+        .from('submissions')
+        .update(updateData)
+        .eq('id', existingId);
+
+      if (updateError) throw updateError;
+
+      console.log("Dialer Lead Updated:", updateData);
+      return res.status(200).json({ success: true, message: "Lead updated successfully!" });
+    } else {
+      // Add a default status if not provided
+      if (!data.leadStatus) data.leadStatus = 'New Lead';
+      
+      // Add a timestamp if missing
+      if (!data.timestamp) data.timestamp = new Date().toISOString();
+
+      const { error } = await supabase
+        .from('submissions')
+        .insert([data]);
+
+      if (error) throw error;
+
+      console.log("Dialer Lead Saved:", data);
+      return res.status(200).json({ success: true, message: "Lead captured successfully!" });
+    }
   } catch (err) {
     console.error("Webhook Error:", err.message);
     return res.status(500).json({ error: err.message });

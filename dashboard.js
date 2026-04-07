@@ -318,7 +318,7 @@ window.openAddCompanyModal = function(existingCompany = null) {
     const c = existingCompany || {};
     
      document.getElementById('modalBox').innerHTML = `
-                < div class="modal-header" ><h2>${isEdit ? 'Edit Company' : 'Add Company'}</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div >
+                <div class="modal-header"><h2>${isEdit ? 'Edit Company' : 'Add Company'}</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>
         <div class="form-grid">
             <div class="form-group"><label>Company Name</label><input type="text" id="cName" class="modern-input" value="${c.name || ''}" placeholder="Name"></div>
             <div class="form-group">
@@ -441,7 +441,7 @@ window.viewCompanyMembers = function(companyId) {
         let mName = ((m.first_name || '') + ' ' + (m.last_name || '')).trim();
         if (!mName || mName.includes('undefined')) mName = 'Unknown Member';
         
-        tbody.innerHTML += `< tr ><td><strong>${mName}</strong></td><td>${m.job_title || '--'}</td><td>${m.email || '--'}</td><td>${m.mobile || '--'}</td><td>${m.landline || '--'}</td>
+        tbody.innerHTML += `<tr><td><strong>${mName}</strong></td><td>${m.job_title || '--'}</td><td>${m.email || '--'}</td><td>${m.mobile || '--'}</td><td>${m.landline || '--'}</td>
             <td>
                 <div class="action-group">
                     <button class="act-btn edit" title="Edit Member" onclick="window.openAddMemberModal('${m.id}')">
@@ -451,7 +451,7 @@ window.viewCompanyMembers = function(companyId) {
                         <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg> Delete
                     </button>
                 </div>
-            </td></tr > `;
+            </td></tr>`;
     });
 };
 
@@ -460,7 +460,7 @@ window.openAddMemberModal = function(editId = null) {
     const m = membersData.find(x => String(x.id) === String(editId)) || {};
 
     document.getElementById('modalBox').innerHTML = `
-                < div class="modal-header" ><h2>${editId ? 'Edit Member' : 'Add Member'}</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div >
+                <div class="modal-header"><h2>${editId ? 'Edit Member' : 'Add Member'}</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>
         <div class="form-grid">
             <div class="form-group"><label>First Name</label><input type="text" id="mFirstName" class="modern-input" value="${m.first_name || ''}"></div>
             <div class="form-group"><label>Last Name</label><input type="text" id="mLastName" class="modern-input" value="${m.last_name || ''}"></div>
@@ -573,7 +573,7 @@ window.openViewModal = function(id) {
 
     document.getElementById('modalBox').innerHTML = `
         <div class="modal-header"><h2>Lead Profile: ${s.name || s.first_name || 'Client'}</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>
-        </div >
+        </div>
                 ${ html }
             `;
     document.getElementById('modalOverlay').style.display = 'flex';
@@ -600,17 +600,17 @@ window.openEditLeadModal = function(id) {
         
         const isFullWidth = displayValue.length > 50 || k === 'address';
         
-        html += `< div class="form-group ${isFullWidth ? 'full' : ''}" ><label>${label}</label>
+        html += `<div class="form-group ${isFullWidth ? 'full' : ''}"><label>${label}</label>
                  <input type="text" class="modern-input edit-inp" data-field="${k}" value="${displayValue}"></div>`;
     });
     
-    html += `</div >
+    html += `</div>
                 <div style="margin-top:24px; display:flex; justify-content:flex-end; gap:10px;">
                     <button class="btn-outline" style="padding:10px 20px; border-radius:8px;" onclick="window.openViewModal('${s.id}')">Back to Profile</button>
                     <button class="btn-action" onclick="window.saveLeadEdits('${s.id}')">Save Changes</button>
                 </div>`;
 
-    document.getElementById('modalBox').innerHTML = `< div class="modal-header" ><h2>Edit Lead Data</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div > ${ html } `;
+    document.getElementById('modalBox').innerHTML = `<div class="modal-header"><h2>Edit Lead Data</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div> ${ html }`;
     document.getElementById('modalOverlay').style.display = 'flex';
 };
 
@@ -641,15 +641,15 @@ window.openNotesModal = function(id) {
     if(!Array.isArray(notesArray)) notesArray = [];
     
     let notesHtml = notesArray.map(n => `
-                < div style = "background:#F9FAFB; border:1px solid #E5E7EB; padding:12px; border-radius:8px; margin-bottom:8px;" >
+                <div style="background:#F9FAFB; border:1px solid #E5E7EB; padding:12px; border-radius:8px; margin-bottom:8px;">
             <div style="font-size:11px; color:#6B7280; margin-bottom:4px;">${new Date(n.date || Date.now()).toLocaleString()}</div>
             <div style="font-size:13px; color:#111827; white-space:pre-wrap;">${n.note || JSON.stringify(n)}</div>
-        </div >
+        </div>
                 `).join('');
-    if(notesArray.length === 0) notesHtml = `< div style = "font-size:13px; color:#9CA3AF; font-style:italic; padding:20px; text-align:center;" > No internal notes yet.</div > `;
+    if(notesArray.length === 0) notesHtml = `<div style="font-size:13px; color:#9CA3AF; font-style:italic; padding:20px; text-align:center;"> No internal notes yet.</div>`;
 
     document.getElementById('modalBox').innerHTML = `
-                < div class="modal-header" ><h2>Internal Notes: ${s.name || s.first_name || 'Client'}</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div >
+                <div class="modal-header"><h2>Internal Notes: ${s.name || s.first_name || 'Client'}</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>
                     <div style="display:flex; flex-direction:column; gap:16px;">
                         <div style="max-height: 350px; overflow-y:auto; background:#FFF; border:1px solid #E2E8F0; padding:16px; border-radius:8px;">
                             ${notesHtml}
