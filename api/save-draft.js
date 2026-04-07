@@ -45,7 +45,7 @@ module.exports = async function handler(req, res) {
     // We search for most recent record with this phone
     const { data: existing, error: findError } = await supabase
       .from('submissions')
-      .select('id')
+      .select('id, leadStatus')
       .eq('phone', data.phone)
       .order('timestamp', { ascending: false })
       .limit(1);
@@ -54,18 +54,17 @@ module.exports = async function handler(req, res) {
 
     let response;
     if (existing && existing.length > 0) {
-        // Ensure status is 'Agent Saved' for drafts so they don't hit the dashboard yet
-        if (!data.leadStatus || data.leadStatus === 'Agent Saved') {
-            data.leadStatus = 'Agent Saved';
-        }
+        // If it already exists, we preserve its current status by not including leadStatus in the update.
+        // This ensures no "live" leads (New Lead, Accepted, etc.) disappear from the dashboard.
+        delete data.leadStatus;
+
         response = await supabase
             .from('submissions')
             .update(data)
             .eq('id', existing[0].id)
             .select();
     } else {
-        // Insert
-        // Ensure status is 'Agent Saved' for new drafts
+        // Insert new record as a draft
         data.leadStatus = 'Agent Saved';
         if (!data.timestamp) data.timestamp = new Date().toISOString();
         response = await supabase

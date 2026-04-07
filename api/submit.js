@@ -45,23 +45,31 @@ module.exports = async function handler(req, res) {
     if (data.phone) {
       const { data: existingLead } = await supabase
         .from('submissions')
-        .select('id')
+        .select('id, leadStatus')
         .eq('phone', data.phone)
+        .order('timestamp', { ascending: false })
+        .limit(1)
         .maybeSingle();
         
       if (existingLead) {
         isUpdate = true;
         existingId = existingLead.id;
+        
+        // Mark as New Lead upon submission ONLY if it was currently hidden (Agent Saved or null)
+        // If it's already live (e.g. New Lead, Accepted, etc.), keep existing status
+        const currentStatus = existingLead.leadStatus;
+        if (!currentStatus || currentStatus === 'Agent Saved') {
+            data.leadStatus = 'New Lead';
+        } else {
+            // Keep existing status
+            delete data.leadStatus;
+        }
       }
     }
 
     if (isUpdate) {
       const updateData = { ...data };
       delete updateData.id;
-      // Mark as New Lead upon submission if it was saved/null
-      if (!updateData.leadStatus || updateData.leadStatus === 'Agent Saved') {
-        updateData.leadStatus = 'New Lead';
-      }
 
       const { error: updateError } = await supabase
         .from('submissions')
