@@ -89,14 +89,26 @@ module.exports = async function handler(req, res) {
       const updateData = { ...data };
       delete updateData.id;
 
+      // CRITICAL: Only update fields that actually have a value.
+      // This prevents the web form from overwriting agent-entered data with empty strings.
+      const safeUpdate = {};
+      for (const [key, val] of Object.entries(updateData)) {
+          if (val !== null && val !== undefined && val !== '') {
+              safeUpdate[key] = val;
+          }
+      }
+      // Always preserve timestamp and status
+      safeUpdate.timestamp = updateData.timestamp;
+      if (updateData.leadStatus !== undefined) safeUpdate.leadStatus = updateData.leadStatus;
+
       const { error: updateError } = await supabase
         .from('submissions')
-        .update(updateData)
+        .update(safeUpdate)
         .eq('id', existingId);
 
       if (updateError) throw updateError;
 
-      console.log("Dialer Lead Updated:", updateData);
+      console.log("Dialer Lead Updated:", safeUpdate);
       return res.status(200).json({ success: true, message: "Lead updated successfully!" });
     } else {
       // Add a default status if not provided

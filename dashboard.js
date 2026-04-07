@@ -646,8 +646,13 @@ window.saveLeadEdits = async function (id) {
         const result = await res.json();
         if (!res.ok) throw new Error(result.error || "Server error " + res.status);
 
+        // Merge the DB response back into memory so the view reflects the actual saved state
         const lead = submissionsData.find(s => String(s.id) === String(id));
-        if (lead) Object.assign(lead, updates);
+        if (lead) {
+            // Merge raw form updates first, then overlay with DB response (authoritative)
+            Object.assign(lead, updates);
+            if (result && typeof result === 'object' && result.id) Object.assign(lead, result);
+        }
         document.getElementById('modalOverlay').style.display = 'none';
         renderFilteredLeads();
     } catch (e) {

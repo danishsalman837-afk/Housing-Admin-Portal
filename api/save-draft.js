@@ -70,13 +70,23 @@ module.exports = async function handler(req, res) {
 
     let response;
     if (existing && existing.length > 0) {
-        // If it already exists, we preserve its current status by not including leadStatus in the update.
-        // This ensures no "live" leads (New Lead, Accepted, etc.) disappear from the dashboard.
+        // Preserve current status — don't let the web form reset it
         delete data.leadStatus;
+
+        // CRITICAL: Only update fields that actually have a value.
+        // This prevents the web form from overwriting agent-entered data with empty strings.
+        const safeUpdate = {};
+        for (const [key, val] of Object.entries(data)) {
+            if (val !== null && val !== undefined && val !== '') {
+                safeUpdate[key] = val;
+            }
+        }
+        // Always update the timestamp regardless
+        safeUpdate.timestamp = data.timestamp;
 
         response = await supabase
             .from('submissions')
-            .update(data)
+            .update(safeUpdate)
             .eq('id', existing[0].id)
             .select();
     } else {
