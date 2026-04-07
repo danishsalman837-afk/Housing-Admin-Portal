@@ -352,78 +352,84 @@ window.openAddCompanyModal = function(existingCompany = null) {
     document.getElementById('modalOverlay').style.display = 'flex';
 };
 
+// --- MODERN MODAL LOGIC ---
 window.openViewModal = function(id) {
-    const item = submissionsData.find(s => String(s.id) === String(id));
-    if (!item) return;
-    let html = '<div style="max-height:400px; overflow-y:auto; padding:10px;">';
-    leadViewOrder.forEach(k => {
-        if (k === 'id') return;
-        const label = leadFieldLabels[k] || k;
-        let value = item[k];
-        if (value === undefined && k === 'dateOfBirth') value = item.dob || item.birthDate;
-        if (value === undefined && k === 'tenantType') value = item.councilTenant || item.housingAssociation;
-        if (value === undefined && k === 'affectedSurface') value = item.onWalls || item.onCeiling || item.onFloor;
-        html += `<div style="margin-bottom:10px;"><label style="font-size:10px; font-weight:800; color:#64748b; text-transform:uppercase;">${label}</label><div style="padding:10px; background:#f8fafc; border-radius:8px;">${value || '---'}</div></div>`;
+    const s = submissionsData.find(x => String(x.id) === String(id));
+    if(!s) return;
+    
+    let dataHtml = '';
+    const ignoreKeys = ['id', 'created_at', 'notes', 'leadStatus', 'assigned_company_id', 'assigned_solicitor_id'];
+    
+    Object.keys(s).forEach(key => {
+        if(ignoreKeys.includes(key)) return;
+        let label = key.replace(/_/g, ' ');
+        let val = s[key] || '--';
+        if(typeof s[key] === 'object' && s[key] !== null) val = JSON.stringify(s[key]);
+        
+        dataHtml += `
+            <div style="margin-bottom:18px;">
+                <label style="font-size:11px; font-weight:700; color:#94A3B8; text-transform:uppercase; display:block; margin-bottom:4px;">${label}</label>
+                <div style="font-size:14px; color:#1E293B; font-weight:600; line-height:1.4; white-space:pre-wrap;">${val}</div>
+            </div>`;
     });
-    html += '</div>';
-    const modalHtml = `
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <h2>Lead Details</h2>
-        <div>
-          <button class="btn-action" onclick="window.openEditModal('${id}')" style="margin-right:10px;">Edit</button>
-          <button class="btn-action" onclick="document.getElementById('modalOverlay').style.display='none'">Close</button>
+
+    document.getElementById('modalBox').innerHTML = `
+        <div class="modal-header">
+            <h2 style="font-size:20px; font-weight:800; letter-spacing:-0.5px;">Lead Profile: ${s.name || s.first_name || 'Client'}</h2>
+            <button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button>
         </div>
-      </div>
-      ${html}`;
-    document.getElementById('modalBox').innerHTML = modalHtml;
+        <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:24px; padding:0 8px; max-height:75vh; overflow-y:auto;">
+            ${dataHtml}
+        </div>
+    `;
     document.getElementById('modalOverlay').style.display = 'flex';
 };
 
-window.openEditModal = function(id) {
-    const item = submissionsData.find(s => String(s.id) === String(id));
-    if (!item) return;
-    let html = '<div style="max-height:420px; overflow-y:auto; padding:10px;">';
-    leadViewOrder.forEach(k => {
-        if (k === 'id') return;
-        const label = leadFieldLabels[k] || k;
-        const value = item[k] || '';
-        html += `<div style="margin-bottom:10px;"><label style="font-size:11px; font-weight:700; color:#334155;">${label}</label><input class="edit-input" id="edit-${k}" value="${String(value).replace(/"/g, '&quot;')}" /></div>`;
+window.openEditLeadModal = function(id) {
+    const s = submissionsData.find(x => String(x.id) === String(id));
+    if(!s) return;
+
+    const ignoreKeys = ['id', 'created_at', 'notes', 'leadStatus', 'assigned_company_id', 'assigned_solicitor_id'];
+    let html = '';
+    
+    Object.keys(s).forEach(k => {
+        if(ignoreKeys.includes(k)) return;
+        
+        let displayValue = (s[k] === null || s[k] === undefined) ? '' : s[k];
+        if(typeof displayValue === 'object') displayValue = JSON.stringify(displayValue);
+        
+        // Escape special chars for attribute safety
+        let safeValue = String(displayValue).replace(/"/g, '&quot;');
+        let label = k.replace(/_/g, ' ');
+
+        if (String(displayValue).length > 60 || k.includes('notes') || k.includes('address') || k.includes('damage') || k.includes('issue')) {
+            html += `<div class="form-group full" style="grid-column: span 2;">
+                        <label style="font-size:11px; font-weight:700; color:#64748B; text-transform:uppercase; margin-bottom:6px; display:block;">${label}</label>
+                        <textarea class="modern-input edit-inp" data-field="${k}" rows="3" style="width:100%; min-height:80px;">${displayValue}</textarea>
+                     </div>`;
+        } else {
+            html += `<div class="form-group">
+                        <label style="font-size:11px; font-weight:700; color:#64748B; text-transform:uppercase; margin-bottom:6px; display:block;">${label}</label>
+                        <input type="text" class="modern-input edit-inp" data-field="${k}" value="${safeValue}" style="width:100%;">
+                     </div>`;
+        }
     });
-    html += '</div>';
-    const modalHtml = `
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <h2>Edit Lead</h2>
-        <button class="btn-action" onclick="document.getElementById('modalOverlay').style.display='none'">Close</button>
-      </div>
-      ${html}
-      <div style="text-align:right;"><button class="btn-action" style="background:#10b981;color:#fff;" onclick="window.saveLeadEdits('${id}')">Save Changes</button></div>`;
-    document.getElementById('modalBox').innerHTML = modalHtml;
+    
+    document.getElementById('modalBox').innerHTML = `
+        <div class="modal-header">
+            <h2 style="font-size:20px; font-weight:800; letter-spacing:-0.5px;">Edit Full Lead Data</h2>
+            <button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button>
+        </div>
+        <div class="form-grid" id="editLeadForm" style="display:grid; grid-template-columns: repeat(2, 1fr); gap:16px; padding:0 8px; max-height:75vh; overflow-y:auto;">
+            ${html}
+        </div>
+        <div style="margin-top:32px; display:flex; justify-content:flex-end; gap:12px; padding:0 8px;">
+           <button class="btn-outline" style="padding:10px 24px; font-weight:700;" onclick="document.getElementById('modalOverlay').style.display='none'">Cancel</button>
+           <button class="btn-action" style="padding:10px 32px; font-weight:700; background:#10B981;" onclick="window.saveLeadEdits('${s.id}')">Apply Changes</button>
+        </div>`;
     document.getElementById('modalOverlay').style.display = 'flex';
 };
 
-window.saveLeadEdits = async function(id) {
-    const updates = {};
-    leadViewOrder.forEach(k => {
-        if (k === 'id') return;
-        const el = document.getElementById(`edit-${k}`);
-        if (el) updates[k] = el.value;
-    });
-    try {
-        const res = await fetch('/api/update', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id, ...updates })
-        });
-        if (!res.ok) throw new Error('Update failed');
-        const updated = await res.json();
-        const idx = submissionsData.findIndex(s => String(s.id) === String(id));
-        if (idx > -1) submissionsData[idx] = { ...submissionsData[idx], ...updated };
-        window.openViewModal(id);
-        renderTable(submissionsData);
-    } catch (err) {
-        alert('Update error: ' + err.message);
-    }
-};
 
 window.saveNewCompany = async function(id) {
     const payload = {
@@ -572,82 +578,27 @@ window.deleteMember = async function(id) {
     } catch(e) { console.error(e); }
 };
 
-// --- LEADS EDIT & NOTES logic ---
-window.openViewModal = function(id) {
-    const s = submissionsData.find(x => String(x.id) === String(id));
-    if(!s) return;
-    
-    let dataHtml = '';
-    const ignoreKeys = ['id', 'created_at', 'notes', 'leadStatus', 'assigned_company_id', 'assigned_solicitor_id'];
-    Object.keys(s).forEach(key => {
-        if(ignoreKeys.includes(key)) return;
-        if(typeof s[key] === 'object' && s[key] !== null) {
-            dataHtml += `<div style="margin-bottom:12px;"><label style="font-size:11px; color:#6B7280; text-transform:uppercase;">${key.replace(/_/g, ' ')}</label><div style="font-size:14px; color:#111827; font-weight:500;">${JSON.stringify(s[key])}</div></div>`;
-        } else {
-            dataHtml += `<div style="margin-bottom:12px;"><label style="font-size:11px; color:#6B7280; text-transform:uppercase;">${key.replace(/_/g, ' ')}</label><div style="font-size:14px; color:#111827; font-weight:500;">${s[key] || '--'}</div></div>`;
-        }
-    });
-
-    document.getElementById('modalBox').innerHTML = `
-        <div class="modal-header"><h2>Lead Profile: ${s.name || s.first_name || 'Client'}</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>
-        <div style="column-count: 2; column-gap: 32px;">
-            ${dataHtml}
-        </div>
-    `;
-    document.getElementById('modalOverlay').style.display = 'flex';
-};
-
-window.openEditLeadModal = function(id) {
-    const s = submissionsData.find(x => String(x.id) === String(id));
-    if(!s) return;
-
-    // Show all data fields except for system/internal elements
-    const ignoreKeys = ['id', 'created_at', 'notes', 'leadStatus', 'assigned_company_id', 'assigned_solicitor_id', 'timestamp'];
-    let html = '<div class="form-grid" id="editLeadForm">';
-    
-    Object.keys(s).forEach(k => {
-        if(ignoreKeys.includes(k)) return;
-        
-        let displayValue = s[k] === null || s[k] === undefined ? '' : s[k];
-        if(typeof displayValue === 'object') {
-            displayValue = JSON.stringify(displayValue);
-        }
-        
-        // Escape characters for HTML
-        displayValue = String(displayValue).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-        
-        // If text is long, use an auto-scaling text area
-        if (displayValue.length > 50 || k.length > 30) {
-            html += `<div class="form-group full"><label>${k.replace(/_/g, ' ')}</label>
-                     <textarea class="modern-input edit-inp" data-field="${k}" rows="3">${displayValue}</textarea></div>`;
-        } else {
-            html += `<div class="form-group"><label>${k.replace(/_/g, ' ')}</label>
-                     <input type="text" class="modern-input edit-inp" data-field="${k}" value="${displayValue}"></div>`;
-        }
-    });
-    
-    html += `</div>
-             <div style="margin-top:24px; display:flex; justify-content:flex-end; gap:10px;">
-                <button class="btn-outline" style="padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:600;" onclick="document.getElementById('modalOverlay').style.display='none'">Cancel</button>
-                <button class="btn-action" onclick="window.saveLeadEdits('${s.id}')">Save Changes</button>
-             </div>`;
-
-    document.getElementById('modalBox').innerHTML = `<div class="modal-header"><h2>Edit Lead Data</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>${html}`;
-    document.getElementById('modalOverlay').style.display = 'flex';
-};
-
 window.saveLeadEdits = async function(id) {
     const inputs = document.querySelectorAll('#editLeadForm .edit-inp');
     const updates = { id };
     inputs.forEach(inp => updates[inp.getAttribute('data-field')] = inp.value);
 
     try {
-        await fetch('/api/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updates) });
+        const res = await fetch('/api/update', { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify(updates) 
+        });
+        if (!res.ok) throw new Error("Server error " + res.status);
+        
         const lead = submissionsData.find(s => String(s.id) === String(id));
         if (lead) Object.assign(lead, updates);
         document.getElementById('modalOverlay').style.display='none';
         renderFilteredLeads();
-    } catch(e) { console.error("Save Error", e); }
+    } catch(e) { 
+        console.error("Save Error", e);
+        alert("Failed to save changes. Please try again.");
+    }
 };
 
 window.openNotesModal = function(id) {
