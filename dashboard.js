@@ -358,7 +358,7 @@ window.openViewModal = function(id) {
     if(!s) return;
     
     let dataHtml = '';
-    const ignoreKeys = ['id', 'created_at', 'notes', 'leadStatus', 'assigned_company_id', 'assigned_solicitor_id'];
+    const ignoreKeys = ['id', 'created_at', 'notes', 'leadStatus', 'assigned_company_id', 'assigned_solicitor_id', 'call_notes'];
     
     Object.keys(s).forEach(key => {
         if(ignoreKeys.includes(key)) return;
@@ -389,7 +389,7 @@ window.openEditLeadModal = function(id) {
     const s = submissionsData.find(x => String(x.id) === String(id));
     if(!s) return;
 
-    const ignoreKeys = ['id', 'created_at', 'notes', 'leadStatus', 'assigned_company_id', 'assigned_solicitor_id'];
+    const ignoreKeys = ['id', 'created_at', 'notes', 'leadStatus', 'assigned_company_id', 'assigned_solicitor_id', 'call_notes'];
     let html = '';
     
     Object.keys(s).forEach(k => {
