@@ -19,49 +19,54 @@ function getStatusColor(status) {
 }
 
 const leadViewOrder = [
-  'name', 'email', 'phone', 'dateOfBirth', 'address', 'postcode',
-  'tenantType', 'tenancyDuration', 'hasDampMould', 'dampLocation', 'roomsAffected',
-  'affectedSurface', 'issueDuration', 'issueCause', 'damageBelongings', 'healthProblems',
-  'hasLeaks', 'leakLocation', 'leakSource', 'leakStart', 'leakOngoing', 'leakDamage',
-  'cracksDamage', 'faultyElectrics', 'heatingIssues', 'structuralDamage', 'reportedOverMonth',
-  'rentalArrears', 'arrearsAmount', 'additionalNotes', 'leadStatus', 'timestamp'
+    'name', 'email', 'phone', 'dateOfBirth', 'address', 'postcode',
+    'tenantType', 'tenancyDuration',
+    'hasDampMould', 'dampLocation', 'roomsAffected', 'affectedSurface', 'issueDuration', 'issueCause', 'damageBelongings', 'healthProblems',
+    'hasLeaks', 'leakLocation', 'leakSource', 'leakStart', 'leakDamage', 'cracksDamage', 'leakBelongings',
+    'faultyElectrics', 'heatingIssues', 'structuralDamage',
+    'reportedOverMonth', 'reportCount', 'reportFirst', 'reportResponse', 'reportAttempt', 'reportStatus',
+    'rentalArrears', 'arrearsAmount', 'additionalNotes'
 ];
 
 const leadFieldLabels = {
-  name: 'Name',
-  email: 'Email Address',
-  phone: 'Phone Number',
-  dateOfBirth: 'Date of Birth (DOB)',
-  address: 'Address',
-  postcode: 'Postcode',
-  tenantType: 'Council/Housing Association Tenant?',
-  tenancyDuration: 'How long living in property?',
-  hasDampMould: 'Any damp or mould?',
-  dampLocation: 'Where is damp/mould located?',
-  roomsAffected: 'How many rooms affected?',
-  affectedSurface: 'Wall/Ceiling/Floor?',
-  issueDuration: 'How long issue present?',
-  issueCause: 'Cause (leak/rain/pipe/roof)?',
-  damageBelongings: 'Belongings damaged?',
-  healthProblems: 'Health problems caused?',
-  hasLeaks: 'Any leaks?',
-  leakLocation: 'Leak coming from?',
-  leakSource: 'From roof/ceiling/pipe/bathroom/kitchen?',
-  leakStart: 'When did leak start?',
-  leakOngoing: 'Is leak still ongoing?',
-  leakDamage: 'Damage to walls/ceiling/floor?',
-  cracksDamage: 'Cracks or structural damage?',
-  faultyElectrics: 'Faulty electrics?',
-  heatingIssues: 'Heating/Boiler issues?',
-  structuralDamage: 'Cracks/structural damage?',
-  reportedOverMonth: 'Reported over a month ago without fix?',
-  rentalArrears: 'Rental arrears (<£1000)?',
-  arrearsAmount: 'Arrears amount',
-  additionalNotes: 'Additional Notes',
-  leadStatus: 'Lead Status'
+    name: 'Name',
+    email: 'Email Address',
+    phone: 'Phone Number',
+    dateOfBirth: 'Date of Birth',
+    address: 'Address',
+    postcode: 'Postcode',
+    tenantType: 'Tenant Type',
+    tenancyDuration: 'Tenancy Duration',
+    hasDampMould: 'Damp or Mould?',
+    dampLocation: 'Damp/Mould Location',
+    roomsAffected: 'Rooms Affected',
+    affectedSurface: 'Affected Surfaces',
+    issueDuration: 'Issue Duration',
+    issueCause: 'Issue Cause',
+    damageBelongings: 'Damaged Belongings (Damp)',
+    healthProblems: 'Health Problems',
+    hasLeaks: 'Leaks?',
+    leakLocation: 'Leak Location',
+    leakSource: 'Leak Source',
+    leakStart: 'Leak Start / Ongoing?',
+    leakDamage: 'Leak Damage',
+    cracksDamage: 'Cracks/Structural Damage (Leaks)',
+    leakBelongings: 'Damaged Belongings (Leaks)',
+    faultyElectrics: 'Faulty Electrics?',
+    heatingIssues: 'Heating / Boiler Issues?',
+    structuralDamage: 'Cracks or Structural Damages?',
+    reportedOverMonth: 'Reported >1 Month Ago?',
+    reportCount: 'Notification Count',
+    reportFirst: 'First Reported Date',
+    reportResponse: 'Landlord Response',
+    reportAttempt: 'Repair Attempted?',
+    reportStatus: 'Issue Still Unresolved?',
+    rentalArrears: 'Rental Arrears?',
+    arrearsAmount: 'Arrears Amount',
+    additionalNotes: 'Additional Notes'
 };
 
-window.switchView = function(view) {
+window.switchView = function (view) {
     document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     const navItems = document.querySelectorAll('.nav-item');
@@ -85,23 +90,23 @@ function calculateDashboardStats() {
     const total = submissionsData.length;
     const acceptedCount = submissionsData.filter(s => s.leadStatus === 'Accepted').length;
     const rejectedCount = submissionsData.filter(s => s.leadStatus === 'Rejected').length;
-    
+
     // Update text references
     const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
-    setEl('dashboardTotal',           total);
-    setEl('dashboardTotalDonut',      total);
-    setEl('dashboardActive',          companiesData.length);
+    setEl('dashboardTotal', total);
+    setEl('dashboardTotalDonut', total);
+    setEl('dashboardActive', companiesData.length);
     setEl('dashboardSolicitorsCount', membersData.length);
-    setEl('dashboardAccepted',        acceptedCount);
-    setEl('dashboardRejected',        rejectedCount);
+    setEl('dashboardAccepted', acceptedCount);
+    setEl('dashboardRejected', rejectedCount);
 
     const activeCompaniesCount = companiesData.filter(c => c.active !== false).length;
-    setEl('dashboardActive',          activeCompaniesCount);
+    setEl('dashboardActive', activeCompaniesCount);
 
     let convRate = total > 0 ? ((acceptedCount / total) * 100).toFixed(1) : '0';
-    setEl('dashboardConvRate',       convRate + '%');
-    setEl('dashboardConvRateDonut',  convRate + '%');
-    
+    setEl('dashboardConvRate', convRate + '%');
+    setEl('dashboardConvRateDonut', convRate + '%');
+
     initCharts(submissionsData, acceptedCount, total);
 }
 
@@ -118,12 +123,13 @@ function initCharts(data, acceptedCount, totalCount) {
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         let monthlyCounts = Array(12).fill(0);
         data.forEach(item => {
-            if (item.timestamp) { const date = new Date(item.timestamp); if(!isNaN(date)) monthlyCounts[date.getMonth()]++; }
+            if (item.timestamp) { const date = new Date(item.timestamp); if (!isNaN(date)) monthlyCounts[date.getMonth()]++; }
         });
         charts.flow = new Chart(ctxFlow, {
             type: 'bar', // Highlevel "Funnel" / Opportunity Value style
             data: { labels: months, datasets: [{ label: 'Leads Received', data: monthlyCounts, backgroundColor: '#3B82F6', borderRadius: 4 }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+            options: {
+                responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
                 scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: '#F2F3F5' } } }
             }
         });
@@ -139,7 +145,7 @@ function initCharts(data, acceptedCount, totalCount) {
 
     if (ctxConv) {
         let remainder = totalCount - acceptedCount;
-        if(totalCount === 0) remainder = 1; // So we can show a grey circle when empty
+        if (totalCount === 0) remainder = 1; // So we can show a grey circle when empty
         charts.conv = new Chart(ctxConv, {
             type: 'doughnut',
             data: { datasets: [{ data: [acceptedCount, remainder], backgroundColor: ['#10B981', '#E5E6EB'], borderWidth: 0 }] },
@@ -172,7 +178,7 @@ function initFilters() {
     }
 }
 
-window.renderFilteredLeads = function() {
+window.renderFilteredLeads = function () {
     const statusFilter = document.getElementById('filterStatus')?.value || 'All';
     const companyFilter = document.getElementById('filterCompany')?.value || 'All';
     const searchVal = (document.getElementById('searchLead')?.value || '').toLowerCase();
@@ -181,12 +187,12 @@ window.renderFilteredLeads = function() {
         let matchStatus = statusFilter === 'All' || item.leadStatus === statusFilter;
         let matchCompany = companyFilter === 'All' || String(item.assigned_company_id || '') === String(companyFilter);
         let matchSearch = true;
-        
-        if(searchVal) {
-            const textToSearch = `${item.name||''} ${item.email||''} ${item.phone||''}`.toLowerCase();
+
+        if (searchVal) {
+            const textToSearch = `${item.name || ''} ${item.email || ''} ${item.phone || ''}`.toLowerCase();
             matchSearch = textToSearch.includes(searchVal);
         }
-        
+
         return matchStatus && matchCompany && matchSearch;
     });
 
@@ -256,19 +262,19 @@ function renderTable(data) {
     });
 }
 
-window.handleFieldUpdate = async function(id, fieldName, value) {
+window.handleFieldUpdate = async function (id, fieldName, value) {
     try {
         const updateParams = { id };
         updateParams[fieldName] = value;
         await fetch('/api/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updateParams) });
         const lead = submissionsData.find(s => String(s.id) === String(id));
         if (lead) lead[fieldName] = value;
-        if(fieldName === 'leadStatus') calculateDashboardStats();
+        if (fieldName === 'leadStatus') calculateDashboardStats();
     } catch (e) { console.error(e); }
 };
 
-window.exportDocx = function(id) { window.open('/api/export-docx?id=' + id, '_blank'); };
-window.exportExcel = function() {
+window.exportDocx = function (id) { window.open('/api/export-docx?id=' + id, '_blank'); };
+window.exportExcel = function () {
     const status = document.getElementById('filterStatus')?.value || 'All';
     const company = document.getElementById('filterCompany')?.value || 'All';
     window.open('/api/export-xlsx?status=' + status + '&company=' + company, '_blank');
@@ -276,20 +282,20 @@ window.exportExcel = function() {
 
 
 // 🏢 COMPANY CRM
-window.viewCompanyEditModal = function(id) {
+window.viewCompanyEditModal = function (id) {
     const c = companiesData.find(x => String(x.id) === String(id));
-    if(!c) return;
+    if (!c) return;
     openAddCompanyModal(c);
 };
 
-window.renderCompanies = function() {
+window.renderCompanies = function () {
     const tbody = document.querySelector("#companyTable tbody");
     if (!tbody) return;
     tbody.innerHTML = '';
     companiesData.forEach((c) => {
         let nameDisp = c.name || c.company_name || 'Unnamed Solicitor';
         if (nameDisp === 'undefined' || nameDisp.includes('undefined')) nameDisp = 'Unnamed Solicitor';
-        
+
         const tr = document.createElement('tr');
         tr.innerHTML = `<td><strong>${nameDisp}</strong></td><td>${c.type || '--'}</td><td>${c.main_contact || '--'}</td><td>${c.postcode || '--'}</td><td>${c.website || '--'}</td>
             <td style="text-align:center;">
@@ -315,11 +321,11 @@ window.renderCompanies = function() {
     document.getElementById('companyMembersSection').style.display = 'none';
 };
 
-window.openAddCompanyModal = function(existingCompany = null) {
+window.openAddCompanyModal = function (existingCompany = null) {
     const isEdit = !!existingCompany;
     const c = existingCompany || {};
-    
-     document.getElementById('modalBox').innerHTML = `
+
+    document.getElementById('modalBox').innerHTML = `
         <div class="modal-header"><h2>${isEdit ? 'Edit Company' : 'Add Company'}</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>
         <div class="form-grid">
             <div class="form-group"><label>Company Name</label><input type="text" id="cName" class="modern-input" value="${c.name || ''}" placeholder="Name"></div>
@@ -376,10 +382,10 @@ function formatDob(val) {
     return val;
 }
 
-window.openViewModal = function(id) {
+window.openViewModal = function (id) {
     const s = submissionsData.find(x => String(x.id) === String(id));
-    if(!s) return;
-    
+    if (!s) return;
+
     const ignoreKeys = ['id', 'created_at', 'notes', 'assigned_company_id', 'assigned_solicitor_id', 'call_notes'];
     let dataHtml = '';
     const shownKeys = new Set();
@@ -388,28 +394,13 @@ window.openViewModal = function(id) {
     leadViewOrder.forEach(key => {
         if (ignoreKeys.includes(key)) return;
         if (s[key] === undefined || s[key] === null) return;
-        
+
         shownKeys.add(key);
         let label = leadFieldLabels[key] || key.replace(/_/g, ' ');
         let val = s[key];
-        
+
         if (key === 'dateOfBirth') val = formatDob(val);
         if (typeof val === 'object' && val !== null) val = JSON.stringify(val);
-        
-        dataHtml += `
-            <div style="margin-bottom:18px;">
-                <label style="font-size:11px; font-weight:700; color:#94A3B8; text-transform:uppercase; display:block; margin-bottom:4px;">${label}</label>
-                <div style="font-size:14px; color:#1E293B; font-weight:600; line-height:1.4; white-space:pre-wrap;">${val || '--'}</div>
-            </div>`;
-    });
-
-    // 2. Show any other fields in the object that weren't in the leadViewOrder
-    Object.keys(s).forEach(key => {
-        if (ignoreKeys.includes(key) || shownKeys.has(key)) return;
-        
-        let label = leadFieldLabels[key] || key.replace(/_/g, ' ');
-        let val = s[key];
-        if (typeof val === 'object' && val !== null) val = JSON.stringify(val);
 
         dataHtml += `
             <div style="margin-bottom:18px;">
@@ -417,6 +408,8 @@ window.openViewModal = function(id) {
                 <div style="font-size:14px; color:#1E293B; font-weight:600; line-height:1.4; white-space:pre-wrap;">${val || '--'}</div>
             </div>`;
     });
+
+
 
     document.getElementById('modalBox').innerHTML = `
         <div class="modal-header">
@@ -430,9 +423,9 @@ window.openViewModal = function(id) {
     document.getElementById('modalOverlay').style.display = 'flex';
 };
 
-window.openEditLeadModal = function(id) {
+window.openEditLeadModal = function (id) {
     const s = submissionsData.find(x => String(x.id) === String(id));
-    if(!s) return;
+    if (!s) return;
 
     const ignoreKeys = ['id', 'created_at', 'notes', 'assigned_company_id', 'assigned_solicitor_id', 'call_notes'];
     let html = '';
@@ -441,16 +434,16 @@ window.openEditLeadModal = function(id) {
     const createFieldHtml = (k, val) => {
         let displayValue = (val === null || val === undefined) ? '' : val;
         if (typeof displayValue === 'object') displayValue = JSON.stringify(displayValue);
-        
+
         let safeValue = String(displayValue).replace(/"/g, '&quot;');
         let label = leadFieldLabels[k] || k.replace(/_/g, ' ');
 
         // If it's a long field or specific type, use textarea
-        const isLongField = String(displayValue).length > 60 || 
-                           k.toLowerCase().includes('notes') || 
-                           k.toLowerCase().includes('address') || 
-                           k.toLowerCase().includes('damage') || 
-                           k.toLowerCase().includes('issue');
+        const isLongField = String(displayValue).length > 60 ||
+            k.toLowerCase().includes('notes') ||
+            k.toLowerCase().includes('address') ||
+            k.toLowerCase().includes('damage') ||
+            k.toLowerCase().includes('issue');
 
         if (isLongField) {
             return `<div class="form-group full" style="grid-column: span 2;">
@@ -472,12 +465,8 @@ window.openEditLeadModal = function(id) {
         html += createFieldHtml(key, s[key]);
     });
 
-    // 2. Show extra fields
-    Object.keys(s).forEach(key => {
-        if (ignoreKeys.includes(key) || shownKeys.has(key)) return;
-        html += createFieldHtml(key, s[key]);
-    });
-    
+
+
     document.getElementById('modalBox').innerHTML = `
         <div class="modal-header">
             <h2 style="font-size:20px; font-weight:800; letter-spacing:-0.5px;">Edit Full Lead Data</h2>
@@ -494,7 +483,7 @@ window.openEditLeadModal = function(id) {
 };
 
 
-window.saveNewCompany = async function(id) {
+window.saveNewCompany = async function (id) {
     const payload = {
         name: document.getElementById('cName').value,
         type: document.getElementById('cType').value,
@@ -509,31 +498,31 @@ window.saveNewCompany = async function(id) {
     try {
         const chk = document.getElementById('cActive');
         payload.active = chk ? chk.checked : true;
-    } catch(e) { payload.active = true; }
+    } catch (e) { payload.active = true; }
     if (id) payload.id = id;
 
     try {
-        const res = await fetch('/api/companies', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+        const res = await fetch('/api/companies', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         const saved = await res.json();
-        
+
         if (!res.ok || saved.error) { return alert("Database Error: " + (saved.error || "Failed to save to Supabase. Check schema.")); }
-        
+
         if (id) {
             const index = companiesData.findIndex(x => String(x.id) === String(id));
-            if(index > -1) companiesData[index] = saved;
+            if (index > -1) companiesData[index] = saved;
         } else {
             companiesData.push(saved);
         }
-        
-        document.getElementById('modalOverlay').style.display='none';
+
+        document.getElementById('modalOverlay').style.display = 'none';
         renderCompanies();
         calculateDashboardStats();
-    } catch(e) { console.error(e); alert("Network Error: " + e.message); }
+    } catch (e) { console.error(e); alert("Network Error: " + e.message); }
 };
 
-window.toggleCompanyActive = async function(id, isActive) {
+window.toggleCompanyActive = async function (id, isActive) {
     try {
-        const res = await fetch('/api/companies', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ id, active: isActive }) });
+        const res = await fetch('/api/companies', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, active: isActive }) });
         const updated = await res.json();
         if (!res.ok || updated.error) { return alert('Failed to update company status: ' + (updated.error || 'Unknown')); }
         const idx = companiesData.findIndex(c => String(c.id) === String(id));
@@ -543,27 +532,27 @@ window.toggleCompanyActive = async function(id, isActive) {
     } catch (e) { console.error(e); alert('Network Error: ' + e.message); }
 };
 
-window.viewCompanyMembers = function(companyId) {
+window.viewCompanyMembers = function (companyId) {
     selectedCompanyId = companyId;
     const company = companiesData.find(c => String(c.id) === String(companyId));
     document.getElementById('companyMembersSection').style.display = 'block';
-    
+
     let compName = company?.name || 'Unknown Solicitor';
     document.getElementById('membersSectionTitle').innerText = 'Members for ' + compName;
-    
+
     const tbody = document.querySelector("#membersTable tbody");
     tbody.innerHTML = '';
-    
+
     const relatedMembers = membersData.filter(m => String(m.company_id) === String(companyId));
-    if(relatedMembers.length === 0) {
+    if (relatedMembers.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 30px; color:#94A3B8;">No members assigned to this company yet.</td></tr>';
         return;
     }
-    
+
     relatedMembers.forEach(m => {
         let mName = ((m.first_name || '') + ' ' + (m.last_name || '')).trim();
         if (!mName || mName.includes('undefined')) mName = 'Unknown Member';
-        
+
         tbody.innerHTML += `<tr><td><strong>${mName}</strong></td><td>${m.job_title || '--'}</td><td>${m.email || '--'}</td><td>${m.mobile || '--'}</td><td>${m.landline || '--'}</td>
             <td>
                 <div class="action-group">
@@ -578,8 +567,8 @@ window.viewCompanyMembers = function(companyId) {
     });
 };
 
-window.openAddMemberModal = function(editId = null) {
-    if(!selectedCompanyId) return alert('Select a company first');
+window.openAddMemberModal = function (editId = null) {
+    if (!selectedCompanyId) return alert('Select a company first');
     const m = membersData.find(x => String(x.id) === String(editId)) || {};
 
     document.getElementById('modalBox').innerHTML = `
@@ -597,7 +586,7 @@ window.openAddMemberModal = function(editId = null) {
     document.getElementById('modalOverlay').style.display = 'flex';
 }
 
-window.saveNewMember = async function(id) {
+window.saveNewMember = async function (id) {
     const payload = {
         company_id: selectedCompanyId,
         first_name: document.getElementById('mFirstName').value,
@@ -610,79 +599,79 @@ window.saveNewMember = async function(id) {
     if (id) payload.id = id;
 
     try {
-        const res = await fetch('/api/members', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+        const res = await fetch('/api/members', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         const saved = await res.json();
-        
+
         if (!res.ok || saved.error) return alert("Database Error: " + (saved.error || "Check database schema."));
 
         if (id) {
             const index = membersData.findIndex(x => String(x.id) === String(id));
-            if(index > -1) membersData[index] = saved;
+            if (index > -1) membersData[index] = saved;
         } else {
             membersData.push(saved);
         }
-        
-        document.getElementById('modalOverlay').style.display='none';
+
+        document.getElementById('modalOverlay').style.display = 'none';
         initFilters();
         viewCompanyMembers(selectedCompanyId);
         calculateDashboardStats();
-        if(document.getElementById('leadsView').classList.contains('active')) renderFilteredLeads();
-    } catch(e) { console.error(e); alert("Network Error: " + e.message); }
+        if (document.getElementById('leadsView').classList.contains('active')) renderFilteredLeads();
+    } catch (e) { console.error(e); alert("Network Error: " + e.message); }
 };
 
-window.deleteMember = async function(id) {
-    if(!confirm("Are you sure you want to delete this member?")) return;
+window.deleteMember = async function (id) {
+    if (!confirm("Are you sure you want to delete this member?")) return;
     try {
-        await fetch('/api/members', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ id, action: 'delete' })});
+        await fetch('/api/members', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, action: 'delete' }) });
         membersData = membersData.filter(m => String(m.id) !== String(id));
         initFilters();
         viewCompanyMembers(selectedCompanyId);
-        if(document.getElementById('leadsView').classList.contains('active')) renderFilteredLeads();
-    } catch(e) { console.error(e); }
+        if (document.getElementById('leadsView').classList.contains('active')) renderFilteredLeads();
+    } catch (e) { console.error(e); }
 };
 
-window.saveLeadEdits = async function(id) {
+window.saveLeadEdits = async function (id) {
     const inputs = document.querySelectorAll('#editLeadForm .edit-inp');
     const updates = { id };
     inputs.forEach(inp => updates[inp.getAttribute('data-field')] = inp.value);
 
     try {
-        const res = await fetch('/api/update', { 
-            method: 'POST', 
-            headers: { 'Content-Type': 'application/json' }, 
-            body: JSON.stringify(updates) 
+        const res = await fetch('/api/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updates)
         });
         if (!res.ok) throw new Error("Server error " + res.status);
-        
+
         const lead = submissionsData.find(s => String(s.id) === String(id));
         if (lead) Object.assign(lead, updates);
-        document.getElementById('modalOverlay').style.display='none';
+        document.getElementById('modalOverlay').style.display = 'none';
         renderFilteredLeads();
-    } catch(e) { 
+    } catch (e) {
         console.error("Save Error", e);
         alert("Failed to save changes. Please try again.");
     }
 };
 
-window.openNotesModal = function(id) {
+window.openNotesModal = function (id) {
     const s = submissionsData.find(x => String(x.id) === String(id));
-    if(!s) return;
+    if (!s) return;
 
     let notesArray = [];
-    if(s.notes) {
-        if(Array.isArray(s.notes)) notesArray = s.notes;
-        else if(typeof s.notes === 'string') { try { notesArray = JSON.parse(s.notes); } catch(e) { notesArray = [{ note: s.notes, date: new Date().toISOString() }]; } }
-        else if(typeof s.notes === 'object') { notesArray = [s.notes]; }
+    if (s.notes) {
+        if (Array.isArray(s.notes)) notesArray = s.notes;
+        else if (typeof s.notes === 'string') { try { notesArray = JSON.parse(s.notes); } catch (e) { notesArray = [{ note: s.notes, date: new Date().toISOString() }]; } }
+        else if (typeof s.notes === 'object') { notesArray = [s.notes]; }
     }
-    if(!Array.isArray(notesArray)) notesArray = [];
-    
+    if (!Array.isArray(notesArray)) notesArray = [];
+
     let notesHtml = notesArray.map(n => `
         <div style="background:#F9FAFB; border:1px solid #E5E7EB; padding:12px; border-radius:8px; margin-bottom:8px;">
             <div style="font-size:11px; color:#6B7280; margin-bottom:4px;">${new Date(n.date || Date.now()).toLocaleString()}</div>
             <div style="font-size:13px; color:#111827; white-space:pre-wrap;">${n.note || JSON.stringify(n)}</div>
         </div>
     `).join('');
-    if(notesArray.length === 0) notesHtml = `<div style="font-size:13px; color:#9CA3AF; font-style:italic; padding:20px; text-align:center;">No internal notes yet.</div>`;
+    if (notesArray.length === 0) notesHtml = `<div style="font-size:13px; color:#9CA3AF; font-style:italic; padding:20px; text-align:center;">No internal notes yet.</div>`;
 
     document.getElementById('modalBox').innerHTML = `
         <div class="modal-header"><h2>Internal Notes: ${s.name || s.first_name || 'Client'}</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>
@@ -699,52 +688,52 @@ window.openNotesModal = function(id) {
     document.getElementById('modalOverlay').style.display = 'flex';
 };
 
-window.saveNewNote = async function(id) {
+window.saveNewNote = async function (id) {
     const s = submissionsData.find(x => String(x.id) === String(id));
-    if(!s) return;
+    if (!s) return;
     const txt = document.getElementById('newNoteEditor').value.trim();
-    if(!txt) return alert("Please type a note first.");
+    if (!txt) return alert("Please type a note first.");
 
     let notesArray = [];
-    if(s.notes) {
-        if(Array.isArray(s.notes)) notesArray = [...s.notes];
-        else if(typeof s.notes === 'string') { try { notesArray = JSON.parse(s.notes); } catch(e) { notesArray = [{ note: s.notes, date: new Date().toISOString() }]; } }
+    if (s.notes) {
+        if (Array.isArray(s.notes)) notesArray = [...s.notes];
+        else if (typeof s.notes === 'string') { try { notesArray = JSON.parse(s.notes); } catch (e) { notesArray = [{ note: s.notes, date: new Date().toISOString() }]; } }
     }
-    
+
     notesArray.push({ note: txt, date: new Date().toISOString() });
-    
+
     const originalNotes = s.notes;
     s.notes = JSON.stringify(notesArray); // Fallback until db commits
     window.openNotesModal(id); // visually update immediately
-    
+
     try {
         await fetch('/api/update', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id: s.id, notes: JSON.stringify(notesArray) })
         });
-    } catch(e) {
+    } catch (e) {
         console.error(e);
         s.notes = originalNotes; // revert mapping
         alert("Failed to save note to server.");
     }
 };
 
-window.archiveLead = async function(id) {
-    if(!confirm("Are you sure you want to delete this lead from the dashboard?\n\n(It will be removed from this view but remain archived in the database)")) return;
+window.archiveLead = async function (id) {
+    if (!confirm("Are you sure you want to delete this lead from the dashboard?\n\n(It will be removed from this view but remain archived in the database)")) return;
     try {
-        const res = await fetch('/api/update', { 
-            method: 'POST', 
-            headers: { 'Content-Type': 'application/json' }, 
-            body: JSON.stringify({ id, leadStatus: 'Archived' }) 
+        const res = await fetch('/api/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, leadStatus: 'Archived' })
         });
         if (!res.ok) throw new Error("Failed to archive lead");
-        
+
         // Remove locally and refresh
         submissionsData = submissionsData.filter(s => String(s.id) !== String(id));
         renderFilteredLeads();
         calculateDashboardStats();
-    } catch(e) { 
+    } catch (e) {
         console.error("Archive Error", e);
         alert("Could not update lead status. Please try again.");
     }
@@ -757,10 +746,10 @@ window.initDashboard = async function () {
 
         const resComp = await fetch('/api/companies');
         if (resComp.ok) companiesData = JSON.parse(await resComp.text());
-        
+
         const resMembers = await fetch('/api/members');
         if (resMembers.ok) membersData = JSON.parse(await resMembers.text());
-        
+
     } catch (e) {
         console.error("Setup running locally:", e);
     } finally {
