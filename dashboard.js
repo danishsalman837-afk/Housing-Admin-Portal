@@ -353,6 +353,29 @@ window.openAddCompanyModal = function(existingCompany = null) {
 };
 
 // --- MODERN MODAL LOGIC ---
+const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+function formatDob(val) {
+    if (!val || typeof val !== 'string') return val || '--';
+    let d, m, y;
+    if (val.includes('/')) {
+        const p = val.split('/').map(x => x.trim());
+        d = p[0]; m = p[1]; y = p[2];
+    } else if (val.includes('-')) {
+        const p = val.split('-');
+        if (p[0].length === 4) { // YYYY-MM-DD
+            y = p[0]; m = p[1]; d = p[2];
+        } else { // DD-MM-YYYY
+            d = p[0]; m = p[1]; y = p[2];
+        }
+    } else return val;
+
+    const mIdx = parseInt(m) - 1;
+    if (mIdx >= 0 && mIdx < 12 && d && y) {
+        return `${parseInt(d)} ${months[mIdx]} ${y}`;
+    }
+    return val;
+}
+
 window.openViewModal = function(id) {
     const s = submissionsData.find(x => String(x.id) === String(id));
     if(!s) return;
@@ -363,7 +386,15 @@ window.openViewModal = function(id) {
     Object.keys(s).forEach(key => {
         if(ignoreKeys.includes(key)) return;
         let label = key.replace(/_/g, ' ');
-        let val = s[key] || '--';
+        let val = s[key];
+        
+        // Format DOB if applicable
+        if (key.toLowerCase() === 'dob' || key.toLowerCase() === 'dateofbirth') {
+            val = formatDob(val);
+        } else if (!val) {
+            val = '--';
+        }
+        
         if(typeof s[key] === 'object' && s[key] !== null) val = JSON.stringify(s[key]);
         
         dataHtml += `
@@ -396,6 +427,12 @@ window.openEditLeadModal = function(id) {
         if(ignoreKeys.includes(k)) return;
         
         let displayValue = (s[k] === null || s[k] === undefined) ? '' : s[k];
+        
+        // Format DOB for display in edit box
+        if (k.toLowerCase() === 'dob' || k.toLowerCase() === 'dateofbirth') {
+            displayValue = formatDob(displayValue);
+        }
+        
         if(typeof displayValue === 'object') displayValue = JSON.stringify(displayValue);
         
         // Escape special chars for attribute safety
