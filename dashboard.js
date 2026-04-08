@@ -328,6 +328,9 @@ window.renderCompanies = function () {
                     <button class="act-btn view" onclick="window.viewCompanyMembers('${c.id}')">
                         <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg> Members
                     </button>
+                    <button class="act-btn" style="background:rgba(255,69,58,.10);color:#CC3328;border-color:rgba(255,69,58,.20);" onclick="window.deleteCompany('${c.id}')" title="Delete Company">
+                        <svg viewBox="0 0 24 24" style="fill:currentColor; width:14px; height:14px;"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg> Delete
+                    </button>
                 </div>
             </td>`;
         tbody.appendChild(tr);
@@ -544,6 +547,28 @@ window.toggleCompanyActive = async function (id, isActive) {
         renderCompanies();
         calculateDashboardStats();
     } catch (e) { console.error(e); alert('Network Error: ' + e.message); }
+};
+
+window.deleteCompany = async function (id) {
+    if (!confirm("Are you sure you want to delete this company? This will remove the firm from the system.")) return;
+    try {
+        const res = await fetch('/api/companies', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, action: 'delete' })
+        });
+        if (res.ok) {
+            companiesData = companiesData.filter(c => String(c.id) !== String(id));
+            renderCompanies();
+            initFilters(); // update solicitor dropdowns
+            calculateDashboardStats();
+        } else {
+            alert("Failed to delete company.");
+        }
+    } catch (e) {
+        console.error(e);
+        alert("Error deleting company.");
+    }
 };
 
 window.viewCompanyMembers = function (companyId) {
