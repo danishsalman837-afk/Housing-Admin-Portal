@@ -674,10 +674,16 @@ window.openNotesModal = function (id) {
     }
     if (!Array.isArray(notesArray)) notesArray = [];
 
-    let notesHtml = notesArray.map(n => `
-        <div style="background:#F9FAFB; border:1px solid #E5E7EB; padding:12px; border-radius:8px; margin-bottom:8px;">
-            <div style="font-size:11px; color:#6B7280; margin-bottom:4px;">${new Date(n.date || Date.now()).toLocaleString()}</div>
-            <div style="font-size:13px; color:#111827; white-space:pre-wrap;">${n.note || JSON.stringify(n)}</div>
+    let notesHtml = notesArray.map((n, idx) => `
+        <div id="note-block-${idx}" style="background:#F9FAFB; border:1px solid #E5E7EB; padding:12px; border-radius:8px; margin-bottom:8px; position:relative;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
+                <div style="font-size:11px; color:#6B7280;">${new Date(n.date || Date.now()).toLocaleString()}</div>
+                <div style="display:flex; gap:12px;">
+                    <button onclick="window.editNote('${id}', ${idx})" style="background:none; border:none; cursor:pointer; color:#3B82F6; font-size:11px; font-weight:700; padding:0; text-transform:uppercase;">Edit</button>
+                    <button onclick="window.deleteNote('${id}', ${idx})" style="background:none; border:none; cursor:pointer; color:#EF4444; font-size:11px; font-weight:700; padding:0; text-transform:uppercase;">Delete</button>
+                </div>
+            </div>
+            <div id="note-text-${idx}" style="font-size:13px; color:#111827; white-space:pre-wrap;">${n.note || (typeof n === 'string' ? n : JSON.stringify(n))}</div>
         </div>
     `).join('');
     if (notesArray.length === 0) notesHtml = `<div style="font-size:13px; color:#9CA3AF; font-style:italic; padding:20px; text-align:center;">No internal notes yet.</div>`;
@@ -710,23 +716,80 @@ window.saveNewNote = async function (id) {
     }
 
     notesArray.push({ note: txt, date: new Date().toISOString() });
+    await updateNotesInDb(s, notesArray);
+};
 
-    const originalNotes = s.notes;
-    s.notes = JSON.stringify(notesArray); // Fallback until db commits
-    window.openNotesModal(id); // visually update immediately
+window.editNote = function (leadId, noteIndex) {
+    const block = document.getElementById(`note-block-${noteIndex}`);
+    const textDiv = document.getElementById(`note-text-${noteIndex}`);
+    if (!block || !textDiv) return;
 
+    const currentText = textDiv.innerText;
+    textDiv.innerHTML = `
+        <textarea id="editNoteEditor-${noteIndex}" style="width:100%; min-height:60px; padding:8px; border-radius:4px; border:1px solid #3B82F6; outline:none; font-family:inherit; resize:vertical; font-size:13px; margin-top:8px;">${currentText}</textarea>
+        <div style="display:flex; gap:8px; margin-top:8px;">
+            <button class="btn-action" style="padding:4px 12px; font-size:12px; background:#10B981;" onclick="window.saveEditedNote('${leadId}', ${noteIndex})">Save</button>
+            <button class="btn-outline" style="padding:4px 12px; font-size:12px;" onclick="window.openNotesModal('${leadId}')">Cancel</button>
+        </div>
+    `;
+    // Hide the original actions
+    const actionRow = block.querySelector('div > div:last-child');
+    if (actionRow) actionRow.style.display = 'none';
+};
+
+window.saveEditedNote = async function (leadId, noteIndex) {
+    const s = submissionsData.find(x => String(x.id) === String(leadId));
+    if (!s) return;
+
+    const newText = document.getElementById(`editNoteEditor-${noteIndex}`).value.trim();
+    if (!newText) return alert("Note cannot be empty.");
+
+    let notesArray = [];
     try {
-        await fetch('/api/update', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: s.id, notes: JSON.stringify(notesArray) })
-        });
-    } catch (e) {
-        console.error(e);
-        s.notes = originalNotes; // revert mapping
-        alert("Failed to save note to server.");
+        notesArray = Array.isArray(s.notes) ? [...s.notes] : JSON.parse(s.notes);
+    } catch (e) { console.error("Parse error", e); }
+
+    if (notesArray[noteIndex]) {
+        notesArray[noteIndex].note = newText;
+        notesArray[noteIndex].updatedAt = new Date().toISOString();
+        await updateNotesInDb(s, notesArray);
     }
 };
+
+window.deleteNote = async function (leadId, noteIndex) {
+    if (!confirm("Are you sure you want to delete this note?")) return;
+    const s = submissionsData.find(x => String(x.id) === String(leadId));
+    if (!s) return;
+
+    let notesArray = [];
+    try {
+        notesArray = Array.isArray(s.notes) ? [...s.notes] : JSON.parse(s.notes);
+    } catch (e) { console.error("Parse error", e); }
+
+    notesArray.splice(noteIndex, 1);
+    await updateNotesInDb(s, notesArray);
+};
+
+async function updateNotesInDb(lead, notesArray) {
+    const originalNotes = lead.notes;
+    const jsonNotes = JSON.stringify(notesArray);
+    lead.notes = notesArray; // Keep as array in memory for consistency
+    window.openNotesModal(lead.id); // visually update immediately
+
+    try {
+        const res = await fetch('/api/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: lead.id, notes: jsonNotes })
+        });
+        if (!res.ok) throw new Error("Server rejected update");
+    } catch (e) {
+        console.error(e);
+        lead.notes = originalNotes; // revert mapping
+        alert("Failed to save changes to server.");
+        window.openNotesModal(lead.id);
+    }
+}
 
 window.archiveLead = async function (id) {
     if (!confirm("Are you sure you want to delete this lead from the dashboard?\n\n(It will be removed from this view but remain archived in the database)")) return;
