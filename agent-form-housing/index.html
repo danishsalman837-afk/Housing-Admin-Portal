@@ -219,7 +219,7 @@
         <input type="tel" id="phone" name="phone" placeholder="e.g. 07123 456789" required>
 
       <label for="dob">Date of Birth (DOB):</label>
-      <input type="text" id="dob" name="dateOfBirth" class="dob-input" placeholder="DD / MM / YYYY" maxlength="14">
+      <input type="text" id="dob" name="dateOfBirth" class="dob-input" placeholder="DD / MM / YYYY" maxlength="16">
 
       <label>Address</label>
       <textarea name="address" rows="2" required></textarea>
@@ -363,7 +363,8 @@
         placeholder="Please provide any additional information or notes that you would like to include with your application..."></textarea>
     </div>
 
-    <div style="display: flex; gap: 15px; margin-top: 30px;">
+    <div id="formStatus" style="display: none; padding: 12px; border-radius: 6px; margin-bottom: 20px; font-weight: 600; text-align: center;"></div>
+    <div style="display: flex; gap: 15px; margin-top: 10px;">
       <button type="button" id="saveDraftBtn" style="margin-top: 0; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);">Save Lead Data</button>
       <button type="submit" id="submitFormBtn" style="margin-top: 0; background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">Submit Lead Finalised</button>
     </div>
@@ -373,18 +374,27 @@
   <div id="toast" style="visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 1000; left: 50%; bottom: 30px; transform: translateX(-50%); font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.2); transition: opacity 0.5s, visibility 0.5s; opacity: 0;"></div>
 
   <script>
-    // Toast Function
-    function showToast(message, isError = false) {
+    // Toast & Status Function
+    function showStatus(message, isError = false) {
+      // 1. Show Toast
       const toast = document.getElementById("toast");
       toast.innerText = message;
-      toast.style.backgroundColor = isError ? "#ef4444" : "#10b981"; // Red for error, Green for success
+      toast.style.backgroundColor = isError ? "#ef4444" : "#10b981";
       toast.style.visibility = "visible";
       toast.style.opacity = "1";
       
+      // 2. Show in-form status message
+      const statusEl = document.getElementById("formStatus");
+      statusEl.innerText = message;
+      statusEl.style.display = "block";
+      statusEl.style.backgroundColor = isError ? "#fee2e2" : "#dcfce7";
+      statusEl.style.color = isError ? "#dc2626" : "#16a34a";
+      statusEl.style.border = `1px solid ${isError ? '#fecaca' : '#bbf7d0'}`;
+
       setTimeout(() => {
         toast.style.opacity = "0";
         setTimeout(() => { toast.style.visibility = "hidden"; }, 500);
-      }, 3000);
+      }, 4000);
     }
 
     // Auto-fill contact details from URL or DB
@@ -403,10 +413,17 @@
           if (phoneVal) document.getElementById("phone").value = phoneVal;
 
           let dobVal = urlParams.get('dob') || urlParams.get('DOB');
-          if (dobVal) {
+          if (dobVal && dobVal !== '0000-00-00') {
             const yyyymmddMatch = dobVal.match(/^(\d{4})\D(\d{2})\D(\d{2})$/);
-            if (yyyymmddMatch) dobVal = `${yyyymmddMatch[3]} / ${yyyymmddMatch[2]} / ${yyyymmddMatch[1]}`;
-            document.getElementById("dob").value = dobVal;
+            if (yyyymmddMatch) {
+              const [_, y, m, d] = yyyymmddMatch;
+              if (y !== '0000' && m !== '00' && d !== '00') {
+                dobVal = `${d} / ${m} / ${y}`;
+                document.getElementById("dob").value = dobVal;
+              }
+            } else {
+              document.getElementById("dob").value = dobVal;
+            }
           }
 
           const addressVal = urlParams.get('address') || urlParams.get('Address');
@@ -444,15 +461,56 @@
       }
     });
 
-    // Smart Masked DOB
+    // Smart Masked DOB with Validation
     const dobInput = document.getElementById('dob');
     dobInput.addEventListener('input', function(e) {
+      // Get digits only
       let v = this.value.replace(/\D/g,'');
+      
+      // Limit to 8 digits (DDMMYYYY)
       if (v.length > 8) v = v.substring(0,8);
+
+      let day = v.substring(0, 2);
+      let month = v.substring(2, 4);
+      let year = v.substring(4, 8);
+
+      // Validate Month
+      if (month.length === 2) {
+        let m = parseInt(month);
+        if (m === 0) month = "01";
+        if (m > 12) month = "12";
+      }
+
+      // Validate Day (initial max 31)
+      if (day.length === 2) {
+        let d = parseInt(day);
+        if (d === 0) day = "01";
+        if (d > 31) day = "31";
+      }
+
+      // Refine Day based on Month and Year
+      if (day.length === 2 && month.length === 2) {
+        let d = parseInt(day);
+        let m = parseInt(month);
+        let y = year.length === 4 ? parseInt(year) : 2024;
+
+        let maxDays = 31;
+        if ([4, 6, 9, 11].includes(m)) {
+          maxDays = 30;
+        } else if (m === 2) {
+          const isLeap = (y % 4 === 0 && y % 100 !== 0) || (y % 400 === 0);
+          maxDays = isLeap ? 29 : 28;
+        }
+
+        if (d > maxDays) day = maxDays.toString().padStart(2, '0');
+      }
+
+      // Format the output
       let out = "";
-      if (v.length > 0) out += v.substring(0,2);
-      if (v.length >= 3) out += " / " + v.substring(2,4);
-      if (v.length >= 5) out += " / " + v.substring(4,8);
+      if (v.length > 0) out += day;
+      if (v.length >= 3) out += " / " + month;
+      if (v.length >= 5) out += " / " + year;
+      
       this.value = out;
     });
 
@@ -475,12 +533,27 @@
     toggleDetails("reported", "reportedDetails");
     toggleDetails("arrears", "arrearsDetails");
 
+    const monthsArr = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    function convertDobToFullDate(val) {
+      if (!val || typeof val !== 'string') return val;
+      // Handle DD / MM / YYYY
+      if (val.includes(' / ')) {
+        const p = val.split(' / ');
+        if (p.length === 3) {
+          const mIdx = parseInt(p[1]) - 1;
+          if (mIdx >= 0 && mIdx < 12) return `${parseInt(p[0])} ${monthsArr[mIdx]} ${p[2]}`;
+        }
+      }
+      return val;
+    }
+
     // "Save Lead Data" Logic (only saves)
     document.getElementById("saveDraftBtn").addEventListener("click", function() {
         const formData = new FormData(document.getElementById("disrepairForm"));
         const data = Object.fromEntries(formData.entries());
         
-        if (!data.phone) return showToast("Please enter a phone number to save progress.", true);
+        if (data.dateOfBirth) data.dateOfBirth = convertDobToFullDate(data.dateOfBirth);
+        if (!data.phone) return showStatus("Please enter a phone number to save progress.", true);
 
         fetch("/api/save-draft", {
             method: "POST",
@@ -490,12 +563,12 @@
         .then(res => res.json())
         .then(resData => {
             if (resData.success) {
-                showToast("The lead data is been saved sucessfully");
+                showStatus("Progress saved successfully!");
             } else {
-                showToast("Error saving: " + (resData.error || "Unknown"), true);
+                showStatus("Error saving: " + (resData.error || "Unknown"), true);
             }
         })
-        .catch(err => showToast("Network Error: " + err.message, true));
+        .catch(err => showStatus("Network Error: " + err.message, true));
     });
 
     // Form submit (Finalize)
@@ -504,6 +577,8 @@
       const formData = new FormData(this);
       const data = Object.fromEntries(formData.entries());
 
+      if (data.dateOfBirth) data.dateOfBirth = convertDobToFullDate(data.dateOfBirth);
+
       fetch("/api/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -511,7 +586,7 @@
       })
       .then(async response => {
           if (response.ok) {
-            showToast("lead data is been submitted");
+            showStatus("Lead finalized and submitted successfully!");
             document.getElementById("disrepairForm").reset();
             // Reset detail views
             ["dampDetails", "leakDetails", "reportedDetails", "arrearsDetails"].forEach(id => {
@@ -520,10 +595,10 @@
           } else {
             let errorMsg = response.statusText;
             try { const errData = await response.json(); errorMsg = errData.error || errorMsg; } catch (e) { }
-            showToast("Error submitting: " + errorMsg, true);
+            showStatus("Error submitting: " + errorMsg, true);
           }
       })
-      .catch(error => { showToast("Submission error. Please try again.", true); });
+      .catch(error => { showStatus("Submission error. Please try again.", true); });
     });
   </script>
 </body>

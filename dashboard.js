@@ -379,6 +379,8 @@ window.openAddCompanyModal = function (existingCompany = null) {
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 function formatDob(val) {
     if (!val || typeof val !== 'string') return val || '--';
+    if (val === '0000-00-00' || val.includes('00 / 00')) return '--';
+    
     let d, m, y;
     if (val.includes('/')) {
         const p = val.split('/').map(x => x.trim());
@@ -391,6 +393,8 @@ function formatDob(val) {
             d = p[0]; m = p[1]; y = p[2];
         }
     } else return val;
+
+    if (y === '0000' || m === '00' || d === '00') return '--';
 
     const mIdx = parseInt(m) - 1;
     if (mIdx >= 0 && mIdx < 12 && d && y) {
@@ -450,6 +454,10 @@ window.openEditLeadModal = function (id) {
 
     const createFieldHtml = (k, val) => {
         let displayValue = (val === null || val === undefined) ? '' : val;
+        
+        // Clear zeroed dates so they don't block input
+        if (displayValue === '0000-00-00' || displayValue === '00 / 00 / 0000') displayValue = '';
+        
         if (typeof displayValue === 'object') displayValue = JSON.stringify(displayValue);
 
         let safeValue = String(displayValue).replace(/"/g, '&quot;');
