@@ -6,14 +6,14 @@ let selectedCompanyId = null;
 
 const leadStatuses = [
     'New Lead', 'Transferred', 'Accepted', 'Rejected',
-    'Not Yet Invoiced', 'Invoice Raised', 'Paid', 'Test Lead', 'Archived'
+    'Not Yet Invoiced', 'Invoice Raised', 'Paid', 'Test Lead', 'Archived', 'Closed'
 ];
 
 function getStatusColor(status) {
     if (status === 'New Lead') return 'new';
     if (status === 'Accepted' || status === 'Paid') return 'success';
     if (status === 'Rejected') return 'danger';
-    if (status === 'Archived') return 'gray';
+    if (status === 'Archived' || status === 'Closed') return 'gray';
     if (status === 'Transferred') return 'purple';
     if (status === 'Invoice Raised' || status === 'Not Yet Invoiced') return 'warning';
     return 'gray';
@@ -184,9 +184,21 @@ window.renderFilteredLeads = function () {
     const statusFilter = document.getElementById('filterStatus')?.value || 'All';
     const companyFilter = document.getElementById('filterCompany')?.value || 'All';
     const searchVal = (document.getElementById('searchLead')?.value || '').toLowerCase();
+    const showClosed = document.getElementById('showClosedCheck')?.checked || false;
 
     const filtered = submissionsData.filter(item => {
-        let matchStatus = statusFilter === 'All' || item.leadStatus === statusFilter;
+        let matchStatus = false;
+        if (statusFilter === 'All') {
+            // By default, 'All' hides 'Closed' unless the checkbox is checked
+            if (item.leadStatus === 'Closed') {
+                matchStatus = showClosed;
+            } else {
+                matchStatus = true;
+            }
+        } else {
+            matchStatus = (item.leadStatus === statusFilter);
+        }
+
         let matchCompany = companyFilter === 'All' || String(item.assigned_company_id || '') === String(companyFilter);
         let matchSearch = true;
 
