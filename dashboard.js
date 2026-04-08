@@ -91,6 +91,7 @@ window.switchView = function (view) {
 function calculateDashboardStats() {
     const total = submissionsData.length;
     const acceptedCount = submissionsData.filter(s => s.leadStatus === 'Accepted').length;
+    const paidCount = submissionsData.filter(s => s.leadStatus === 'Paid').length;
     const rejectedCount = submissionsData.filter(s => s.leadStatus === 'Rejected').length;
 
     // Update text references
@@ -105,11 +106,12 @@ function calculateDashboardStats() {
     const activeCompaniesCount = companiesData.filter(c => c.active !== false).length;
     setEl('dashboardActive', activeCompaniesCount);
 
-    let convRate = total > 0 ? ((acceptedCount / total) * 100).toFixed(1) : '0';
+    // Conversion rate is now based on PAID leads
+    let convRate = total > 0 ? ((paidCount / total) * 100).toFixed(1) : '0';
     setEl('dashboardConvRate', convRate + '%');
     setEl('dashboardConvRateDonut', convRate + '%');
 
-    initCharts(submissionsData, acceptedCount, total);
+    initCharts(submissionsData, paidCount, total);
 }
 
 function initCharts(data, acceptedCount, totalCount) {
