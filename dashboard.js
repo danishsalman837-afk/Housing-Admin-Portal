@@ -25,7 +25,7 @@ const leadViewOrder = [
     'damp', 'dampLocation', 'dampRooms', 'dampSurface', 'dampDuration', 'dampCause', 'dampDamage', 'dampHealth',
     'leak', 'leakLocation', 'leakSource', 'leakStart', 'leakDamage', 'leakCracks', 'leakBelongings',
     'issues_electrics', 'issues_heating', 'issues_structural',
-    'reported', 'reportCount', 'reportFirst', 'reportResponse', 'reportAttempt', 'reportStatus',
+    'reported', 'reportCount', 'reportFirst', 'reportLast', 'reportResponse', 'reportAttempt', 'reportStatus',
     'arrears', 'arrearsAmount', 'additionalNotes'
 ];
 
@@ -59,6 +59,7 @@ const leadFieldLabels = {
     reported: 'Reported >1 Month Ago?',
     reportCount: 'Notification Count',
     reportFirst: 'First Reported Date',
+    reportLast: 'Last Reported to Landlord',
     reportResponse: 'Landlord Response',
     reportAttempt: 'Repair Attempted?',
     reportStatus: 'Issue Still Unresolved?',

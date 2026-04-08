@@ -41,6 +41,7 @@ module.exports = async function handler(req, res) {
         leakBelongings: 'leakBelongings',
         reportCount: 'reportCount',
         reportFirst: 'reportFirst',
+        reportLast: 'reportLast',
         reportResponse: 'reportResponse',
         reportAttempt: 'reportAttempt',
         reportStatus: 'reportStatus',
