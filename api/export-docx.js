@@ -160,6 +160,7 @@ module.exports = async function handler(req, res) {
     children.push(qaRow("Have you reported all the disrepairs over a month ago and have no date for it to be fixed?", val('reported', ['reportedOverMonth'])));
     children.push(qaRow("How many times have you notified your landlord? Was it through email, text, or calls?", val('reportCount')));
     children.push(qaRow("When did you first report the issue?", val('reportFirst')));
+    children.push(qaRow("When did you last report to the landlord about the disrepair?", val('reportLast')));
     children.push(qaRow("Did the landlord or council respond?", val('reportResponse')));
     children.push(qaRow("Did they attempt any repairs?", val('reportAttempt')));
     children.push(qaRow("Is the issue still not resolved?", val('reportStatus')));
