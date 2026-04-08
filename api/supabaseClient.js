@@ -76,6 +76,7 @@ function normalizeLead(lead) {
   n('reportAttempt', 'reportAttempt');
   n('reportStatus', 'reportStatus');
   n('arrearsAmount', 'arrearsAmount');
+  n('alreadySubmitted', 'alreadySubmitted');
   n('additionalNotes', 'additionalNotes');
   
   return lead;

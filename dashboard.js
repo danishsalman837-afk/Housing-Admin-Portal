@@ -26,7 +26,7 @@ const leadViewOrder = [
     'leak', 'leakLocation', 'leakSource', 'leakStart', 'leakDamage', 'leakCracks', 'leakBelongings',
     'issues_electrics', 'issues_heating', 'issues_structural',
     'reported', 'reportCount', 'reportFirst', 'reportLast', 'reportResponse', 'reportAttempt', 'reportStatus',
-    'arrears', 'arrearsAmount', 'additionalNotes'
+    'arrears', 'arrearsAmount', 'alreadySubmitted', 'additionalNotes'
 ];
 
 const leadFieldLabels = {
@@ -65,6 +65,7 @@ const leadFieldLabels = {
     reportStatus: 'Issue Still Unresolved?',
     arrears: 'Rental Arrears?',
     arrearsAmount: 'Arrears Amount',
+    alreadySubmitted: 'Already Submitted Claim?',
     additionalNotes: 'Additional Notes'
 };
 

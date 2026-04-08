@@ -46,6 +46,7 @@ module.exports = async function handler(req, res) {
         reportAttempt: 'reportAttempt',
         reportStatus: 'reportStatus',
         arrearsAmount: 'arrearsAmount',
+        alreadySubmitted: 'alreadySubmitted',
         additionalNotes: 'additionalNotes'
     };
     for (const [formKey, dbKey] of Object.entries(mapping)) {

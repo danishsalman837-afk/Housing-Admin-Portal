@@ -169,6 +169,7 @@ module.exports = async function handler(req, res) {
     children.push(spacer(160), sectionHeading("Section 6 — Rental Arrears"), spacer(60));
     children.push(qaRow("Are you in rental arrears? (Must be less than £1000)", val('arrears', ['rentalArrears'])));
     children.push(qaRow("If YES – confirm amount:", val('arrearsAmount')));
+    children.push(qaRow("Have you already submitted a housing disrepair claim?", val('alreadySubmitted')));
 
     // ── Section 7: Additional Notes ──
     children.push(spacer(160), sectionHeading("Section 7 — Additional Notes"), spacer(60));
