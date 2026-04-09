@@ -11,6 +11,7 @@ const axios = require("axios");
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method Not Allowed' });
 
+  try {
     const { id, token, anonymize } = req.query;
     if (!id && !token) return res.status(400).json({ error: "Missing Lead ID or Token" });
 

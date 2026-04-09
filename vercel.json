@@ -3,15 +3,20 @@
     {
       "source": "/(.*)",
       "headers": [
-        {
-          "key": "X-Frame-Options",
-          "value": "ALLOWALL"
-        },
-        {
-          "key": "Content-Security-Policy",
-          "value": "frame-ancestors 'self' https://as.primodialler.io"
-        }
+        { "key": "X-Frame-Options", "value": "ALLOWALL" },
+        { "key": "Content-Security-Policy", "value": "frame-ancestors 'self' https://as.primodialler.io" }
       ]
     }
+  ],
+  "rewrites": [
+    { "source": "/api/upload", "destination": "/api/attachments" },
+    { "source": "/api/delete-attachment", "destination": "/api/attachments" },
+    { "source": "/api/companies", "destination": "/api/crm" },
+    { "source": "/api/members", "destination": "/api/crm" },
+    { "source": "/api/update", "destination": "/api/leads-admin" },
+    { "source": "/api/get-lead", "destination": "/api/leads-admin" },
+    { "source": "/api/submissions", "destination": "/api/leads-admin" },
+    { "source": "/api/submit", "destination": "/api/leads-public" },
+    { "source": "/api/save-draft", "destination": "/api/leads-public" }
   ]
 }
