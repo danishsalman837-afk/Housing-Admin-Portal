@@ -1455,6 +1455,7 @@ function renderNotifications() {
         countEl.textContent = unreadCount;
         countEl.classList.add('visible');
     } else {
+        countEl.textContent = '0';
         countEl.classList.remove('visible');
     }
 
@@ -1647,10 +1648,8 @@ async function initUser() {
 }
 
 window.logout = function() {
-    if (confirm("Are you sure you want to log out?")) {
-        localStorage.removeItem('admin_session');
-        window.location.href = '/login.html';
-    }
+    localStorage.removeItem('admin_session');
+    window.location.href = '/login.html';
 };
 
 // Initialize user on load
