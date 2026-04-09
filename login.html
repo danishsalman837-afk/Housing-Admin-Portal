@@ -167,7 +167,7 @@
                 <div class="input-wrapper">
                     <i data-lucide="lock"></i>
                     <input type="password" id="password" placeholder="Password" required>
-                    <i data-lucide="eye-off" class="toggle-pwd"></i>
+                    <i data-lucide="eye" class="toggle-pwd"></i>
                 </div>
                 <button type="submit" class="btn-login" id="loginBtn">Secure Log In</button>
             </form>
@@ -181,16 +181,20 @@
 
     <script>
         lucide.createIcons();
-        const pwdInput = document.getElementById('password');
-        const toggle = document.querySelector('.toggle-pwd');
-        if (toggle) {
-            toggle.onclick = () => {
-                const isPwd = pwdInput.type === 'password';
-                pwdInput.type = isPwd ? 'text' : 'password';
-                toggle.setAttribute('data-lucide', isPwd ? 'eye' : 'eye-off');
-                lucide.createIcons();
+        
+        // Robust delegated listener for password toggling
+        document.addEventListener('click', (e) => {
+            const toggle = e.target.closest('.toggle-pwd');
+            if (toggle) {
+                const input = toggle.previousElementSibling; // The password input
+                if (input && input.tagName === 'INPUT') {
+                    const isPassword = input.type === 'password';
+                    input.type = isPassword ? 'text' : 'password';
+                    toggle.setAttribute('data-lucide', isPassword ? 'eye-off' : 'eye');
+                    lucide.createIcons();
+                }
             }
-        }
+        });
     </script>
     <script src="login.js"></script>
 </body>
