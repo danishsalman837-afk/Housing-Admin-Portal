@@ -797,7 +797,17 @@ window.viewCompanyMembers = function (companyId) {
         let mName = ((m.first_name || '') + ' ' + (m.last_name || '')).trim();
         if (!mName || mName.includes('undefined')) mName = 'Unknown Member';
 
-        tbody.innerHTML += `<tr><td><strong>${mName}</strong></td><td>${m.job_title || '--'}</td><td>${m.email || '--'}</td><td>${m.mobile || '--'}</td><td>${m.landline || '--'}</td>
+        tbody.innerHTML += `<tr>
+            <td><strong>${mName}</strong></td>
+            <td>${m.job_title || '--'}</td>
+            <td>${m.email || '--'}</td>
+            <td style="text-align:center;">
+                ${m.can_receive_emails !== false ? 
+                    '<span class="badge badge-success">Authorized</span>' : 
+                    '<span class="badge badge-gray">No Email</span>'}
+            </td>
+            <td>${m.mobile || '--'}</td>
+            <td>${m.landline || '--'}</td>
             <td>
                 <div class="action-group">
                     <button class="act-btn edit" title="Edit Member" onclick="window.openAddMemberModal('${m.id}')">
@@ -824,6 +834,13 @@ window.openAddMemberModal = function (editId = null) {
             <div class="form-group"><label>Job Title</label><input type="text" id="mJobTitle" class="modern-input" value="${m.job_title || ''}"></div>
             <div class="form-group"><label>Mobile Base</label><input type="text" id="mMobile" class="modern-input" value="${m.mobile || ''}"></div>
             <div class="form-group"><label>Landline</label><input type="text" id="mLandline" class="modern-input" value="${m.landline || ''}"></div>
+            <div class="form-group full" style="display:flex; align-items:center; gap:12px; background:var(--surface-2); padding:10px; border-radius:8px;">
+                <input type="checkbox" id="mCanReceiveEmails" ${m.can_receive_emails !== false ? 'checked' : ''} style="width:20px; height:20px; cursor:pointer;">
+                <label for="mCanReceiveEmails" style="cursor:pointer; margin:0;">
+                    <div style="font-weight:700; color:var(--label-1);">Authorize for Emails</div>
+                    <div style="font-size:11px; color:var(--label-3);">Only authorized members will receive lead links via email.</div>
+                </label>
+            </div>
         </div>
         <button class="btn-action" style="margin-top:24px; width:100%; justify-content:center; padding:12px;" onclick="window.saveNewMember('${m.id || ''}')">Save Member</button>
     `;
@@ -848,7 +865,8 @@ window.saveNewMember = async function (id) {
         mobile: document.getElementById('mMobile').value.trim(),
         landline: document.getElementById('mLandline').value.trim(),
         job_title: document.getElementById('mJobTitle').value.trim(),
-        email: document.getElementById('mEmail').value.trim()
+        email: document.getElementById('mEmail').value.trim(),
+        can_receive_emails: document.getElementById('mCanReceiveEmails').checked
     };
 
     if (!payload.first_name) return showToast('Error', 'First name is required.', 'warning');
@@ -1325,13 +1343,19 @@ window.openAllocateModal = function (preSelectedLeadId = null) {
 
     let solOptions = '<option value="" disabled selected>Select a solicitor…</option>';
     const activeCompanyIds = companiesData.filter(c => c.active !== false).map(c => String(c.id));
-    const activeMembers = membersData.filter(m => activeCompanyIds.includes(String(m.company_id)));
-    activeMembers.forEach(m => {
-        const mName = ((m.first_name || '') + ' ' + (m.last_name || '')).trim() || 'Unknown';
-        const comp = companiesData.find(c => String(c.id) === String(m.company_id));
-        const compName = comp?.name || comp?.company_name || '';
-        solOptions += `<option value="${m.id}">${mName}${compName ? ' — ' + compName : ''}</option>`;
-    });
+    // Only show authorized members for selection
+    const activeMembers = membersData.filter(m => activeCompanyIds.includes(String(m.company_id)) && m.can_receive_emails !== false);
+    
+    if (activeMembers.length === 0) {
+        solOptions = '<option value="" disabled selected>No authorized solicitors found…</option>';
+    } else {
+        activeMembers.forEach(m => {
+            const mName = ((m.first_name || '') + ' ' + (m.last_name || '')).trim() || 'Unknown';
+            const comp = companiesData.find(c => String(c.id) === String(m.company_id));
+            const compName = comp?.name || comp?.company_name || '';
+            solOptions += `<option value="${m.id}">${mName}${compName ? ' — ' + compName : ''}</option>`;
+        });
+    }
 
     document.getElementById('modalBox').innerHTML = `
         <div class="modal-header">

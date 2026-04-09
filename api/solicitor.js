@@ -80,6 +80,7 @@ module.exports = async function handler(req, res) {
       const { data: member, error: memErr } = await supabase.from('company_members').select('*').eq('id', activity.solicitor_id).single();
       if (memErr || !member) return res.status(404).json({ error: "Solicitor member not found." });
       if (!member.email) return res.status(400).json({ error: "Solicitor has no email address on file." });
+      if (member.can_receive_emails === false) return res.status(403).json({ error: "This solicitor member is not authorized to receive emails." });
 
       const baseUrl = process.env.BASE_URL || `https://${req.headers.host}`;
       const solicitUrl = `${baseUrl}/solicitor.html?token=${token}`;
