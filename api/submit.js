@@ -1,4 +1,5 @@
 const { createSupabaseClient, assertEnv } = require("./supabaseClient");
+const crypto = require("crypto");
 
 // Webhook for Primo Dialler to push leads directly to Admin Dashboard
 module.exports = async function handler(req, res) {
@@ -121,11 +122,18 @@ module.exports = async function handler(req, res) {
       // Add a timestamp if missing
       if (!data.timestamp) data.timestamp = new Date().toISOString();
 
+      // Generate a unique token for the solicitor link workflow
+      if (!data.unique_token) data.unique_token = crypto.randomUUID();
+
+      // Set default actual_status
+      if (!data.actual_status) data.actual_status = 'New';
+
       const { error } = await supabase
         .from('submissions')
         .insert([data]);
 
       if (error) throw error;
+
 
       console.log("Dialer Lead Saved:", data);
       return res.status(200).json({ success: true, message: "Lead captured successfully!" });

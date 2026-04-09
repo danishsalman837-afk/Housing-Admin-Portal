@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lead Review — Housing Disrepair</title>
+    <meta name="description" content="Secure lead review page for solicitors. Review and accept or reject housing disrepair leads.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --blue: #0A84FF;
+            --blue-hover: #0071E3;
+            --blue-light: rgba(10,132,255,.10);
+            --blue-ring: rgba(10,132,255,.30);
+            --green: #30D158;
+            --green-light: rgba(48,209,88,.12);
+            --red: #FF453A;
+            --red-light: rgba(255,69,58,.12);
+            --orange: #FF9F0A;
+            --orange-light: rgba(255,159,10,.12);
+            --bg: #F2F2F7;
+            --surface-1: #FFFFFF;
+            --surface-2: #F2F2F7;
+            --surface-3: #E5E5EA;
+            --label-1: #1C1C1E;
+            --label-2: #3C3C43;
+            --label-3: #636366;
+            --label-4: #AEAEB2;
+            --border: rgba(60,60,67,.12);
+            --border-med: rgba(60,60,67,.20);
+            --r-sm: 8px;
+            --r-md: 12px;
+            --r-lg: 16px;
+            --r-xl: 20px;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+            --shadow-md: 0 4px 16px rgba(0,0,0,.10), 0 2px 4px rgba(0,0,0,.06);
+            --shadow-lg: 0 12px 40px rgba(0,0,0,.14), 0 4px 12px rgba(0,0,0,.08);
+            --shadow-xl: 0 24px 64px rgba(0,0,0,.18), 0 8px 24px rgba(0,0,0,.10);
+            --ease: cubic-bezier(.25,.1,.25,1);
+            --ease-spring: cubic-bezier(.34,1.56,.64,1);
+        }
+
+        *, *::before, *::after {
+            margin: 0; padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+            background: var(--bg);
+            color: var(--label-1);
+            min-height: 100vh;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* ═══ TOP BAR ═══ */
+        .sol-topbar {
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 24px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .sol-topbar-inner {
+            max-width: 840px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sol-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sol-logo-icon {
+            width: 34px;
+            height: 34px;
+            background: linear-gradient(145deg, #0A84FF 0%, #0050D0 100%);
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 3px 10px rgba(10,132,255,.30);
+        }
+
+        .sol-logo-icon span {
+            color: white;
+            font-weight: 800;
+            font-size: 16px;
+        }
+
+        .sol-logo-text {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--label-1);
+            letter-spacing: -0.3px;
+        }
+
+        .sol-status-pill {
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+
+        .sol-status-pill.sent {
+            background: var(--blue-light);
+            color: #0566CC;
+            border: 1px solid rgba(10,132,255,.25);
+        }
+
+        .sol-status-pill.accepted {
+            background: var(--green-light);
+            color: #1A8735;
+            border: 1px solid rgba(48,209,88,.25);
+        }
+
+        .sol-status-pill.rejected {
+            background: var(--red-light);
+            color: #CC3328;
+            border: 1px solid rgba(255,69,58,.25);
+        }
+
+        /* ═══ MAIN CONTENT ═══ */
+        .sol-container {
+            max-width: 840px;
+            margin: 0 auto;
+            padding: 32px 24px 60px;
+        }
+
+        .sol-hero {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .sol-hero h1 {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--label-1);
+            letter-spacing: -0.8px;
+            line-height: 1.2;
+        }
+
+        .sol-hero p {
+            font-size: 14px;
+            color: var(--label-3);
+            margin-top: 6px;
+        }
+
+        /* ═══ CARDS ═══ */
+        .sol-card {
+            background: var(--surface-1);
+            border-radius: var(--r-lg);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            margin-bottom: 20px;
+            transition: all 0.2s var(--ease);
+        }
+
+        .sol-card:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .sol-card-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sol-card-header-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .sol-card-header-icon.blue { background: var(--blue-light); color: var(--blue); }
+        .sol-card-header-icon.green { background: var(--green-light); color: #228B35; }
+        .sol-card-header-icon.orange { background: var(--orange-light); color: #B06600; }
+        .sol-card-header-icon.red { background: var(--red-light); color: var(--red); }
+
+        .sol-card-header-icon svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        .sol-card-header h2 {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--label-1);
+            letter-spacing: -0.2px;
+        }
+
+        .sol-card-body {
+            padding: 20px 24px;
+        }
+
+        /* ═══ DATA GRID ═══ */
+        .sol-data-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .sol-field {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .sol-field-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--label-4);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+        }
+
+        .sol-field-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--label-1);
+            line-height: 1.4;
+            white-space: pre-wrap;
+        }
+
+        .sol-field-value.masked {
+            color: var(--label-4);
+            font-style: italic;
+            letter-spacing: 1px;
+        }
+
+        .sol-field.full {
+            grid-column: span 2;
+        }
+
+        /* ═══ ACTION BUTTONS ═══ */
+        .sol-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 28px;
+        }
+
+        .sol-btn {
+            flex: 1;
+            padding: 16px 24px;
+            border: none;
+            border-radius: var(--r-md);
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s var(--ease);
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            letter-spacing: -0.2px;
+        }
+
+        .sol-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        .sol-btn.accept {
+            background: linear-gradient(145deg, #30D158 0%, #28B84E 100%);
+            color: white;
+            box-shadow: 0 4px 14px rgba(48,209,88,.35);
+        }
+
+        .sol-btn.accept:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(48,209,88,.45);
+        }
+
+        .sol-btn.reject {
+            background: var(--surface-1);
+            color: var(--red);
+            border: 2px solid rgba(255,69,58,.30);
+        }
+
+        .sol-btn.reject:hover {
+            background: var(--red-light);
+            border-color: var(--red);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 14px rgba(255,69,58,.20);
+        }
+
+        .sol-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        /* ═══ MODAL ═══ */
+        .sol-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.40);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+            animation: overlayIn 0.2s var(--ease);
+        }
+
+        .sol-overlay.active {
+            display: flex;
+        }
+
+        @keyframes overlayIn {
+            from { background: rgba(0,0,0,0); }
+            to { background: rgba(0,0,0,.40); }
+        }
+
+        .sol-modal {
+            background: rgba(255,255,255,0.97);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            width: 100%;
+            max-width: 500px;
+            border-radius: var(--r-xl);
+            padding: 28px 28px 24px;
+            box-shadow: var(--shadow-xl), 0 0 0 1px rgba(255,255,255,.5) inset;
+            animation: modalIn 0.28s var(--ease-spring);
+        }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .sol-modal h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--label-1);
+            letter-spacing: -0.4px;
+            margin-bottom: 8px;
+        }
+
+        .sol-modal p {
+            font-size: 13px;
+            color: var(--label-3);
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+
+        .sol-modal textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 12px 14px;
+            border-radius: var(--r-sm);
+            border: 1px solid var(--border-med);
+            font-size: 13px;
+            outline: none;
+            background: var(--surface-2);
+            color: var(--label-1);
+            font-family: inherit;
+            resize: vertical;
+            transition: all 0.18s var(--ease);
+        }
+
+        .sol-modal textarea:focus {
+            border-color: var(--blue);
+            box-shadow: 0 0 0 3px var(--blue-ring);
+            background: var(--surface-1);
+        }
+
+        .sol-modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .sol-modal-btn {
+            flex: 1;
+            padding: 11px 16px;
+            border-radius: var(--r-sm);
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.18s var(--ease);
+            border: none;
+        }
+
+        .sol-modal-btn.cancel {
+            background: var(--surface-2);
+            color: var(--label-2);
+            border: 1px solid var(--border-med);
+        }
+
+        .sol-modal-btn.cancel:hover {
+            background: var(--surface-3);
+        }
+
+        .sol-modal-btn.submit {
+            background: var(--red);
+            color: white;
+            box-shadow: 0 2px 8px rgba(255,69,58,.3);
+        }
+
+        .sol-modal-btn.submit:hover {
+            background: #E3352B;
+        }
+
+        .sol-modal-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* ═══ CONTACT REVEAL ═══ */
+        .sol-contact-reveal {
+            padding: 24px;
+            text-align: center;
+        }
+
+        .sol-contact-reveal .reveal-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--green-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            animation: popIn 0.4s var(--ease-spring);
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0); }
+            to { transform: scale(1); }
+        }
+
+        .sol-contact-reveal .reveal-icon svg {
+            width: 28px;
+            height: 28px;
+            fill: #228B35;
+        }
+
+        .sol-contact-reveal h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--label-1);
+            margin-bottom: 6px;
+        }
+
+        .sol-contact-reveal p {
+            font-size: 13px;
+            color: var(--label-3);
+            margin-bottom: 20px;
+        }
+
+        .sol-revealed-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            text-align: center;
+        }
+
+        .sol-revealed-item {
+            background: var(--surface-2);
+            border-radius: var(--r-md);
+            padding: 16px 12px;
+            border: 1px solid var(--border);
+        }
+
+        .sol-revealed-item .label {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--label-4);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .sol-revealed-item .value {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--blue);
+            word-break: break-all;
+        }
+
+        /* ═══ RESULT STATES ═══ */
+        .sol-result-banner {
+            padding: 20px 24px;
+            border-radius: var(--r-lg);
+            text-align: center;
+            margin-bottom: 20px;
+            animation: slideUp 0.3s var(--ease);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .sol-result-banner.accepted {
+            background: var(--green-light);
+            border: 1px solid rgba(48,209,88,.25);
+            color: #1A8735;
+        }
+
+        .sol-result-banner.rejected {
+            background: var(--red-light);
+            border: 1px solid rgba(255,69,58,.25);
+            color: #CC3328;
+        }
+
+        .sol-result-banner h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .sol-result-banner p {
+            font-size: 13px;
+            opacity: 0.85;
+        }
+
+        /* ═══ LOADING ═══ */
+        .sol-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+            gap: 16px;
+        }
+
+        .sol-spinner {
+            width: 36px;
+            height: 36px;
+            border: 3px solid var(--surface-3);
+            border-top-color: var(--blue);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .sol-loading p {
+            font-size: 14px;
+            color: var(--label-3);
+            font-weight: 500;
+        }
+
+        /* ═══ ERROR ═══ */
+        .sol-error {
+            text-align: center;
+            padding: 60px 24px;
+        }
+
+        .sol-error-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--red-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+        }
+
+        .sol-error-icon svg {
+            width: 28px;
+            height: 28px;
+            fill: var(--red);
+        }
+
+        .sol-error h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--label-1);
+            margin-bottom: 8px;
+        }
+
+        .sol-error p {
+            font-size: 14px;
+            color: var(--label-3);
+        }
+
+        /* ═══ RESPONSIVE ═══ */
+        @media (max-width: 640px) {
+            .sol-data-grid {
+                grid-template-columns: 1fr;
+            }
+            .sol-field.full {
+                grid-column: span 1;
+            }
+            .sol-actions {
+                flex-direction: column;
+            }
+            .sol-revealed-details {
+                grid-template-columns: 1fr;
+            }
+            .sol-hero h1 {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Top Bar -->
+    <div class="sol-topbar">
+        <div class="sol-topbar-inner">
+            <div class="sol-logo">
+                <div class="sol-logo-icon"><span>H</span></div>
+                <span class="sol-logo-text">HDR Lead Review</span>
+            </div>
+            <div id="statusPill" class="sol-status-pill sent" style="display:none;"></div>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loadingState" class="sol-loading">
+        <div class="sol-spinner"></div>
+        <p>Loading lead details…</p>
+    </div>
+
+    <!-- Error State -->
+    <div id="errorState" class="sol-error" style="display:none;"></div>
+
+    <!-- Main Content -->
+    <div id="mainContent" class="sol-container" style="display:none;">
+        <!-- Hero -->
+        <div class="sol-hero">
+            <h1 id="heroTitle">Lead Review</h1>
+            <p id="heroSub">Review the details below and choose to accept or decline this lead</p>
+        </div>
+
+        <!-- Result banner (shown after action) -->
+        <div id="resultBanner" style="display:none;"></div>
+
+        <!-- Contact Reveal Card (shown after accept) -->
+        <div id="contactRevealCard" class="sol-card" style="display:none;">
+            <div id="contactRevealBody"></div>
+        </div>
+
+        <!-- Client Info -->
+        <div class="sol-card">
+            <div class="sol-card-header">
+                <div class="sol-card-header-icon blue">
+                    <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                </div>
+                <h2>Client Information</h2>
+            </div>
+            <div class="sol-card-body">
+                <div id="clientInfoGrid" class="sol-data-grid"></div>
+            </div>
+        </div>
+
+        <!-- Disrepair Questions -->
+        <div class="sol-card">
+            <div class="sol-card-header">
+                <div class="sol-card-header-icon orange">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                </div>
+                <h2>Disrepair Details</h2>
+            </div>
+            <div class="sol-card-body">
+                <div id="disrepairGrid" class="sol-data-grid"></div>
+            </div>
+        </div>
+
+        <!-- Reporting History -->
+        <div class="sol-card">
+            <div class="sol-card-header">
+                <div class="sol-card-header-icon green">
+                    <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+                </div>
+                <h2>Reporting History</h2>
+            </div>
+            <div class="sol-card-body">
+                <div id="reportingGrid" class="sol-data-grid"></div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div id="actionButtons" class="sol-actions">
+            <button class="sol-btn accept" id="acceptBtn" onclick="handleAccept()">
+                <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+                Accept Lead
+            </button>
+            <button class="sol-btn reject" id="rejectBtn" onclick="openRejectModal()">
+                <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+                Reject Lead
+            </button>
+        </div>
+    </div>
+
+    <!-- Rejection Modal -->
+    <div id="rejectOverlay" class="sol-overlay">
+        <div class="sol-modal">
+            <h3>Reject Lead</h3>
+            <p>Please provide a reason for rejecting this lead. This is mandatory and will be shared with the admin team.</p>
+            <textarea id="rejectionReason" placeholder="Type your reason for rejection…"></textarea>
+            <div class="sol-modal-actions">
+                <button class="sol-modal-btn cancel" onclick="closeRejectModal()">Cancel</button>
+                <button class="sol-modal-btn submit" id="submitRejectBtn" onclick="handleReject()">Submit Rejection</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let leadData = null;
+        let token = null;
+
+        // Get token from URL
+        const params = new URLSearchParams(window.location.search);
+        token = params.get('token');
+
+        if (!token) {
+            showError('Invalid Link', 'This link is missing a valid token. Please use the link provided in your email.');
+        } else {
+            loadLeadData();
+        }
+
+        async function loadLeadData() {
+            try {
+                const res = await fetch('/api/solicitor-view?token=' + encodeURIComponent(token));
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.error || 'Failed to load lead data.');
+                }
+
+                leadData = await res.json();
+
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+
+                renderLeadData();
+                updateStatusPill(leadData.status);
+
+                // If already actioned, show result immediately
+                if (leadData.status === 'Accepted') {
+                    showAcceptedResult();
+                } else if (leadData.status === 'Rejected') {
+                    showRejectedResult();
+                }
+
+            } catch (err) {
+                showError('Unable to Load Lead', err.message);
+            }
+        }
+
+        function renderLeadData() {
+            // Client Info
+            const clientFields = [
+                { label: 'Full Name', value: leadData.name },
+                { label: 'Tenancy Type', value: leadData.tenantType },
+                { label: 'Landlord', value: leadData.landlordName },
+                { label: 'Postcode', value: leadData.postcode },
+                { label: 'Email', value: leadData.email, masked: !leadData.contactRevealed },
+                { label: 'Phone', value: leadData.phone, masked: !leadData.contactRevealed },
+                { label: 'Date of Birth', value: leadData.dob, masked: !leadData.contactRevealed },
+                { label: 'Address', value: leadData.address, full: true },
+            ];
+            renderFieldGrid('clientInfoGrid', clientFields);
+
+            // Disrepair Details
+            const disrepairFields = [
+                { label: 'Damp or Mould?', value: leadData.damp },
+                { label: 'Damp Location', value: leadData.dampLocation },
+                { label: 'Rooms Affected', value: leadData.dampRooms },
+                { label: 'Affected Surface', value: leadData.dampSurface },
+                { label: 'Issue Duration', value: leadData.dampDuration },
+                { label: 'Issue Cause', value: leadData.dampCause },
+                { label: 'Damaged Belongings (Damp)', value: leadData.dampDamage },
+                { label: 'Health Problems', value: leadData.dampHealth },
+                { label: 'Leaks?', value: leadData.leak },
+                { label: 'Leak Location', value: leadData.leakLocation },
+                { label: 'Leak Source', value: leadData.leakSource },
+                { label: 'Leak Start/Ongoing', value: leadData.leakStart },
+                { label: 'Leak Damage', value: leadData.leakDamage },
+                { label: 'Cracks/Structural (Leaks)', value: leadData.leakCracks },
+                { label: 'Damaged Belongings (Leaks)', value: leadData.leakBelongings },
+                { label: 'Faulty Electrics?', value: leadData.issues_electrics },
+                { label: 'Heating/Boiler Issues?', value: leadData.issues_heating },
+                { label: 'Structural Damage?', value: leadData.issues_structural },
+            ];
+            renderFieldGrid('disrepairGrid', disrepairFields);
+
+            // Reporting History
+            const reportFields = [
+                { label: 'Reported >1 Month Ago?', value: leadData.reported },
+                { label: 'Times Reported', value: leadData.reportCount },
+                { label: 'First Reported', value: leadData.reportFirst },
+                { label: 'Last Reported', value: leadData.reportLast },
+                { label: 'Landlord Response', value: leadData.reportResponse },
+                { label: 'Repair Attempted?', value: leadData.reportAttempt },
+                { label: 'Issue Still Unresolved?', value: leadData.reportStatus },
+            ];
+            renderFieldGrid('reportingGrid', reportFields);
+        }
+
+        function renderFieldGrid(containerId, fields) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = fields.map(f => {
+                const val = f.value || '---';
+                const isMasked = f.masked && val.includes('••');
+                return `
+                    <div class="sol-field ${f.full ? 'full' : ''}">
+                        <span class="sol-field-label">${f.label}</span>
+                        <span class="sol-field-value ${isMasked ? 'masked' : ''}">${val}</span>
+                    </div>`;
+            }).join('');
+        }
+
+        function updateStatusPill(status) {
+            const pill = document.getElementById('statusPill');
+            pill.style.display = 'inline-block';
+            pill.textContent = status;
+            pill.className = 'sol-status-pill ' + status.toLowerCase();
+        }
+
+        // ─── ACCEPT ───
+        async function handleAccept() {
+            const btn = document.getElementById('acceptBtn');
+            const rejectBtn = document.getElementById('rejectBtn');
+            btn.disabled = true;
+            rejectBtn.disabled = true;
+            btn.innerHTML = '<div class="sol-spinner" style="width:18px;height:18px;border-width:2px;"></div> Accepting…';
+
+            try {
+                const res = await fetch('/api/solicitor-view', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token, action: 'accept' })
+                });
+
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Failed to accept lead.');
+
+                showAcceptedResult(data.contactDetails);
+            } catch (err) {
+                alert('Error: ' + err.message);
+                btn.disabled = false;
+                rejectBtn.disabled = false;
+                btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg> Accept Lead';
+            }
+        }
+
+        function showAcceptedResult(contactDetails) {
+            updateStatusPill('Accepted');
+            document.getElementById('actionButtons').style.display = 'none';
+
+            // Show banner
+            const banner = document.getElementById('resultBanner');
+            banner.style.display = 'block';
+            banner.className = 'sol-result-banner accepted';
+            banner.innerHTML = '<h3>✓ Lead Accepted</h3><p>The contact details are now revealed below. The admin team has been notified.</p>';
+
+            // Show contact details
+            if (contactDetails) {
+                const revealCard = document.getElementById('contactRevealCard');
+                revealCard.style.display = 'block';
+                document.getElementById('contactRevealBody').innerHTML = `
+                    <div class="sol-contact-reveal">
+                        <div class="reveal-icon">
+                            <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                        </div>
+                        <h3>Contact Details Revealed</h3>
+                        <p>You can now contact the client directly</p>
+                        <div class="sol-revealed-details">
+                            <div class="sol-revealed-item">
+                                <div class="label">Email</div>
+                                <div class="value">${contactDetails.email}</div>
+                            </div>
+                            <div class="sol-revealed-item">
+                                <div class="label">Phone</div>
+                                <div class="value">${contactDetails.phone}</div>
+                            </div>
+                            <div class="sol-revealed-item">
+                                <div class="label">Date of Birth</div>
+                                <div class="value">${contactDetails.dob}</div>
+                            </div>
+                        </div>
+                    </div>`;
+            }
+
+            // Update hero text
+            document.getElementById('heroSub').textContent = 'You have accepted this lead. Contact details are available below.';
+        }
+
+        function showRejectedResult() {
+            updateStatusPill('Rejected');
+            document.getElementById('actionButtons').style.display = 'none';
+
+            const banner = document.getElementById('resultBanner');
+            banner.style.display = 'block';
+            banner.className = 'sol-result-banner rejected';
+            banner.innerHTML = '<h3>✕ Lead Rejected</h3><p>This lead has been declined. The admin team has been notified and will reassign it.</p>';
+
+            document.getElementById('heroSub').textContent = 'This lead has been declined.';
+        }
+
+        // ─── REJECT ───
+        function openRejectModal() {
+            document.getElementById('rejectOverlay').classList.add('active');
+            document.getElementById('rejectionReason').value = '';
+            document.getElementById('rejectionReason').focus();
+        }
+
+        function closeRejectModal() {
+            document.getElementById('rejectOverlay').classList.remove('active');
+        }
+
+        async function handleReject() {
+            const reason = document.getElementById('rejectionReason').value.trim();
+            if (!reason) {
+                alert('Please provide a rejection reason. This field is mandatory.');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submitRejectBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting…';
+
+            try {
+                const res = await fetch('/api/solicitor-view', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token, action: 'reject', rejection_reason: reason })
+                });
+
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Failed to reject lead.');
+
+                closeRejectModal();
+                showRejectedResult();
+
+            } catch (err) {
+                alert('Error: ' + err.message);
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Rejection';
+            }
+        }
+
+        // ─── ERROR STATE ───
+        function showError(title, message) {
+            document.getElementById('loadingState').style.display = 'none';
+            const errorEl = document.getElementById('errorState');
+            errorEl.style.display = 'block';
+            errorEl.innerHTML = `
+                <div class="sol-error-icon">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                </div>
+                <h2>${title}</h2>
+                <p>${message}</p>`;
+        }
+    </script>
+</body>
+</html>

@@ -1,6 +1,8 @@
 let submissionsData = [];
 let companiesData = [];
 let membersData = [];
+let activityData = [];
+let notifications = [];
 let charts = {};
 let selectedCompanyId = null;
 
@@ -82,9 +84,13 @@ window.switchView = function (view) {
         document.getElementById('companiesView').classList.add('active');
         navItems[1].classList.add('active');
         renderCompanies();
+    } else if (view === 'activity') {
+        document.getElementById('activityView').classList.add('active');
+        navItems[2].classList.add('active');
+        renderFilteredActivity();
     } else {
         document.getElementById('leadsView').classList.add('active');
-        navItems[2].classList.add('active');
+        navItems[3].classList.add('active');
         renderFilteredLeads();
     }
 };
@@ -383,7 +389,7 @@ const months = ["January", "February", "March", "April", "May", "June", "July", 
 function formatDob(val) {
     if (!val || typeof val !== 'string') return val || '--';
     if (val === '0000-00-00' || val.includes('00 / 00')) return '--';
-    
+
     let d, m, y;
     if (val.includes('/')) {
         const p = val.split('/').map(x => x.trim());
@@ -457,10 +463,10 @@ window.openEditLeadModal = function (id) {
 
     const createFieldHtml = (k, val) => {
         let displayValue = (val === null || val === undefined) ? '' : val;
-        
+
         // Clear zeroed dates so they don't block input
         if (displayValue === '0000-00-00' || displayValue === '00 / 00 / 0000') displayValue = '';
-        
+
         if (typeof displayValue === 'object') displayValue = JSON.stringify(displayValue);
 
         let safeValue = String(displayValue).replace(/"/g, '&quot;');
@@ -870,11 +876,343 @@ window.initDashboard = async function () {
         const resMembers = await fetch('/api/members');
         if (resMembers.ok) membersData = JSON.parse(await resMembers.text());
 
+        const resActivity = await fetch('/api/solicitor-activity');
+        if (resActivity.ok) activityData = JSON.parse(await resActivity.text());
+
     } catch (e) {
         console.error("Setup running locally:", e);
     } finally {
         initFilters();
         calculateDashboardStats();
         switchView('dashboard');
+        initRealtimeSubscription();
     }
 };
+
+// ═══════════════════════════════════════
+// SOLICITOR ACTIVITY — RENDERING
+// ═══════════════════════════════════════
+
+function updateActivityStats() {
+    const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+    setEl('saAllocated', activityData.filter(a => a.status === 'Allocated').length);
+    setEl('saSent', activityData.filter(a => a.status === 'Sent').length);
+    setEl('saAccepted', activityData.filter(a => a.status === 'Accepted').length);
+    setEl('saRejected', activityData.filter(a => a.status === 'Rejected').length);
+}
+
+window.renderFilteredActivity = function () {
+    const statusFilter = document.getElementById('filterActivityStatus')?.value || 'All';
+    const searchVal = (document.getElementById('searchActivity')?.value || '').toLowerCase();
+
+    const filtered = activityData.filter(a => {
+        let matchStatus = statusFilter === 'All' || a.status === statusFilter;
+        let matchSearch = true;
+
+        if (searchVal) {
+            const lead = submissionsData.find(s => String(s.id) === String(a.lead_id));
+            const member = membersData.find(m => String(m.id) === String(a.solicitor_id));
+            const leadName = (lead?.name || lead?.first_name || '').toLowerCase();
+            const memberName = ((member?.first_name || '') + ' ' + (member?.last_name || '')).toLowerCase();
+            matchSearch = leadName.includes(searchVal) || memberName.includes(searchVal);
+        }
+
+        return matchStatus && matchSearch;
+    });
+
+    renderActivityTable(filtered);
+    updateActivityStats();
+};
+
+function renderActivityTable(data) {
+    const tbody = document.querySelector('#activityTable tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:40px; color:var(--label-4); font-style:italic;">No solicitor activity records yet. Click "Allocate Lead" to get started.</td></tr>';
+        return;
+    }
+
+    data.forEach((a, idx) => {
+        const lead = submissionsData.find(s => String(s.id) === String(a.lead_id));
+        const member = membersData.find(m => String(m.id) === String(a.solicitor_id));
+        const company = member ? companiesData.find(c => String(c.id) === String(member.company_id)) : null;
+
+        const leadName = lead?.name || lead?.first_name || '---';
+        const memberName = member ? ((member.first_name || '') + ' ' + (member.last_name || '')).trim() : '---';
+        const companyName = company?.name || company?.company_name || '---';
+        const statusLower = (a.status || 'allocated').toLowerCase();
+        const dateStr = a.created_at ? new Date(a.created_at).toLocaleDateString() : '---';
+
+        let actionsHtml = '';
+        if (a.status === 'Allocated') {
+            actionsHtml = `<button class="sa-send-btn" id="send-btn-${a.id}" onclick="window.sendLink('${a.id}')">
+                <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                Send Link
+            </button>`;
+        } else if (a.status === 'Rejected' && a.rejection_reason) {
+            actionsHtml = `<button class="act-btn notes" onclick="window.viewRejectionReason('${a.id}')" title="View Reason">
+                <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+                Reason
+            </button>`;
+        } else {
+            actionsHtml = '<span style="color:var(--label-4); font-size:11px;">—</span>';
+        }
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${idx + 1}</td>
+            <td><strong>${leadName}</strong></td>
+            <td>${memberName}</td>
+            <td>${companyName}</td>
+            <td><span class="sa-badge ${statusLower}">${a.status}</span></td>
+            <td>${dateStr}</td>
+            <td>${actionsHtml}</td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+// ═══════════════════════════════════════
+// SOLICITOR ACTIVITY — ALLOCATE MODAL
+// ═══════════════════════════════════════
+
+window.openAllocateModal = function () {
+    const allocatedLeadIds = activityData
+        .filter(a => a.status === 'Allocated' || a.status === 'Sent')
+        .map(a => String(a.lead_id));
+
+    const availableLeads = submissionsData.filter(s => {
+        return !allocatedLeadIds.includes(String(s.id)) &&
+               s.leadStatus !== 'Archived' &&
+               s.leadStatus !== 'Agent Saved';
+    });
+
+    let leadOptions = '<option value="" disabled selected>Select a lead…</option>';
+    availableLeads.forEach(s => {
+        const n = s.name || s.first_name || 'Unknown';
+        leadOptions += `<option value="${s.id}">${n} — ${s.phone || s.email || 'No contact'}</option>`;
+    });
+
+    let solOptions = '<option value="" disabled selected>Select a solicitor…</option>';
+    const activeCompanyIds = companiesData.filter(c => c.active !== false).map(c => String(c.id));
+    const activeMembers = membersData.filter(m => activeCompanyIds.includes(String(m.company_id)));
+    activeMembers.forEach(m => {
+        const mName = ((m.first_name || '') + ' ' + (m.last_name || '')).trim() || 'Unknown';
+        const comp = companiesData.find(c => String(c.id) === String(m.company_id));
+        const compName = comp?.name || comp?.company_name || '';
+        solOptions += `<option value="${m.id}">${mName}${compName ? ' — ' + compName : ''}</option>`;
+    });
+
+    document.getElementById('modalBox').innerHTML = `
+        <div class="modal-header">
+            <h2 style="font-size:20px; font-weight:800; letter-spacing:-0.5px;">Allocate Lead to Solicitor</h2>
+            <button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button>
+        </div>
+        <div class="form-grid">
+            <div class="form-group full">
+                <label>Select Lead</label>
+                <select id="allocLeadSelect" class="modern-select">${leadOptions}</select>
+            </div>
+            <div class="form-group full">
+                <label>Assign to Solicitor</label>
+                <select id="allocSolSelect" class="modern-select">${solOptions}</select>
+            </div>
+        </div>
+        <button class="btn-action" style="margin-top:24px; width:100%; justify-content:center; padding:12px;" onclick="window.submitAllocate()">Allocate Lead</button>
+    `;
+    document.getElementById('modalOverlay').style.display = 'flex';
+};
+
+window.submitAllocate = async function () {
+    const leadId = document.getElementById('allocLeadSelect')?.value;
+    const solId = document.getElementById('allocSolSelect')?.value;
+
+    if (!leadId || !solId) return alert('Please select both a lead and a solicitor.');
+
+    try {
+        const res = await fetch('/api/solicitor-activity', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lead_id: leadId, solicitor_id: solId, status: 'Allocated' })
+        });
+
+        const saved = await res.json();
+        if (!res.ok || saved.error) return alert('Error: ' + (saved.error || 'Failed to allocate.'));
+
+        activityData.unshift(saved);
+
+        await fetch('/api/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: leadId, actual_status: 'Assigned' })
+        });
+
+        document.getElementById('modalOverlay').style.display = 'none';
+        renderFilteredActivity();
+    } catch (e) {
+        console.error(e);
+        alert('Network Error: ' + e.message);
+    }
+};
+
+// ═══════════════════════════════════════
+// SOLICITOR ACTIVITY — SEND LINK
+// ═══════════════════════════════════════
+
+window.sendLink = async function (activityId) {
+    const btn = document.getElementById('send-btn-' + activityId);
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span style="font-size:10px;">Sending…</span>';
+    }
+
+    try {
+        const res = await fetch('/api/send-link', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ activity_id: activityId })
+        });
+
+        const result = await res.json();
+        if (!res.ok || result.error) throw new Error(result.error || 'Failed to send.');
+
+        const activity = activityData.find(a => String(a.id) === String(activityId));
+        if (activity) activity.status = 'Sent';
+
+        renderFilteredActivity();
+        addNotification('Link sent successfully', 'blue');
+
+    } catch (e) {
+        console.error('Send Link Error:', e);
+        alert('Failed to send link: ' + e.message);
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg> Send Link';
+        }
+    }
+};
+
+window.viewRejectionReason = function (activityId) {
+    const a = activityData.find(x => String(x.id) === String(activityId));
+    if (!a) return;
+
+    const lead = submissionsData.find(s => String(s.id) === String(a.lead_id));
+    const leadName = lead?.name || lead?.first_name || 'Unknown';
+
+    document.getElementById('modalBox').innerHTML = `
+        <div class="modal-header">
+            <h2 style="font-size:18px; font-weight:700;">Rejection Reason</h2>
+            <button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button>
+        </div>
+        <div style="margin-bottom:16px;">
+            <label style="font-size:11px; font-weight:700; color:#636366; text-transform:uppercase; letter-spacing:0.5px;">Lead</label>
+            <div style="font-size:15px; font-weight:600; color:#1C1C1E; margin-top:4px;">${leadName}</div>
+        </div>
+        <div style="background:#FEF2F2; border:1px solid rgba(255,69,58,0.2); border-radius:12px; padding:16px;">
+            <label style="font-size:11px; font-weight:700; color:#CC3328; text-transform:uppercase; letter-spacing:0.5px;">Reason for Rejection</label>
+            <div style="font-size:14px; color:#1C1C1E; margin-top:8px; line-height:1.6; white-space:pre-wrap;">${a.rejection_reason || 'No reason provided.'}</div>
+        </div>
+    `;
+    document.getElementById('modalOverlay').style.display = 'flex';
+};
+
+// ═══════════════════════════════════════
+// NOTIFICATION SYSTEM
+// ═══════════════════════════════════════
+
+function addNotification(message, color) {
+    color = color || 'blue';
+    notifications.unshift({ msg: message, color: color, time: new Date() });
+    if (notifications.length > 30) notifications.pop();
+    renderNotifications();
+}
+
+function renderNotifications() {
+    const list = document.getElementById('notifList');
+    const countEl = document.getElementById('notifCount');
+    if (!list || !countEl) return;
+
+    if (notifications.length === 0) {
+        list.innerHTML = '<div class="notif-empty">No new notifications</div>';
+        countEl.classList.remove('visible');
+        return;
+    }
+
+    countEl.textContent = notifications.length;
+    countEl.classList.add('visible');
+
+    list.innerHTML = notifications.map(n => {
+        const timeStr = n.time ? new Date(n.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+        return `<div class="notif-item">
+            <div class="notif-dot ${n.color}"></div>
+            <div class="notif-text">
+                <div class="notif-msg">${n.msg}</div>
+                <div class="notif-time">${timeStr}</div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+window.toggleNotifDropdown = function () {
+    const dd = document.getElementById('notifDropdown');
+    if (dd) dd.classList.toggle('open');
+};
+
+window.clearNotifications = function (e) {
+    if (e) e.stopPropagation();
+    notifications = [];
+    renderNotifications();
+};
+
+// Close notification dropdown when clicking outside
+document.addEventListener('click', function (e) {
+    const bell = document.getElementById('notifBell');
+    if (bell && !bell.contains(e.target)) {
+        const dd = document.getElementById('notifDropdown');
+        if (dd) dd.classList.remove('open');
+    }
+});
+
+// ═══════════════════════════════════════
+// REALTIME POLLING SUBSCRIPTION
+// ═══════════════════════════════════════
+
+function initRealtimeSubscription() {
+    setInterval(async () => {
+        try {
+            const res = await fetch('/api/solicitor-activity');
+            if (!res.ok) return;
+            const freshData = await res.json();
+
+            freshData.forEach(fresh => {
+                const existing = activityData.find(a => String(a.id) === String(fresh.id));
+                if (existing) {
+                    if (existing.status !== fresh.status) {
+                        const lead = submissionsData.find(s => String(s.id) === String(fresh.lead_id));
+                        const leadName = lead?.name || lead?.first_name || 'A lead';
+
+                        if (fresh.status === 'Accepted') {
+                            addNotification(`<strong>${leadName}</strong> has been <strong style="color:#228B35">accepted</strong> by the solicitor.`, 'green');
+                        } else if (fresh.status === 'Rejected') {
+                            addNotification(`<strong>${leadName}</strong> has been <strong style="color:#CC3328">rejected</strong> by the solicitor.`, 'red');
+                        } else if (fresh.status === 'Sent') {
+                            addNotification(`Link for <strong>${leadName}</strong> has been sent.`, 'blue');
+                        }
+
+                        existing.status = fresh.status;
+                        existing.rejection_reason = fresh.rejection_reason;
+                    }
+                } else {
+                    activityData.unshift(fresh);
+                }
+            });
+
+            if (document.getElementById('activityView')?.classList.contains('active')) {
+                renderFilteredActivity();
+            }
+        } catch (e) {
+            // Silently fail — next poll will retry
+        }
+    }, 10000);
+}
