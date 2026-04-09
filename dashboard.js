@@ -24,8 +24,12 @@ window.toggleTheme = function(e) {
 function syncThemeToggle() {
     const theme = localStorage.getItem('theme');
     const toggle = document.getElementById('checkbox');
+    const dropdownToggle = document.getElementById('dropdownThemeToggle');
     if (toggle) {
         toggle.checked = (theme === 'dark');
+    }
+    if (dropdownToggle) {
+        dropdownToggle.checked = (theme === 'dark');
     }
 }
 
@@ -364,6 +368,7 @@ window.toggleDropdown = function(e, id) {
 
 document.addEventListener('click', () => {
     document.querySelectorAll('.dropdown-menu').forEach(d => d.classList.remove('active'));
+    document.querySelectorAll('.user-dropdown').forEach(d => d.classList.remove('active'));
 });
 
 window.handleFieldUpdate = async function (id, fieldName, value) {
@@ -1625,9 +1630,11 @@ async function initUser() {
         
         // Update UI displays
         const nameEl = document.getElementById('usernameDisplay');
+        const emailEl = document.getElementById('userEmailDisplay');
         const avatarEl = document.getElementById('userAvatar');
         
         if (nameEl) nameEl.innerText = fullName;
+        if (emailEl) emailEl.innerText = user.email;
         
         if (avatarEl) {
             let initials = 'AD'; // Default Admin
@@ -1642,10 +1649,44 @@ async function initUser() {
             }
             avatarEl.innerText = initials;
         }
+
+        syncThemeToggle();
     } catch (e) {
         console.error("Session init failed", e);
     }
 }
+
+window.toggleUserDropdown = function(e) {
+    if (e) e.stopPropagation();
+    const dropdown = document.getElementById('userDropdown');
+    if (!dropdown) return;
+    const isOpen = dropdown.classList.contains('active');
+    
+    // Close other notification dropdowns if open
+    const notifDropdown = document.getElementById('notifDropdown');
+    if (notifDropdown) notifDropdown.classList.remove('active');
+    // Close table dropdowns
+    document.querySelectorAll('.dropdown-menu').forEach(d => d.classList.remove('active'));
+    
+    if (!isOpen) dropdown.classList.add('active');
+    else dropdown.classList.remove('active');
+};
+
+window.switchThemeFromDropdown = function() {
+    const theme = localStorage.getItem('theme') || 'light';
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    
+    if (newTheme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem('theme', 'dark');
+    } else {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('theme', 'light');
+    }
+    
+    syncThemeToggle();
+    calculateDashboardStats();
+};
 
 window.logout = function() {
     localStorage.removeItem('admin_session');

@@ -1724,6 +1724,124 @@
             .form-group.full { grid-column: span 1; }
             .notif-dropdown { width: 280px; right: -60px; }
         }
+
+        /* ═══════════════════════════════════════
+           USER DROPDOWN
+        ═══════════════════════════════════════ */
+        .user-dropdown-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .user-avatar-trigger {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--blue) 0%, var(--indigo) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            color: white;
+            cursor: pointer;
+            transition: all 0.25s var(--ease);
+            border: 2px solid transparent;
+            box-shadow: var(--shadow-sm);
+            user-select: none;
+        }
+
+        .user-avatar-trigger:hover {
+            transform: scale(1.05);
+            box-shadow: var(--shadow-md);
+            border-color: var(--blue-ring);
+        }
+
+        .user-avatar-trigger:active {
+            transform: scale(0.95);
+        }
+
+        .user-dropdown {
+            position: absolute;
+            top: calc(100% + 12px);
+            right: 0;
+            width: 240px;
+            background: var(--surface-1);
+            border: 1px solid var(--border);
+            border-radius: var(--r-lg);
+            box-shadow: var(--shadow-lg);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: all 0.25s var(--ease-spring);
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .user-dropdown.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .user-dropdown-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface-2);
+        }
+
+        .user-dropdown-email {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--label-1);
+            word-break: break-all;
+            margin-bottom: 2px;
+        }
+
+        .user-dropdown-role {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--label-4);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .user-dropdown-body {
+            padding: 8px;
+        }
+
+        .user-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: var(--r-sm);
+            color: var(--label-2);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.18s var(--ease);
+            text-decoration: none;
+        }
+
+        .user-dropdown-item:hover {
+            background: var(--surface-2);
+            color: var(--label-1);
+        }
+
+        .user-dropdown-item.danger {
+            color: var(--red);
+        }
+
+        .user-dropdown-item.danger:hover {
+            background: var(--red-light);
+        }
+
+        .user-dropdown-item svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
     </style>
 </head>
 
@@ -1812,12 +1930,30 @@
                     </div>
                 </div>
                 
-                <!-- User Profile & Logout -->
-                <div class="user-pill" onclick="logout()" style="cursor: pointer; border: 1px solid var(--border); background: var(--surface-1); margin-left: 10px;">
-                    <div class="user-avatar" id="userAvatar">??</div>
-                    <div class="user-info">
-                        <div class="user-name" id="usernameDisplay">Admin</div>
-                        <div class="user-role">Log Out</div>
+                <!-- User Profile Dropdown -->
+                <div class="user-dropdown-wrapper">
+                    <div class="user-avatar-trigger" id="userAvatar" onclick="toggleUserDropdown(event)">??</div>
+                    
+                    <div class="user-dropdown" id="userDropdown">
+                        <div class="user-dropdown-header">
+                            <div class="user-dropdown-email" id="userEmailDisplay">admin@example.com</div>
+                            <div class="user-dropdown-role">Administrator</div>
+                        </div>
+                        <div class="user-dropdown-body">
+                            <div class="user-dropdown-item" onclick="switchThemeFromDropdown()">
+                                <svg viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-3.03 0-5.5-2.47-5.5-5.5 0-1.82.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg>
+                                <span>Dark Mode</span>
+                                <label class="theme-switch" style="margin-left:auto; pointer-events:none;">
+                                    <input type="checkbox" id="dropdownThemeToggle">
+                                    <div class="slider" style="transform: scale(0.8);"></div>
+                                </label>
+                            </div>
+                            <div style="height: 1px; background: var(--border); margin: 8px 0;"></div>
+                            <div class="user-dropdown-item danger" onclick="logout()">
+                                <svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+                                <span>Log Out</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
