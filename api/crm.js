@@ -7,38 +7,37 @@ module.exports = async function handler(req, res) {
 
   try {
     const { action, id, ...fields } = req.body;
-    // Prioritize the query parameter 'type' from the URL rewrite (company or member)
     const resourceType = req.query.type || req.body.resourceType; 
 
     // ═════════════════════════════════════════════════
-    // CRUD: COMPANIES
+    // CRUD: COMPANIES (Matched to your 'companies' table)
     // ═════════════════════════════════════════════════
     if (resourceType === 'company' || req.url.includes('companies')) {
       if (method === 'GET') {
-        const { data, error } = await supabase.from('solicitor_firms').select('*').order('name');
+        const { data, error } = await supabase.from('companies').select('*').order('name');
         if (error) return res.status(500).json({ error: error.message });
         return res.status(200).json(data || []);
       }
       
       if (method === 'POST') {
         if (id && action === 'delete') {
-          const { error } = await supabase.from('solicitor_firms').delete().eq('id', id);
+          const { error } = await supabase.from('companies').delete().eq('id', id);
           if (error) return res.status(500).json({ error: error.message });
           return res.status(200).json({ success: true });
         }
         if (id) {
-          const { data, error } = await supabase.from('solicitor_firms').update(fields).eq('id', id).select();
+          const { data, error } = await supabase.from('companies').update(fields).eq('id', id).select();
           if (error) return res.status(500).json({ error: error.message });
           return res.status(200).json(data[0]);
         }
-        const { data, error } = await supabase.from('solicitor_firms').insert([fields]).select();
+        const { data, error } = await supabase.from('companies').insert([fields]).select();
         if (error) return res.status(500).json({ error: error.message });
         return res.status(200).json(data[0]);
       }
     }
 
     // ═════════════════════════════════════════════════
-    // CRUD: MEMBERS
+    // CRUD: MEMBERS (Matched to your 'company_members' table)
     // ═════════════════════════════════════════════════
     if (resourceType === 'member' || req.url.includes('members')) {
       if (method === 'POST') {
@@ -63,7 +62,7 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    return res.status(405).json({ error: 'Method Not Allowed or Invalid Resource Type: ' + resourceType });
+    return res.status(405).json({ error: 'Method Not Allowed or Invalid Resource Type' });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: "Server Error" });
