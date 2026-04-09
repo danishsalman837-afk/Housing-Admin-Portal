@@ -324,10 +324,10 @@ function renderTable(data) {
                     <div id="drop-${item.id}" class="dropdown-menu">
                         ${(item.agent_data || item.is_edited) ? `
                         <button class="dropdown-item" onclick="window.openViewModal('${item.id}', true)">
-                            <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg> Agent View
+                            <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg> Agent Form
                         </button>` : ''}
                         <button class="dropdown-item" onclick="window.openViewModal('${item.id}', false)">
-                            <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg> Admin View
+                            <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg> Admin Edits
                         </button>
                         <button class="dropdown-item" onclick="window.openEditLeadModal('${item.id}')">
                             <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg> Edit Lead
@@ -371,11 +371,18 @@ window.handleFieldUpdate = async function (id, fieldName, value) {
     try {
         const updateParams = { id };
         updateParams[fieldName] = value;
-        await fetch('/api/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updateParams) });
+        const res = await fetch('/api/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updateParams) });
+        if (!res.ok) throw new Error("Update failed");
+        
         const lead = submissionsData.find(s => String(s.id) === String(id));
         if (lead) lead[fieldName] = value;
         if (fieldName === 'leadStatus') calculateDashboardStats();
-    } catch (e) { console.error(e); }
+        
+        showToast('Update Successful', `The ${fieldName.replace(/_/g, ' ')} has been updated.`, 'success');
+    } catch (e) { 
+        console.error(e); 
+        showToast('Update Failed', e.message, 'danger');
+    }
 };
 
 window.exportDocx = function (id) { window.open('/api/export-docx?id=' + id, '_blank'); };
@@ -707,31 +714,43 @@ window.saveNewCompany = async function (id) {
         const res = await fetch('/api/companies', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         const saved = await res.json();
 
-        if (!res.ok || saved.error) { return alert("Database Error: " + (saved.error || "Failed to save to Supabase. Check schema.")); }
+        if (!res.ok || saved.error) { 
+            throw new Error(saved.error || "Failed to save to database");
+        }
 
         if (id) {
             const index = companiesData.findIndex(x => String(x.id) === String(id));
             if (index > -1) companiesData[index] = saved;
+            showToast('Company Updated', `Firm "${saved.name || saved.company_name}" saved.`, 'success');
         } else {
             companiesData.push(saved);
+            showToast('Company Added', `Firm "${saved.name || saved.company_name}" created.`, 'success');
         }
 
         document.getElementById('modalOverlay').style.display = 'none';
         renderCompanies();
         calculateDashboardStats();
-    } catch (e) { console.error(e); alert("Network Error: " + e.message); }
+    } catch (e) { 
+        console.error(e); 
+        showToast('Error', e.message, 'danger');
+    }
 };
 
 window.toggleCompanyActive = async function (id, isActive) {
     try {
         const res = await fetch('/api/companies', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, active: isActive }) });
         const updated = await res.json();
-        if (!res.ok || updated.error) { return alert('Failed to update company status: ' + (updated.error || 'Unknown')); }
+        if (!res.ok || updated.error) { throw new Error(updated.error || 'Unknown error'); }
         const idx = companiesData.findIndex(c => String(c.id) === String(id));
         if (idx > -1) companiesData[idx] = updated;
+        
+        showToast('Status Updated', `Company is now ${isActive ? 'Active' : 'Inactive'}.`, 'info');
         renderCompanies();
         calculateDashboardStats();
-    } catch (e) { console.error(e); alert('Network Error: ' + e.message); }
+    } catch (e) { 
+        console.error(e); 
+        showToast('Update Failed', e.message, 'danger');
+    }
 };
 
 window.deleteCompany = async function (id) {
@@ -747,12 +766,13 @@ window.deleteCompany = async function (id) {
             renderCompanies();
             initFilters(); // update solicitor dropdowns
             calculateDashboardStats();
+            showToast('Deleted', 'Company successfully removed.', 'success');
         } else {
-            alert("Failed to delete company.");
+            throw new Error("Failed to delete from server");
         }
     } catch (e) {
         console.error(e);
-        alert("Error deleting company.");
+        showToast('Error', 'Failed to delete company.', 'danger');
     }
 };
 
@@ -826,13 +846,15 @@ window.saveNewMember = async function (id) {
         const res = await fetch('/api/members', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         const saved = await res.json();
 
-        if (!res.ok || saved.error) return alert("Database Error: " + (saved.error || "Check database schema."));
+        if (!res.ok || saved.error) throw new Error(saved.error || "Save failed");
 
         if (id) {
             const index = membersData.findIndex(x => String(x.id) === String(id));
             if (index > -1) membersData[index] = saved;
+            showToast('Solicitor Saved', 'Member details updated.', 'success');
         } else {
             membersData.push(saved);
+            showToast('Solicitor Added', 'New member successfully created.', 'success');
         }
 
         document.getElementById('modalOverlay').style.display = 'none';
@@ -846,12 +868,17 @@ window.saveNewMember = async function (id) {
 window.deleteMember = async function (id) {
     if (!confirm("Are you sure you want to delete this member?")) return;
     try {
-        await fetch('/api/members', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, action: 'delete' }) });
+        const res = await fetch('/api/members', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, action: 'delete' }) });
+        if (!res.ok) throw new Error("Delete failed");
         membersData = membersData.filter(m => String(m.id) !== String(id));
         initFilters();
         viewCompanyMembers(selectedCompanyId);
         if (document.getElementById('leadsView').classList.contains('active')) renderFilteredLeads();
-    } catch (e) { console.error(e); }
+        showToast('Member Removed', 'Solicitor has been deleted.', 'success');
+    } catch (e) { 
+        console.error(e); 
+        showToast('Error', 'Failed to delete member.', 'danger');
+    }
 };
 
 window.saveLeadEdits = async function (id) {
@@ -886,9 +913,10 @@ window.saveLeadEdits = async function (id) {
         }
         document.getElementById('modalOverlay').style.display = 'none';
         renderFilteredLeads();
+        showToast('Changes Saved', 'Lead data has been updated successfully.', 'success');
     } catch (e) {
         console.error("Save Error", e);
-        alert("Failed to save changes: " + e.message);
+        showToast('Save Failed', e.message, 'danger');
     }
 };
 
@@ -938,7 +966,7 @@ window.handleAttachmentUpload = async function (leadId, input) {
 
         } catch (e) {
             console.error(e);
-            alert(`Failed to upload ${file.name}: ${e.message}`);
+            showToast('Upload Error', `Failed to upload ${file.name}: ${e.message}`, 'danger');
         }
     }
 
@@ -964,9 +992,10 @@ window.deleteAttachment = async function (leadId, index) {
         if (lead) lead.attachments = result.attachments;
 
         renderAttachmentList(leadId, result.attachments);
+        showToast('Attachment Deleted', 'The file has been removed.', 'success');
     } catch (e) {
         console.error(e);
-        alert(`Failed to delete attachment: ${e.message}`);
+        showToast('Delete Failed', e.message, 'danger');
     }
 };
 
@@ -1035,7 +1064,7 @@ window.saveNewNote = async function (id) {
     const s = submissionsData.find(x => String(x.id) === String(id));
     if (!s) return;
     const txt = document.getElementById('newNoteEditor').value.trim();
-    if (!txt) return alert("Please type a note first.");
+    if (!txt) return showToast('Empty Note', "Please type a note first.", 'warning');
 
     let notesArray = [];
     if (s.notes) {
@@ -1070,7 +1099,7 @@ window.saveEditedNote = async function (leadId, noteIndex) {
     if (!s) return;
 
     const newText = document.getElementById(`editNoteEditor-${noteIndex}`).value.trim();
-    if (!newText) return alert("Note cannot be empty.");
+    if (!newText) return showToast('Empty Note', "Note cannot be empty.", 'warning');
 
     let notesArray = [];
     try {
@@ -1111,10 +1140,11 @@ async function updateNotesInDb(lead, notesArray) {
             body: JSON.stringify({ id: lead.id, notes: jsonNotes })
         });
         if (!res.ok) throw new Error("Server rejected update");
+        showToast('Sync Successful', 'Notes updated on server.', 'success');
     } catch (e) {
         console.error(e);
         lead.notes = originalNotes; // revert mapping
-        alert("Failed to save changes to server.");
+        showToast('Sync Error', "Failed to save changes to server.", 'danger');
         window.openNotesModal(lead.id);
     }
 }
@@ -1129,13 +1159,13 @@ window.archiveLead = async function (id) {
         });
         if (!res.ok) throw new Error("Failed to archive lead");
 
-        // Remove locally and refresh
         submissionsData = submissionsData.filter(s => String(s.id) !== String(id));
         renderFilteredLeads();
         calculateDashboardStats();
+        showToast('Archived', 'Lead has been removed from active view.', 'info');
     } catch (e) {
         console.error("Archive Error", e);
-        alert("Could not update lead status. Please try again.");
+        showToast('Error', "Could not update lead status. Please try again.", 'danger');
     }
 };
 
@@ -1315,7 +1345,7 @@ window.submitAllocate = async function () {
     const leadId = document.getElementById('allocLeadSelect')?.value;
     const solId = document.getElementById('allocSolSelect')?.value;
 
-    if (!leadId || !solId) return alert('Please select both a lead and a solicitor.');
+    if (!leadId || !solId) return showToast('Selection Required', 'Please select both a lead and a solicitor.', 'warning');
 
     try {
         // 1. Create activity record
@@ -1326,7 +1356,7 @@ window.submitAllocate = async function () {
         });
 
         const saved = await res.json();
-        if (!res.ok || saved.error) return alert('Error: ' + (saved.error || 'Failed to allocate.'));
+        if (!res.ok || saved.error) throw new Error(saved.error || 'Failed to allocate.');
 
         activityData.unshift(saved);
 
@@ -1361,9 +1391,10 @@ window.submitAllocate = async function () {
         renderFilteredActivity();
         if (document.getElementById('leadsView').classList.contains('active')) renderFilteredLeads();
         calculateDashboardStats();
+        calculateDashboardStats();
     } catch (e) {
         console.error(e);
-        alert('Network Error: ' + e.message);
+        showToast('Allocation Error', 'Network Error: ' + e.message, 'danger');
     }
 };
 
@@ -1388,15 +1419,15 @@ window.sendLink = async function (activityId) {
         const result = await res.json();
         if (!res.ok || result.error) throw new Error(result.error || 'Failed to send.');
 
-        const activity = activityData.find(a => String(a.id) === String(activityId));
-        if (activity) activity.status = 'Sent';
+        activityData.find(a => String(a.id) === String(activityId)).status = 'Sent';
 
         renderFilteredActivity();
+        showToast('Link Sent', 'The lead link has been sent to the solicitor.', 'success');
         addNotification('Link sent successfully', 'blue');
 
     } catch (e) {
         console.error('Send Link Error:', e);
-        alert('Failed to send link: ' + e.message);
+        showToast('Send Failed', e.message, 'danger');
         if (btn) {
             btn.disabled = false;
             btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg> Send Link';
