@@ -102,6 +102,10 @@ module.exports = async function handler(req, res) {
 
       const { data: updated, error: updErr } = await supabase.from('solicitor_activity').update({ status: 'Sent', sent_at: new Date().toISOString() }).eq('id', activity_id).select();
       if (updErr) return res.status(500).json({ error: "Email sent, but failed to update status: " + updErr.message });
+      
+      // SYNC: Update the main lead status to 'Sent'
+      await supabase.from('submissions').update({ leadStatus: 'Sent' }).eq('id', activity.lead_id);
+      
       return res.status(200).json({ success: true, activity: updated[0] });
     } catch (err) {
       return res.status(500).json({ error: "Failed to send email: " + err.message });
@@ -176,7 +180,10 @@ module.exports = async function handler(req, res) {
         if (action === 'accept') {
           const { error: updErr } = await supabase.from('solicitor_activity').update({ status: 'Accepted' }).eq('id', activity.id);
           if (updErr) return res.status(500).json({ error: updErr.message });
-          await supabase.from('submissions').update({ actual_status: 'Assigned' }).eq('id', lead.id);
+          await supabase.from('submissions').update({ 
+              actual_status: 'Assigned',
+              leadStatus: 'Accepted' 
+          }).eq('id', lead.id);
           
           const { data: fullLead } = await supabase.from('submissions').select('*').eq('id', lead.id).single();
           const normalized = normalizeLead({ ...(fullLead || {}) });
@@ -196,7 +203,10 @@ module.exports = async function handler(req, res) {
           if (!rejection_reason || !rejection_reason.trim()) return res.status(400).json({ error: "A rejection reason is required." });
           const { error: updErr } = await supabase.from('solicitor_activity').update({ status: 'Rejected', rejection_reason: rejection_reason.trim() }).eq('id', activity.id);
           if (updErr) return res.status(500).json({ error: updErr.message });
-          await supabase.from('submissions').update({ actual_status: 'Re-assign' }).eq('id', lead.id);
+          await supabase.from('submissions').update({ 
+              actual_status: 'Re-assign',
+              leadStatus: 'Rejected'
+          }).eq('id', lead.id);
           return res.status(200).json({ success: true, status: 'Rejected' });
         }
       } catch (err) { return res.status(500).json({ error: "Server Error: " + err.message }); }

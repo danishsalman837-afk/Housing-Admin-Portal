@@ -7,7 +7,7 @@ let charts = {};
 let selectedCompanyId = null;
 
 const leadStatuses = [
-    'New Lead', 'Transferred', 'Accepted', 'Rejected',
+    'New Lead', 'Allocated', 'Sent', 'Accepted', 'Rejected', 'Transferred',
     'Not Yet Invoiced', 'Invoice Raised', 'Paid', 'Test Lead', 'Archived', 'Closed'
 ];
 
@@ -18,6 +18,8 @@ function getStatusColor(status) {
     if (status === 'Archived' || status === 'Closed') return 'gray';
     if (status === 'Transferred') return 'purple';
     if (status === 'Invoice Raised' || status === 'Not Yet Invoiced') return 'warning';
+    if (status === 'Allocated') return 'allocated';
+    if (status === 'Sent') return 'sent';
     return 'gray';
 }
 
@@ -253,12 +255,25 @@ function renderTable(data) {
 
         const statusSelectTheme = getStatusColor(item.leadStatus || 'New Lead');
 
+        // Solicitor Name display
+        let solicitorDisplay = '';
+        if (item.assigned_solicitor_id) {
+            const member = membersData.find(m => String(m.id) === String(item.assigned_solicitor_id));
+            if (member) {
+                const mName = ((member.first_name || '') + ' ' + (member.last_name || '')).trim();
+                solicitorDisplay = `<div style="font-size:11px; font-weight:700; color:var(--blue); margin-top:4px;">👤 ${mName}</div>`;
+            }
+        }
+
         tr.innerHTML = `
             <td>${index + 1}</td>
             <td><strong>${item.name || item.first_name || "---"}</strong></td>
             <td>${item.phone || item.mobile_number || "---"}</td>
             <td>${item.timestamp ? new Date(item.timestamp).toLocaleDateString() : '---'}</td>
-            <td><select class="modern-select" style="padding: 6px 30px 6px 12px; font-size: 12px; width:175px; text-overflow: ellipsis; white-space: nowrap;" onchange="window.handleFieldUpdate('${item.id}', 'assigned_company_id', this.value)">${compOptions}</select></td>
+            <td>
+                <select class="modern-select" style="padding: 6px 30px 6px 12px; font-size: 11px; width:175px; text-overflow: ellipsis; white-space: nowrap;" onchange="window.handleFieldUpdate('${item.id}', 'assigned_company_id', this.value)">${compOptions}</select>
+                ${solicitorDisplay}
+            </td>
             <td>
                 <select class="status-badge" data-color="${statusSelectTheme}" onchange="window.handleFieldUpdate('${item.id}', 'leadStatus', this.value); this.setAttribute('data-color', getStatusColor(this.value));">
                     ${leadStatuses.map(s => `<option value="${s}" ${item.leadStatus === s ? 'selected' : ''}>${s}</option>`).join('')}
@@ -1241,6 +1256,7 @@ window.submitAllocate = async function () {
     if (!leadId || !solId) return alert('Please select both a lead and a solicitor.');
 
     try {
+        // 1. Create activity record
         const res = await fetch('/api/solicitor?route=activity', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1252,14 +1268,37 @@ window.submitAllocate = async function () {
 
         activityData.unshift(saved);
 
+        // 2. Determine company ID to sync with Lead Management
+        const member = membersData.find(m => String(m.id) === String(solId));
+        const companyId = member ? member.company_id : null;
+
+        // 3. Update main lead status and assignment in one go
         await fetch('/api/update', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: leadId, actual_status: 'Assigned' })
+            body: JSON.stringify({ 
+                id: leadId, 
+                leadStatus: 'Allocated',
+                assigned_company_id: companyId,
+                assigned_solicitor_id: solId
+            })
         });
+
+        // 4. Update local memory for immediate UI refresh
+        const lead = submissionsData.find(s => String(s.id) === String(leadId));
+        if (lead) {
+            lead.leadStatus = 'Allocated';
+            lead.assigned_company_id = companyId;
+            lead.assigned_solicitor_id = solId;
+        }
+
+        const mName = member ? ((member.first_name || '') + ' ' + (member.last_name || '')).trim() : 'Solicitor';
+        showToast('Success', `Lead successfully allocated to ${mName}.`, 'success');
 
         document.getElementById('modalOverlay').style.display = 'none';
         renderFilteredActivity();
+        if (document.getElementById('leadsView').classList.contains('active')) renderFilteredLeads();
+        calculateDashboardStats();
     } catch (e) {
         console.error(e);
         alert('Network Error: ' + e.message);
@@ -1397,23 +1436,40 @@ function initRealtimeSubscription() {
             if (!res.ok) return;
             const freshData = await res.json();
 
-            freshData.forEach(fresh => {
+            freshData.forEach(async (fresh) => {
                 const existing = activityData.find(a => String(a.id) === String(fresh.id));
                 if (existing) {
                     if (existing.status !== fresh.status) {
                         const lead = submissionsData.find(s => String(s.id) === String(fresh.lead_id));
                         const leadName = lead?.name || lead?.first_name || 'A lead';
 
+                        // SYNC: Update the main lead status in Management to match Solicitor Activity status
+                        if (lead) {
+                            lead.leadStatus = fresh.status;
+                            fetch('/api/update', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ id: lead.id, leadStatus: fresh.status })
+                            }).catch(err => console.error("Sync failed", err));
+                        }
+
                         if (fresh.status === 'Accepted') {
-                            addNotification(`<strong>${leadName}</strong> has been <strong style="color:#228B35">accepted</strong> by the solicitor.`, 'green');
+                            addNotification(`<strong>${leadName}</strong> has been <strong style="color:#228B35">accepted</strong>.`, 'green');
+                            showToast('Lead Accepted', `${leadName} has been accepted by the solicitor.`, 'success');
                         } else if (fresh.status === 'Rejected') {
-                            addNotification(`<strong>${leadName}</strong> has been <strong style="color:#CC3328">rejected</strong> by the solicitor.`, 'red');
+                            addNotification(`<strong>${leadName}</strong> has been <strong style="color:#CC3328">rejected</strong>.`, 'red');
+                            showToast('Lead Rejected', `${leadName} was rejected by the solicitor.`, 'danger');
                         } else if (fresh.status === 'Sent') {
                             addNotification(`Link for <strong>${leadName}</strong> has been sent.`, 'blue');
+                            showToast('Link Sent', `Lead details link sent for ${leadName}.`, 'info');
                         }
 
                         existing.status = fresh.status;
                         existing.rejection_reason = fresh.rejection_reason;
+
+                        // Local UI refresh
+                        if (document.getElementById('leadsView').classList.contains('active')) renderFilteredLeads();
+                        calculateDashboardStats();
                     }
                 } else {
                     activityData.unshift(fresh);
@@ -1428,3 +1484,38 @@ function initRealtimeSubscription() {
         }
     }, 10000);
 }
+
+window.showToast = function(title, message, type = 'info') {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    
+    const icons = {
+        success: '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>',
+        info: '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>',
+        warning: '<svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>',
+        danger: '<svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>'
+    };
+
+    toast.innerHTML = `
+        <div class="toast-icon">${icons[type] || icons.info}</div>
+        <div class="toast-content">
+            <div class="toast-title">${title}</div>
+            <div class="toast-msg">${message}</div>
+        </div>
+        <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+    `;
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.add('fade-out');
+        setTimeout(() => toast.remove(), 300);
+    }, 5000);
+};
