@@ -649,6 +649,70 @@
             fill: currentColor;
         }
 
+        /* Action Buttons in Tables */
+        .act-btn {
+            background: var(--surface-1);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 5px 10px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--label-3);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s var(--ease);
+            font-family: inherit;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .act-btn svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+            flex-shrink: 0;
+        }
+
+        .act-btn:hover {
+            background: var(--surface-2);
+            color: var(--label-1);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-xs);
+        }
+
+        .act-btn.view:hover {
+            background: var(--blue-light);
+            color: var(--blue);
+            border-color: rgba(10,132,255,0.3);
+        }
+
+        .act-btn.edit:hover {
+            background: var(--orange-light);
+            color: var(--orange);
+            border-color: rgba(255,159,10,0.3);
+        }
+
+        .act-btn.notes:hover {
+            background: var(--purple-light);
+            color: var(--purple);
+            border-color: rgba(191,90,242,0.3);
+        }
+
+        .act-btn.dl:hover {
+            background: var(--green-light);
+            color: #248237;
+            border-color: rgba(48,209,88,0.3);
+        }
+
+        .action-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: nowrap;
+        }
+
         /* ═══════════════════════════════════════
            DASHBOARD STATS CARDS
         ═══════════════════════════════════════ */
@@ -1010,73 +1074,213 @@
            STATUS BADGES
         ═══════════════════════════════════════ */
         .status-badge {
-            padding: 5px 12px;
-            border-radius: 20px;
+            padding: 6px 14px;
+            border-radius: 99px;
             font-size: 11px;
             font-weight: 700;
             border: none;
             cursor: pointer;
             outline: none;
-            letter-spacing: 0.3px;
+            letter-spacing: 0.1px;
             font-family: inherit;
+            transition: all 0.2s var(--ease);
+            text-transform: uppercase;
         }
 
         select.status-badge {
-            padding-right: 26px;
+            padding-right: 28px;
             background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
             background-repeat: no-repeat;
-            background-position: right 8px center;
-            background-size: 9px;
+            background-position: right 10px center;
+            background-size: 8px;
             appearance: none;
             -webkit-appearance: none;
         }
 
-        .status-badge[data-color="new"]     { background: rgba(10,132,255,.12);  color: #0566CC; border: 1px solid rgba(10,132,255,.25);   }
-        .status-badge[data-color="warning"] { background: rgba(255,159,10,.12);  color: #C47A00; border: 1px solid rgba(255,159,10,.25);   }
-        .status-badge[data-color="success"] { background: rgba(48,209,88,.12);   color: #228B35; border: 1px solid rgba(48,209,88,.25);    }
-        .status-badge[data-color="danger"]  { background: rgba(255,69,58,.12);   color: #CC3328; border: 1px solid rgba(255,69,58,.25);    }
-        .status-badge[data-color="purple"]  { background: rgba(191,90,242,.12);  color: #8A3FC0; border: 1px solid rgba(191,90,242,.25);   }
-        .status-badge[data-color="gray"]    { background: rgba(60,60,67,.07);    color: var(--label-3); border: 1px solid var(--border); }
+        .status-badge[data-color="new"]     { background: #E0F2FE; color: #0369A1; }
+        .status-badge[data-color="warning"] { background: #FEF3C7; color: #92400E; }
+        .status-badge[data-color="success"] { background: #DCFCE7; color: #166534; }
+        .status-badge[data-color="danger"]  { background: #FEE2E2; color: #991B1B; }
+        .status-badge[data-color="purple"]  { background: #F3E8FF; color: #6B21A8; }
+        .status-badge[data-color="gray"]    { background: #F3F4F6; color: #374151; }
+        .status-badge[data-color="allocated"] { background: #E0E7FF; color: #4338CA; }
+        .status-badge[data-color="sent"] { background: #E0F2FE; color: #0369A1; }
 
         /* ═══════════════════════════════════════
-           ACTION BUTTONS IN TABLE
+           MODERN ACTION DROPDOWN
         ═══════════════════════════════════════ */
-        .action-group {
+        .action-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .btn-more {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--label-3);
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
             display: flex;
-            gap: 6px;
             align-items: center;
             justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s var(--ease);
         }
 
-        .act-btn {
-            display: inline-flex;
+        .btn-more:hover {
+            background: var(--surface-3);
+            color: var(--label-1);
+            transform: scale(1.05);
+        }
+
+        .btn-more svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: var(--surface-1);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-lg);
+            min-width: 180px;
+            z-index: 100;
+            display: none;
+            overflow: hidden;
+            animation: dropdownIn 0.2s var(--ease-spring);
+        }
+
+        @keyframes dropdownIn {
+            from { opacity: 0; transform: translateY(-10px) scale(0.95); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .dropdown-menu.active {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 10px 16px;
+            display: flex;
             align-items: center;
-            gap: 4px;
-            padding: 5px 10px;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: 600;
+            gap: 12px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--label-2);
             cursor: pointer;
             transition: all 0.15s var(--ease);
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
             font-family: inherit;
-            border: 1px solid transparent;
-            letter-spacing: 0.1px;
         }
 
-        .act-btn svg {
-            width: 12px;
-            height: 12px;
+        .dropdown-item:hover {
+            background: var(--surface-2);
+            color: var(--blue);
+        }
+
+        .dropdown-item svg {
+            width: 16px;
+            height: 16px;
             fill: currentColor;
-            flex-shrink: 0;
+            opacity: 0.7;
         }
 
-        .act-btn.view   { background: var(--blue-light);   color: var(--blue);   border-color: rgba(10,132,255,.20); }
-        .act-btn.edit   { background: var(--orange-light); color: #B06600;       border-color: rgba(255,159,10,.20); }
-        .act-btn.notes  { background: var(--purple-light); color: var(--purple); border-color: rgba(191,90,242,.20); }
-        .act-btn.dl     { background: var(--green-light);  color: #228B35;       border-color: rgba(48,209,88,.20);  }
+        .dropdown-item.danger:hover {
+            background: var(--red-light);
+            color: var(--red);
+        }
 
-        .act-btn:hover  { transform: translateY(-1px); filter: brightness(0.92); box-shadow: 0 2px 6px rgba(0,0,0,.08); }
-        .act-btn:active { transform: translateY(0); }
+        /* ═══════════════════════════════════════
+           RESPONSIVENESS
+        ═══════════════════════════════════════ */
+        @media (max-width: 1024px) {
+            #sidebar {
+                width: 72px;
+            }
+            .logo-text, .nav-item span, .nav-section-label, .sidebar-footer {
+                display: none;
+            }
+            .nav-item {
+                justify-content: center;
+                padding: 10px;
+            }
+            .nav-item .nav-icon {
+                margin: 0;
+            }
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            #sidebar {
+                position: fixed;
+                left: -100%;
+                top: 0;
+                bottom: 0;
+                transition: left 0.3s var(--ease);
+            }
+            #sidebar.mobile-active {
+                left: 0;
+                width: 260px;
+            }
+            .logo-text, .nav-item span, .nav-section-label, .sidebar-footer {
+                display: flex;
+            }
+            .topbar {
+                padding: 0 16px;
+            }
+            .view-container {
+                padding: 20px 16px;
+            }
+            .stats-row {
+                grid-template-columns: 1fr;
+            }
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            .table-container {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            table {
+                min-width: 800px;
+            }
+        }
+
+        /* Mobile Menu Toggle */
+        #mobileMenuToggle {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            color: var(--label-1);
+        }
+
+        @media (max-width: 768px) {
+            #mobileMenuToggle {
+                display: block;
+            }
+        }
+
+        /* Table Row Styling */
+        .lead-row {
+            cursor: pointer;
+            transition: background 0.15s var(--ease);
+        }
+        .lead-row:hover {
+            background: rgba(10,132,255,0.03) !important;
+        }
 
         /* ═══════════════════════════════════════
            MODALS — Frosted Glass Style
@@ -1569,6 +1773,9 @@
 
         <!-- Sticky top bar -->
         <div class="topbar">
+            <button id="mobileMenuToggle" onclick="document.getElementById('sidebar').classList.toggle('mobile-active')">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </button>
             <span class="topbar-title" id="topbarTitle">Dashboard</span>
             <div class="topbar-actions">
                 <!-- Notification Bell -->

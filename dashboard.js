@@ -1155,6 +1155,7 @@ window.initDashboard = async function () {
     } catch (e) {
         console.error("Setup running locally:", e);
     } finally {
+        syncThemeToggle();
         initFilters();
         calculateDashboardStats();
         switchView('dashboard');
