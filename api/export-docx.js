@@ -26,16 +26,13 @@ module.exports = async function handler(req, res) {
       if (error || !data) return res.status(404).json({ error: "Lead not found" });
       lead = data;
       
-      // Check if accepted to decide on anonymization
       const { data: activities } = await supabase.from('solicitor_activity').select('status').eq('lead_id', lead.id).order('created_at', { ascending: false }).limit(1);
       const status = (activities && activities[0]) ? activities[0].status : 'New';
       if (status !== 'Accepted') isAnonymized = true;
     } else {
       const { data, error } = await supabase.from('submissions').select('*').eq('id', id).single();
-      if (error || !lead) {
-        if (!data) return res.status(404).json({ error: "Lead not found" });
-        lead = data;
-      }
+      if (error || !data) return res.status(404).json({ error: "Lead not found" });
+      lead = data;
     }
 
     // ─── Helpers ────────────────────────────────────────────────────────────
@@ -141,6 +138,7 @@ module.exports = async function handler(req, res) {
     children.push(qaRow("Are you a council tenant or a housing association tenant?", val('tenantType', ['tenant_type'])));
     children.push(qaRow("Name of Landlord", val('landlordName', ['landlord_name'])));
     children.push(qaRow("How long have you been living in the property?", val('livingDuration', ['tenancyDuration', 'living_duration'])));
+    children.push(qaRow("Agent Name", val('agent_name', ['agentName'])));
 
     // ── Section 2: Damp / Mould ──
     children.push(spacer(160), sectionHeading("Section 2 — Damp / Mould"), spacer(60));

@@ -79,6 +79,7 @@ function normalizeLead(lead) {
   n('arrearsAmount', 'arrearsAmount');
   n('alreadySubmitted', 'alreadySubmitted');
   n('additionalNotes', 'additionalNotes');
+  n('agent_name', 'agentName');
   
   return lead;
 }

@@ -28,7 +28,7 @@ const leadViewOrder = [
     'leak', 'leakLocation', 'leakSource', 'leakStart', 'leakDamage', 'leakCracks', 'leakBelongings',
     'issues_electrics', 'issues_heating', 'issues_structural',
     'reported', 'reportCount', 'reportFirst', 'reportLast', 'reportResponse', 'reportAttempt', 'reportStatus',
-    'arrears', 'arrearsAmount', 'alreadySubmitted', 'additionalNotes'
+    'arrears', 'arrearsAmount', 'alreadySubmitted', 'additionalNotes', 'agentName'
 ];
 
 const leadFieldLabels = {
@@ -69,7 +69,8 @@ const leadFieldLabels = {
     arrears: 'Rental Arrears?',
     arrearsAmount: 'Arrears Amount',
     alreadySubmitted: 'Already Submitted Claim?',
-    additionalNotes: 'Additional Notes'
+    additionalNotes: 'Additional Notes',
+    agentName: 'Agent Name'
 };
 
 window.switchView = function (view) {
@@ -455,6 +456,25 @@ window.openViewModal = function (id) {
         </div>
         <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:24px; padding:0 8px; max-height:75vh; overflow-y:auto;">
             ${dataHtml}
+            
+            <!-- 📎 PHOTO EVIDENCE -->
+            <div style="grid-column: span 2; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);">
+                <h3 style="font-size:15px; font-weight:700; color:var(--label-1); display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+                    <svg style="width:18px; height:18px; fill:var(--blue);" viewBox="0 0 24 24"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.93 1.57 3.5 3.5 3.5s3.5-1.57 3.5-3.5V5c0-2.21-1.79-4-4-4S9 2.79 9 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/></svg>
+                    Photo Evidence
+                </h3>
+                <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap:12px;">
+                    ${(s.attachments || []).map(a => `
+                        <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:6px; box-shadow:var(--shadow-xs);">
+                            <a href="${a.url}" target="_blank">
+                                <img src="${a.url}" style="width:100%; height:85px; object-fit:cover; border-radius:6px;">
+                            </a>
+                            <div style="font-size:9px; color:var(--label-3); margin-top:4px; text-align:center; overflow:hidden; text-overflow:ellipsis;">${a.name}</div>
+                        </div>
+                    `).join('')}
+                    ${(!s.attachments || s.attachments.length === 0) ? '<p style="font-size:13px; color:var(--label-4); font-style:italic; grid-column:1/-1; text-align:center;">No pictures attached.</p>' : ''}
+                </div>
+            </div>
         </div>
     `;
     document.getElementById('modalOverlay').style.display = 'flex';
@@ -527,6 +547,7 @@ window.openEditLeadModal = function (id) {
                         <div id="uploadStatus" style="font-size:12px; font-weight:600; color:var(--label-3);"></div>
                         <input type="file" id="attachInput" style="display:none;" onchange="window.handleAttachmentUpload('${s.id}', this)" accept="image/*" multiple>
                         <button class="btn-action" style="font-size:12px; padding:7px 14px; background:var(--blue-light); color:var(--blue); border:1px solid var(--blue-ring); box-shadow:none;" onclick="document.getElementById('attachInput').click()">+ Add Photos</button>
+                        <button class="btn-action" style="font-size:12px; padding:7px 14px; background:var(--green); color:white; border:none; box-shadow:var(--shadow-sm);" onclick="window.saveLeadEdits('${s.id}')">Save Pictures / Update</button>
                     </div>
                 </div>
                 
