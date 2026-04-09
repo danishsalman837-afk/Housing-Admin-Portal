@@ -82,30 +82,42 @@
         h1 { font-size: 32px; font-weight: 800; color: #0f172a; margin: 0 0 8px 0; letter-spacing: -0.8px; }
         p.subtitle { font-size: 15px; color: var(--text-secondary); margin-bottom: 32px; }
 
-        .input-wrapper { position: relative; margin-bottom: 16px; display: flex; align-items: center; }
+        .input-wrapper { 
+            position: relative; 
+            margin-bottom: 20px; 
+            display: flex; 
+            align-items: center; 
+            gap: 16px; 
+        }
         .input-wrapper i { 
-            position: absolute; 
-            left: 20px; 
-            top: 50% !important; 
-            transform: translateY(-50%) !important; 
-            color: var(--text-secondary); 
+            color: var(--text-main); 
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 20px; 
-            height: 20px;
-            pointer-events: none;
-            z-index: 5;
-            opacity: 0.8;
+            width: 24px; 
+            height: 24px;
+            flex-shrink: 0;
+            opacity: 0.9;
         }
         .input-wrapper input {
-            width: 100%; background: rgba(255, 255, 255, 0.6); border: 1px solid rgba(226, 232, 240, 0.8);
-            border-radius: 14px; padding: 16px 20px 16px 60px; font-size: 15px; color: var(--text-main);
-            box-sizing: border-box; transition: all 0.3s var(--ease);
+            flex: 1;
+            background: rgba(255, 255, 255, 0.6); 
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            border-radius: 14px; 
+            padding: 16px 20px; 
+            font-size: 15px; 
+            color: var(--text-main);
+            box-sizing: border-box; 
+            transition: all 0.3s var(--ease);
             position: relative;
             z-index: 1;
         }
-        .input-wrapper input:focus { outline: none; background: white; border-color: var(--blue-primary); box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.1); }
+        .input-wrapper input:focus { 
+            outline: none; 
+            background: white; 
+            border-color: var(--blue-primary); 
+            box-shadow: 0 10px 25px -5px rgba(26, 115, 232, 0.1), 0 0 0 4px rgba(26, 115, 232, 0.05); 
+        }
 
         .toggle-pwd { 
             position: absolute !important; 
