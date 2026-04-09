@@ -59,6 +59,7 @@ function normalizeLead(lead) {
   n('issues_structural', 'structuralDamage');
   n('reported', 'reportedOverMonth');
   n('arrears', 'rentalArrears');
+  n('attachments', 'attachments');
   
   // Snake case to camelCase for dashboard/form consistency
   n('first_name', 'name');

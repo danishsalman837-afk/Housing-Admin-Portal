@@ -4,26 +4,38 @@ const {
   Document, Packer, Paragraph, TextRun,
   HeadingLevel, AlignmentType, BorderStyle,
   Table, TableRow, TableCell, WidthType,
-  ShadingType, convertInchesToTwip
+  ShadingType, convertInchesToTwip, ImageRun
 } = docx;
+const axios = require("axios");
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method Not Allowed' });
 
-  const { id } = req.query;
-  if (!id) return res.status(400).json({ error: "Missing Lead ID" });
+    const { id, token, anonymize } = req.query;
+    if (!id && !token) return res.status(400).json({ error: "Missing Lead ID or Token" });
 
-  if (!assertEnv('service', res)) return;
-  const supabase = createSupabaseClient('service');
+    if (!assertEnv('service', res)) return;
+    const supabase = createSupabaseClient('service');
 
-  try {
-    const { data: lead, error } = await supabase
-      .from('submissions')
-      .select('*')
-      .eq('id', id)
-      .single();
+    let lead;
+    let isAnonymized = anonymize === 'true';
 
-    if (error || !lead) return res.status(404).json({ error: "Lead not found" });
+    if (token) {
+      const { data, error } = await supabase.from('submissions').select('*').eq('unique_token', token).single();
+      if (error || !data) return res.status(404).json({ error: "Lead not found" });
+      lead = data;
+      
+      // Check if accepted to decide on anonymization
+      const { data: activities } = await supabase.from('solicitor_activity').select('status').eq('lead_id', lead.id).order('created_at', { ascending: false }).limit(1);
+      const status = (activities && activities[0]) ? activities[0].status : 'New';
+      if (status !== 'Accepted') isAnonymized = true;
+    } else {
+      const { data, error } = await supabase.from('submissions').select('*').eq('id', id).single();
+      if (error || !lead) {
+        if (!data) return res.status(404).json({ error: "Lead not found" });
+        lead = data;
+      }
+    }
 
     // ─── Helpers ────────────────────────────────────────────────────────────
 
@@ -120,10 +132,10 @@ module.exports = async function handler(req, res) {
     // ── Section 1: Contact Details ──
     children.push(sectionHeading("Section 1 — CONTACT DETAILS"), spacer(60));
     children.push(qaRow("Name", val('name')));
-    children.push(qaRow("Email Address", val('email')));
-    children.push(qaRow("Phone Number", val('phone')));
-    children.push(qaRow("Date of Birth (DOB)", val('dob', ['dateOfBirth', 'date_of_birth'])));
-    children.push(qaRow("Address", val('address')));
+    children.push(qaRow("Email Address", isAnonymized ? '••••••••@••••.com' : val('email')));
+    children.push(qaRow("Phone Number", isAnonymized ? '•••• ••• ••••' : val('phone')));
+    children.push(qaRow("Date of Birth (DOB)", isAnonymized ? '••/••/••••' : val('dob', ['dateOfBirth', 'date_of_birth'])));
+    children.push(qaRow("Address", isAnonymized ? '••••••••••••••••••••' : val('address')));
     children.push(qaRow("Postcode", val('postcode')));
     children.push(qaRow("Are you a council tenant or a housing association tenant?", val('tenantType', ['tenant_type'])));
     children.push(qaRow("Name of Landlord", val('landlordName', ['landlord_name'])));
@@ -175,6 +187,40 @@ module.exports = async function handler(req, res) {
     // ── Section 7: Additional Notes ──
     children.push(spacer(160), sectionHeading("Section 7 — Additional Notes"), spacer(60));
     children.push(qaRow("Additional Notes", val('additionalNotes')));
+
+    // ── Section 8: Visual Evidence ──
+    const attachments = Array.isArray(lead.attachments) ? lead.attachments : [];
+    if (attachments.length > 0) {
+      children.push(spacer(160), sectionHeading("Section 8 — Photo Evidence"), spacer(80));
+      
+      for (const attach of attachments) {
+        try {
+          const response = await axios.get(attach.url, { responseType: 'arraybuffer' });
+          const buffer = Buffer.from(response.data, 'binary');
+          
+          children.push(
+            new Paragraph({
+              children: [
+                new ImageRun({
+                  data: buffer,
+                  transformation: { width: 500, height: 350 },
+                }),
+              ],
+              alignment: AlignmentType.CENTER,
+              spacing: { before: 200, after: 200 }
+            }),
+            new Paragraph({
+              children: [new TextRun({ text: `File: ${attach.name}`, size: 16, color: SLATE, italics: true })],
+              alignment: AlignmentType.CENTER,
+              spacing: { after: 400 }
+            })
+          );
+        } catch (e) {
+          console.error("Failed to include image:", attach.url, e.message);
+          children.push(new Paragraph({ text: `[Error loading image: ${attach.name}]`, spacing: { before: 100, after: 100 } }));
+        }
+      }
+    }
 
     // ── Footer note ──
     children.push(

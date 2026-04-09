@@ -789,9 +789,36 @@
                 { label: 'Email', value: leadData.email, masked: !leadData.contactRevealed },
                 { label: 'Phone', value: leadData.phone, masked: !leadData.contactRevealed },
                 { label: 'Date of Birth', value: leadData.dob, masked: !leadData.contactRevealed },
-                { label: 'Address', value: leadData.address, full: true },
+                { label: 'Address', value: leadData.address, masked: !leadData.contactRevealed, full: true },
             ];
             renderFieldGrid('clientInfoGrid', clientFields);
+
+            // Photos Section
+            if (leadData.attachments && leadData.attachments.length > 0) {
+                const photoCard = `
+                    <div class="sol-card" style="margin-top:20px;">
+                        <div class="sol-card-header">
+                            <div class="sol-card-header-icon blue">
+                                <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                            </div>
+                            <h2>Photo Evidence</h2>
+                        </div>
+                        <div class="sol-card-body">
+                            <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:16px;">
+                                ${leadData.attachments.map(a => `
+                                    <div style="background:var(--surface-2); border-radius:12px; padding:10px; border:1px solid var(--border); overflow:hidden;">
+                                        <a href="${a.url}" target="_blank">
+                                            <img src="${a.url}" style="width:100%; height:120px; object-fit:cover; border-radius:8px;">
+                                        </a>
+                                        <div style="font-size:11px; color:var(--label-3); margin-top:8px; font-weight:600; text-align:center;">${a.name}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('reportingGrid').parentElement.parentElement.insertAdjacentHTML('afterend', photoCard);
+            }
 
             // Disrepair Details
             const disrepairFields = [
@@ -868,6 +895,13 @@
                 if (!res.ok) throw new Error(data.error || 'Failed to accept lead.');
 
                 showAcceptedResult(data.contactDetails);
+                
+                // 📂 AUTO-DOWNLOAD WORD DOC
+                // We use the token to authenticate the export which now supports full data if accepted
+                setTimeout(() => {
+                    window.location.href = `/api/export-docx?token=${encodeURIComponent(token)}`;
+                }, 1000);
+
             } catch (err) {
                 alert('Error: ' + err.message);
                 btn.disabled = false;

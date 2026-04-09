@@ -509,6 +509,34 @@ window.openEditLeadModal = function (id) {
         </div>
         <div class="form-grid" id="editLeadForm" style="display:grid; grid-template-columns: repeat(2, 1fr); gap:16px; padding:0 8px; max-height:75vh; overflow-y:auto;">
             ${html}
+            
+            <!-- 📎 ATTACHMENTS SECTION -->
+            <div style="grid-column: span 2; margin-top: 24px; padding-top: 24px; border-top: 2px dashed var(--border); background: var(--surface-2); border-radius: 12px; padding: 20px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                    <h3 style="font-size:15px; font-weight:700; color:var(--label-1); display:flex; align-items:center; gap:8px; margin:0;">
+                        <svg style="width:18px; height:18px; fill:var(--blue);" viewBox="0 0 24 24"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.93 1.57 3.5 3.5 3.5s3.5-1.57 3.5-3.5V5c0-2.21-1.79-4-4-4S9 2.79 9 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/></svg>
+                        Case Evidences & Pictures
+                    </h3>
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <div id="uploadStatus" style="font-size:12px; font-weight:600; color:var(--label-3);"></div>
+                        <input type="file" id="attachInput" style="display:none;" onchange="window.handleAttachmentUpload('${s.id}', this)" accept="image/*" multiple>
+                        <button class="btn-action" style="font-size:12px; padding:7px 14px; background:var(--blue-light); color:var(--blue); border:1px solid var(--blue-ring); box-shadow:none;" onclick="document.getElementById('attachInput').click()">+ Add Photos</button>
+                    </div>
+                </div>
+                
+                <div id="attachmentList" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap:12px;">
+                    ${(s.attachments || []).map((a, i) => `
+                        <div class="attach-item" style="position:relative; background:var(--surface-1); border:1px solid var(--border); border-radius:10px; padding:8px; transition:all 0.2s ease; box-shadow:var(--shadow-xs);">
+                            <a href="${a.url}" target="_blank" style="display:block;">
+                                <img src="${a.url}" style="width:100%; height:90px; object-fit:cover; border-radius:6px; background:var(--surface-2);">
+                            </a>
+                            <div style="font-size:10px; color:var(--label-3); margin-top:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4px;">${a.name}</div>
+                            <button onclick="window.deleteAttachment('${s.id}', ${i})" style="position:absolute; top:-6px; right:-6px; background:var(--red); color:white; border:none; border-radius:50%; width:22px; height:22px; cursor:pointer; font-size:14px; font-weight:800; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(255,69,58,0.3);">&times;</button>
+                        </div>
+                    `).join('')}
+                    ${(!s.attachments || s.attachments.length === 0) ? '<p style="font-size:12px; color:var(--label-4); font-style:italic; grid-column:1/-1; text-align:center; padding:20px 0;">No pictures attached yet.</p>' : ''}
+                </div>
+            </div>
         </div>
         <div style="margin-top:32px; display:flex; justify-content:flex-end; gap:12px; padding:0 8px;">
            <button class="btn-outline" style="padding:10px 24px; font-weight:700;" onclick="document.getElementById('modalOverlay').style.display='none'">Cancel</button>
@@ -692,6 +720,10 @@ window.saveLeadEdits = async function (id) {
     const updates = { id };
     inputs.forEach(inp => updates[inp.getAttribute('data-field')] = inp.value);
 
+    // Note: Attachments are handled via standalone functions to keep things responsive
+    // but we can also ensure they're part of the payload if needed. 
+    // They are already merged into memory after successful upload.
+
     try {
         const res = await fetch('/api/update', {
             method: 'POST',
@@ -702,12 +734,16 @@ window.saveLeadEdits = async function (id) {
         const result = await res.json();
         if (!res.ok) throw new Error(result.error || "Server error " + res.status);
 
-        // Merge the DB response back into memory so the view reflects the actual saved state
+        // Merge the DB response back into memory
         const lead = submissionsData.find(s => String(s.id) === String(id));
         if (lead) {
-            // Merge raw form updates first, then overlay with DB response (authoritative)
             Object.assign(lead, updates);
-            if (result && typeof result === 'object' && result.id) Object.assign(lead, result);
+            if (result && typeof result === 'object' && result.id) {
+                // Keep attachments if they weren't in the updates but are in the memory
+                const existingAttachments = lead.attachments;
+                Object.assign(lead, result);
+                if (!result.attachments && existingAttachments) lead.attachments = existingAttachments;
+            }
         }
         document.getElementById('modalOverlay').style.display = 'none';
         renderFilteredLeads();
@@ -716,6 +752,104 @@ window.saveLeadEdits = async function (id) {
         alert("Failed to save changes: " + e.message);
     }
 };
+
+// 📎 ATTACHMENT HANDLERS
+window.handleAttachmentUpload = async function (leadId, input) {
+    const files = input.files;
+    if (!files || files.length === 0) return;
+
+    const statusEl = document.getElementById('uploadStatus');
+    const listEl = document.getElementById('attachmentList');
+
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        statusEl.innerText = `Uploading ${i + 1}/${files.length}...`;
+
+        try {
+            const reader = new FileReader();
+            const base64Promise = new Promise((resolve) => {
+                reader.onload = () => resolve(reader.result);
+                reader.readAsDataURL(file);
+            });
+
+            const base64Content = await base64Promise;
+
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    leadId: leadId,
+                    name: file.name,
+                    type: file.type,
+                    content: base64Content
+                })
+            });
+
+            const result = await res.json();
+            if (!res.ok) throw new Error(result.error || 'Upload failed');
+
+            // Update local state
+            const lead = submissionsData.find(s => String(s.id) === String(leadId));
+            if (lead) lead.attachments = result.attachments;
+
+            // Re-render only the attachment section if modal is still open
+            if (document.getElementById('attachmentList')) {
+                renderAttachmentList(leadId, result.attachments);
+            }
+
+        } catch (e) {
+            console.error(e);
+            alert(`Failed to upload ${file.name}: ${e.message}`);
+        }
+    }
+
+    statusEl.innerText = 'All files uploaded';
+    setTimeout(() => { if (statusEl) statusEl.innerText = ''; }, 3000);
+    input.value = '';
+};
+
+window.deleteAttachment = async function (leadId, index) {
+    if (!confirm("Are you sure you want to delete this attachment?")) return;
+
+    try {
+        const res = await fetch('/api/delete-attachment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ leadId, index })
+        });
+
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error || 'Delete failed');
+
+        const lead = submissionsData.find(s => String(s.id) === String(leadId));
+        if (lead) lead.attachments = result.attachments;
+
+        renderAttachmentList(leadId, result.attachments);
+    } catch (e) {
+        console.error(e);
+        alert(`Failed to delete attachment: ${e.message}`);
+    }
+};
+
+function renderAttachmentList(leadId, attachments) {
+    const listEl = document.getElementById('attachmentList');
+    if (!listEl) return;
+
+    if (!attachments || attachments.length === 0) {
+        listEl.innerHTML = '<p style="font-size:12px; color:var(--label-4); font-style:italic; grid-column:1/-1; text-align:center; padding:20px 0;">No pictures attached yet.</p>';
+        return;
+    }
+
+    listEl.innerHTML = attachments.map((a, i) => `
+        <div class="attach-item" style="position:relative; background:var(--surface-1); border:1px solid var(--border); border-radius:10px; padding:8px; transition:all 0.2s ease; box-shadow:var(--shadow-xs);">
+            <a href="${a.url}" target="_blank" style="display:block;">
+                <img src="${a.url}" style="width:100%; height:90px; object-fit:cover; border-radius:6px; background:var(--surface-2);">
+            </a>
+            <div style="font-size:10px; color:var(--label-3); margin-top:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4px;">${a.name}</div>
+            <button onclick="window.deleteAttachment('${leadId}', ${i})" style="position:absolute; top:-6px; right:-6px; background:var(--red); color:white; border:none; border-radius:50%; width:22px; height:22px; cursor:pointer; font-size:14px; font-weight:800; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(255,69,58,0.3);">&times;</button>
+        </div>
+    `).join('');
+}
 
 window.openNotesModal = function (id) {
     const s = submissionsData.find(x => String(x.id) === String(id));
