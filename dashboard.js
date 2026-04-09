@@ -1555,7 +1555,7 @@ window.showToast = function(title, message, type = 'info') {
     }
 
     const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
+    toast.className = `hdr-toast hdr-toast-${type}`;
     
     const icons = {
         success: '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>',
@@ -1565,12 +1565,12 @@ window.showToast = function(title, message, type = 'info') {
     };
 
     toast.innerHTML = `
-        <div class="toast-icon">${icons[type] || icons.info}</div>
-        <div class="toast-content">
-            <div class="toast-title">${title}</div>
-            <div class="toast-msg">${message}</div>
+        <div class="hdr-toast-icon">${icons[type] || icons.info}</div>
+        <div class="hdr-toast-content">
+            <div class="hdr-toast-title">${title}</div>
+            <div class="hdr-toast-msg">${message}</div>
         </div>
-        <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+        <button class="hdr-toast-close" onclick="this.parentElement.remove()">&times;</button>
     `;
 
     container.appendChild(toast);
