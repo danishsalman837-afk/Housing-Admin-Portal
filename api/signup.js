@@ -29,6 +29,10 @@ module.exports = async function handler(req, res) {
 
     if (authError) {
       console.error("Auth Signup Error:", authError.message);
+      // If user already exists, tell them to login
+      if (authError.message.includes("already registered")) {
+        return res.status(400).json({ error: "This email is already registered. Please log in instead." });
+      }
       return res.status(400).json({ error: authError.message });
     }
 
@@ -37,19 +41,26 @@ module.exports = async function handler(req, res) {
     }
 
     // 2. Create the associated profile in our public 'profiles' table
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .insert([{
-        id: authData.user.id,
-        username: fullName.trim(),
-        email: email.toLowerCase().trim()
-      }]);
+    // We use a try/catch here so that the Auth success isn't entirely lost
+    try {
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert([{
+          id: authData.user.id,
+          username: fullName.trim(),
+          email: email.toLowerCase().trim()
+        }]);
 
-    if (profileError) {
-      console.error("Profile Creation Error:", profileError.message);
-      // Even if profile fails, the Auth user is created. 
-      // You may want to handle cleanup or inform the user.
-      return res.status(500).json({ error: "Account created but profile setup failed. Please contact admin." });
+      if (profileError) {
+        console.error("Profile DB Error:", profileError.message);
+        // We still return success because the AUTH account is active
+        return res.status(200).json({ 
+          message: "Account created! Note: Profile record pending. You can now log in.",
+          warning: "Database profile sync failed, but auth succeeded."
+        });
+      }
+    } catch (dbErr) {
+      console.error("Database connection error:", dbErr);
     }
 
     // 3. Return success
