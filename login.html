@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Housing Admin Portal — Secure Log In</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --blue-primary: #1A73E8;
+            --blue-vibrant: #00A3FF;
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.4);
+            --text-main: #0F172A;
+            --text-secondary: #64748B;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            background: #F8FAFC;
+            background-image: url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=2000');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;inset: 0;
+            background: rgba(248, 250, 252, 0.85);backdrop-filter: blur(10px);
+            z-index: 1;
+        }
+
+        header {
+            position: relative;z-index: 10;
+            display: flex;justify-content: space-between;align-items: center;
+            padding: 24px 60px;
+        }
+
+        .logo-container {
+            display: flex;align-items: center;gap: 12px;
+            font-weight: 700;font-size: 18px;color: var(--text-main);
+        }
+
+        .nav-links a {
+            text-decoration: none;color: var(--text-main);font-weight: 500;font-size: 14px;
+        }
+
+        main {
+            position: relative;z-index: 10;
+            flex: 1;display: flex;align-items: center;justify-content: center;
+            padding-bottom: 60px;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(100px);
+            -webkit-backdrop-filter: blur(100px);
+            border: 2px solid var(--glass-border);
+            border-radius: 40px;
+            padding: 48px;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: 0 40px 100px rgba(15, 23, 42, 0.1);
+            text-align: center;
+            animation: cardReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes cardReveal {
+            from { opacity: 0; transform: translateY(40px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        h1 { font-size: 32px; font-weight: 800; color: #0f172a; margin: 0 0 8px 0; letter-spacing: -0.8px; }
+        p.subtitle { font-size: 15px; color: var(--text-secondary); margin-bottom: 32px; }
+
+        .input-wrapper { position: relative; margin-bottom: 16px; }
+        .input-wrapper i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); width: 20px; }
+        .input-wrapper input {
+            width: 100%; background: rgba(255, 255, 255, 0.5); border: 1px solid rgba(226, 232, 240, 0.8);
+            border-radius: 12px; padding: 14px 14px 14px 48px; font-size: 15px; color: var(--text-main);
+            box-sizing: border-box; transition: all 0.2s;
+        }
+        .input-wrapper input:focus { outline: none; background: white; border-color: var(--blue-primary); box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.1); }
+
+        .toggle-pwd { position: absolute; right: 16px; cursor: pointer; }
+
+        .btn-login {
+            width: 100%; background: linear-gradient(180deg, #1aa3ff 0%, #1a73e8 100%);
+            color: white; border: none; padding: 16px; border-radius: 12px;
+            font-weight: 700; font-size: 16px; cursor: pointer; margin-top: 8px;
+            box-shadow: 0 10px 20px rgba(26, 115, 232, 0.2); transition: all 0.2s;
+        }
+        .btn-login:hover { transform: translateY(-2px); box-shadow: 0 15px 30px rgba(26, 115, 232, 0.3); }
+
+        footer { margin-top: 24px; font-size: 13px; color: var(--text-secondary); }
+        footer a { color: var(--blue-primary); font-weight: 600; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <i data-lucide="home" style="width: 32px; height: 32px;"></i>
+            Housing Admin Portal
+        </div>
+        <div class="nav-links">
+            <a href="/signup.html">Create Account</a>
+        </div>
+    </header>
+
+    <main>
+        <div class="glass-card">
+            <i data-lucide="shield-check" style="width: 48px; height: 48px; margin-bottom: 24px;"></i>
+            <h1>Welcome Back</h1>
+            <p class="subtitle">Enter your credentials to access the portal.</p>
+
+            <form id="loginForm">
+                <div class="input-wrapper">
+                    <i data-lucide="mail"></i>
+                    <input type="email" id="email" placeholder="Email Address" required>
+                </div>
+                <div class="input-wrapper">
+                    <i data-lucide="lock"></i>
+                    <input type="password" id="password" placeholder="Password" required>
+                    <i data-lucide="eye-off" class="toggle-pwd"></i>
+                </div>
+                <button type="submit" class="btn-login" id="loginBtn">Secure Log In</button>
+            </form>
+
+            <footer>
+                New user? <a href="/signup.html">Join the Portal</a>
+            </footer>
+            <div id="errorMsg" style="color: #ff453a; margin-top: 16px; font-weight: 500; font-size: 14px;"></div>
+        </div>
+    </main>
+
+    <script>
+        lucide.createIcons();
+        const pwdInput = document.getElementById('password');
+        const toggle = document.querySelector('.toggle-pwd');
+        if (toggle) {
+            toggle.onclick = () => {
+                const isPwd = pwdInput.type === 'password';
+                pwdInput.type = isPwd ? 'text' : 'password';
+                toggle.setAttribute('data-lucide', isPwd ? 'eye' : 'eye-off');
+                lucide.createIcons();
+            }
+        }
+    </script>
+    <script src="login.js"></script>
+</body>
+</html>

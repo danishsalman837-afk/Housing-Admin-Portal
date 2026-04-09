@@ -5,10 +5,10 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const { username, email, password } = req.body;
+  const { fullName, email, password } = req.body;
 
-  if (!username || !email || !password) {
-    return res.status(400).json({ error: "Username, email, and password are required." });
+  if (!fullName || !email || !password) {
+    return res.status(400).json({ error: "Full Name, email, and password are required." });
   }
 
   // Use service role to ensure profile creation succeeds
@@ -17,13 +17,12 @@ module.exports = async function handler(req, res) {
 
   try {
     // 1. Sign up the user in Supabase Auth
-    // Note: This creates a user in the auth.users table
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
-          username: username
+          full_name: fullName
         }
       }
     });
@@ -42,7 +41,7 @@ module.exports = async function handler(req, res) {
       .from('profiles')
       .insert([{
         id: authData.user.id,
-        username: username.toLowerCase().trim(),
+        username: fullName.trim(),
         email: email.toLowerCase().trim()
       }]);
 

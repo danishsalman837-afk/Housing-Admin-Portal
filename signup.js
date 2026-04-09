@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
             signupBtn.disabled = true;
             errorMsg.innerText = '';
 
-            const username = document.getElementById('username').value;
+            const fullName = document.getElementById('fullname').value;
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const res = await fetch('/api/signup', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, email, password })
+                    body: JSON.stringify({ fullName, email, password })
                 });
 
                 const data = await res.json();
