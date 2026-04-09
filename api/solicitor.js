@@ -135,7 +135,7 @@ module.exports = async function handler(req, res) {
           tenantType: normalized.tenantType || '---',
           landlordName: normalized.landlordName || '---',
           address: isAccepted ? (normalized.address || '---') : '••••••••••••••••••••',
-          postcode: normalized.postcode || '---',
+          postcode: isAccepted ? (normalized.postcode || '---') : '••••••••',
           damp: normalized.damp || '---', dampLocation: normalized.dampLocation || '---', dampRooms: normalized.dampRooms || '---',
           dampSurface: normalized.dampSurface || '---', dampDuration: normalized.dampDuration || '---', dampCause: normalized.dampCause || '---',
           dampDamage: normalized.dampDamage || '---', dampHealth: normalized.dampHealth || '---',
