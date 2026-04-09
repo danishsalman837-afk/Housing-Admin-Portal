@@ -831,15 +831,21 @@ window.openAddMemberModal = function (editId = null) {
 }
 
 window.saveNewMember = async function (id) {
+    if (!selectedCompanyId || selectedCompanyId === 'null' || selectedCompanyId === 'undefined') {
+        return showToast('Error', 'Please select a company first by clicking "Members" on a firm.', 'danger');
+    }
+
     const payload = {
         company_id: selectedCompanyId,
-        first_name: document.getElementById('mFirstName').value,
-        last_name: document.getElementById('mLastName').value,
-        mobile: document.getElementById('mMobile').value,
-        landline: document.getElementById('mLandline').value,
-        job_title: document.getElementById('mJobTitle').value,
-        email: document.getElementById('mEmail').value
+        first_name: document.getElementById('mFirstName').value.trim(),
+        last_name: document.getElementById('mLastName').value.trim(),
+        mobile: document.getElementById('mMobile').value.trim(),
+        landline: document.getElementById('mLandline').value.trim(),
+        job_title: document.getElementById('mJobTitle').value.trim(),
+        email: document.getElementById('mEmail').value.trim()
     };
+
+    if (!payload.first_name) return showToast('Error', 'First name is required.', 'warning');
     if (id) payload.id = id;
 
     try {
