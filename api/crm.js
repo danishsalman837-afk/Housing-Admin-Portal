@@ -13,22 +13,22 @@ module.exports = async function handler(req, res) {
     // 1. Logic for COMPANIES
     if (resourceType === 'company' || req.url.toLowerCase().includes('companies')) {
       if (method === 'GET') {
-        const { data, error } = await supabase.from('solicitor_firms').select('*').order('name');
+        const { data, error } = await supabase.from('companies').select('*').order('name');
         if (error) throw error;
         return res.status(200).json(data || []);
       }
       if (method === 'POST') {
         if (id && action === 'delete') {
-          const { error } = await supabase.from('solicitor_firms').delete().eq('id', id);
+          const { error } = await supabase.from('companies').delete().eq('id', id);
           if (error) throw error;
           return res.status(200).json({ success: true });
         }
         if (id) {
-          const { data, error } = await supabase.from('solicitor_firms').update(fields).eq('id', id).select();
+          const { data, error } = await supabase.from('companies').update(fields).eq('id', id).select();
           if (error) throw error;
           return res.status(200).json(data[0] || {});
         }
-        const { data, error } = await supabase.from('solicitor_firms').insert([fields]).select();
+        const { data, error } = await supabase.from('companies').insert([fields]).select();
         if (error) throw error;
         return res.status(200).json(data[0] || {});
       }

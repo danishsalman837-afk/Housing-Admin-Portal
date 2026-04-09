@@ -835,6 +835,12 @@ window.saveNewMember = async function (id) {
         return showToast('Error', 'Please select a company first by clicking "Members" on a firm.', 'danger');
     }
 
+    // Secondary Check: Verify the company actually exists in our local list
+    const exists = companiesData.some(c => String(c.id) === String(selectedCompanyId));
+    if (!exists) {
+        return showToast('Error', 'The selected company no longer exists. Please refresh the page.', 'danger');
+    }
+
     const payload = {
         company_id: selectedCompanyId,
         first_name: document.getElementById('mFirstName').value.trim(),
