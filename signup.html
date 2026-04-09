@@ -3,148 +3,259 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Housing Admin — Join the Portal</title>
+    <title>Housing Admin Portal — Sign Up</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons for the input fields -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         :root {
-            --blue: #0A84FF;
-            --blue-gradient: linear-gradient(135deg, #0A84FF 0%, #0050D0 100%);
-            --bg: #F2F2F7;
-            --card-bg: rgba(255, 255, 255, 0.75);
-            --border: rgba(60, 60, 67, 0.12);
+            --blue-primary: #1A73E8;
+            --blue-vibrant: #00A3FF;
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.4);
+            --text-main: #0F172A;
+            --text-secondary: #64748B;
         }
+
         body {
             font-family: 'Inter', sans-serif;
-            background: #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
             margin: 0;
-            overflow: hidden;
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(10, 132, 255, 0.15) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(94, 92, 230, 0.15) 0px, transparent 50%);
-        }
-        .container {
-            display: flex;
-            width: 1000px;
-            max-width: 90vw;
-            height: 600px;
-            background: var(--card-bg);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
-            border-radius: 32px;
-            border: 1px solid rgba(255,255,255,0.2);
-            box-shadow: 0 24px 80px rgba(0,0,0,0.4);
-            overflow: hidden;
-            animation: fadeIn 0.8s ease-out;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        .visual-side {
-            flex: 1;
-            background: linear-gradient(45deg, #1C1C1E 0%, #2C2C2E 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
-        }
-        .visual-side::after {
-            content: '';
-            position: absolute;
-            width: 150%;
-            height: 150%;
-            background: url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=1000') center/cover;
-            opacity: 0.15;
-            filter: grayscale(1);
-        }
-        .form-side {
-            width: 440px;
-            padding: 60px;
+            padding: 0;
+            height: 100vh;
+            background: #F8FAFC;
+            /* Background 3D Illustration Layer */
+            background-image: url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=2000');
+            background-size: cover;
+            background-position: center;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Overlay to soften the background image like in the mockup */
+        body::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(248, 250, 252, 0.85); /* Light translucent overlay */
+            backdrop-filter: blur(10px);
+            z-index: 1;
+        }
+
+        /* Top Navigation Bar */
+        header {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 60px;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--text-main);
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            color: #1e293b;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .review-badge {
+            background: #1e4b8a;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* Main Sign-Up Card Container */
+        main {
+            position: relative;
+            z-index: 10;
+            flex: 1;
+            display: flex;
+            align-items: center;
             justify-content: center;
-            background: white;
+            padding-bottom: 60px;
         }
-        h1 { font-size: 32px; font-weight: 800; margin-bottom: 8px; letter-spacing: -1.2px; color: #1C1C1E; }
-        p { color: #636366; font-size: 15px; margin-bottom: 40px; }
-        .form-group { margin-bottom: 24px; }
-        label { display: block; font-size: 11px; font-weight: 700; color: #8E8E93; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.8px; }
-        input {
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(100px);
+            -webkit-backdrop-filter: blur(100px);
+            border: 2px solid var(--glass-border);
+            border-radius: 40px;
+            padding: 48px;
             width: 100%;
-            padding: 14px 16px;
-            border-radius: 14px;
-            border: 1px solid var(--border);
+            max-width: 440px;
+            box-shadow: 0 40px 100px rgba(15, 23, 42, 0.1);
+            text-align: center;
+            animation: cardReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes cardReveal {
+            from { opacity: 0; transform: translateY(40px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .card-icon {
+            margin-bottom: 24px;
+            color: #1e293b;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0 0 8px 0;
+            letter-spacing: -0.8px;
+        }
+
+        p.subtitle {
             font-size: 15px;
-            background: #F2F2F7;
-            box-sizing: border-box;
-            transition: all 0.25s;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
         }
-        input:focus {
-            outline: none;
-            border-color: var(--blue);
-            background: white;
-            box-shadow: 0 0 0 4px rgba(10,132,255,0.1);
+
+        /* Form Inputs */
+        .input-wrapper {
+            position: relative;
+            margin-bottom: 16px;
         }
-        .btn-submit {
+
+        .input-wrapper i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            width: 20px;
+        }
+
+        .input-wrapper input {
             width: 100%;
-            background: var(--blue-gradient);
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            border-radius: 12px;
+            padding: 14px 14px 14px 48px;
+            font-size: 15px;
+            color: var(--text-main);
+            box-sizing: border-box;
+            transition: all 0.2s;
+        }
+
+        .input-wrapper input:focus {
+            outline: none;
+            background: white;
+            border-color: var(--blue-primary);
+            box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.1);
+        }
+
+        .toggle-pwd {
+            position: absolute;
+            right: 16px;
+            left: auto !important;
+            cursor: pointer;
+        }
+
+        /* Button */
+        .btn-create {
+            width: 100%;
+            background: linear-gradient(180deg, #1aa3ff 0%, #1a73e8 100%);
             color: white;
             border: none;
             padding: 16px;
-            border-radius: 14px;
+            border-radius: 12px;
             font-weight: 700;
             font-size: 16px;
             cursor: pointer;
-            margin-top: 10px;
-            transition: all 0.3s;
-            box-shadow: 0 8px 24px rgba(10,132,255,0.3);
+            margin-top: 8px;
+            box-shadow: 0 10px 20px rgba(26, 115, 232, 0.2);
+            transition: transform 0.2s, box-shadow 0.2s;
         }
-        .btn-submit:hover { 
+
+        .btn-create:hover {
             transform: translateY(-2px);
-            box-shadow: 0 12px 32px rgba(10,132,255,0.4);
+            box-shadow: 0 15px 30px rgba(26, 115, 232, 0.3);
         }
-        .footer-link { margin-top: 32px; text-align: center; font-size: 14px; color: #8E8E93; }
-        .footer-link a { color: var(--blue); text-decoration: none; font-weight: 600; }
-        #errorMsg { color: #FF453A; font-size: 13px; margin-top: 20px; text-align: center; min-height: 20px; }
+
+        footer {
+            margin-top: 24px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        footer strong { color: #1e293b; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="visual-side">
-            <div style="z-index: 10; color: white; text-align: center; padding: 40px;">
-                <h2 style="font-size: 40px; margin-bottom: 10px; letter-spacing: -1px;">Modern Admin</h2>
-                <p style="color: rgba(255,255,255,0.6);">Fast, Secure, and Built for Scale.</p>
-            </div>
+    <header>
+        <div class="logo-container">
+            <i data-lucide="home" class="logo-icon"></i>
+            Housing Admin Portal
         </div>
-        <div class="form-side">
-            <h1>Create Account</h1>
-            <p>Enter your details to get started.</p>
+        <div class="nav-links">
+            <a href="/index.html">Log In</a>
+            <div class="review-badge">Review</div>
+        </div>
+    </header>
+
+    <main>
+        <div class="glass-card">
+            <i data-lucide="home" class="card-icon" style="width: 48px; height: 48px;"></i>
+            <h1>Create Your Account</h1>
+            <p class="subtitle">Join the Housing Admin Portal today.</p>
+
             <form id="signupForm">
-                <div class="form-group">
-                    <label>Username</label>
-                    <input type="text" id="username" placeholder="janesmith" required>
+                <div class="input-wrapper">
+                    <i data-lucide="user"></i>
+                    <input type="text" id="username" placeholder="Username" required>
                 </div>
-                <div class="form-group">
-                    <label>Email ID</label>
-                    <input type="email" id="email" placeholder="jane@portal.com" required>
+                <div class="input-wrapper">
+                    <i data-lucide="mail"></i>
+                    <input type="email" id="email" placeholder="Email ID" required>
                 </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" id="password" placeholder="••••••••" required minlength="8">
+                <div class="input-wrapper">
+                    <i data-lucide="lock"></i>
+                    <input type="password" id="password" placeholder="Password" required minlength="8">
+                    <i data-lucide="eye-off" class="toggle-pwd"></i>
                 </div>
-                <button type="submit" class="btn-submit" id="signupBtn">Get Started</button>
-                <div id="errorMsg"></div>
+                <button type="submit" class="btn-create" id="signupBtn">Create Account</button>
             </form>
-            <div class="footer-link">
-                Already member? <a href="/index.html">Log In</a>
-            </div>
+
+            <footer>
+                By signing up, you agree to our <strong>Terms and Privacy Policy</strong>.
+            </footer>
+            <div id="errorMsg" style="color: #ff453a; margin-top: 16px; font-weight: 500; font-size: 14px;"></div>
         </div>
-    </div>
+    </main>
+
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+    </script>
     <script src="signup.js"></script>
 </body>
 </html>
