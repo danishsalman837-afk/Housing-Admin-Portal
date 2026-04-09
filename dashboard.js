@@ -23,7 +23,7 @@ function getStatusColor(status) {
 
 const leadViewOrder = [
     'name', 'email', 'phone', 'dob', 'address', 'postcode',
-    'tenantType', 'livingDuration',
+    'tenantType', 'landlordName', 'livingDuration',
     'damp', 'dampLocation', 'dampRooms', 'dampSurface', 'dampDuration', 'dampCause', 'dampDamage', 'dampHealth',
     'leak', 'leakLocation', 'leakSource', 'leakStart', 'leakDamage', 'leakCracks', 'leakBelongings',
     'issues_electrics', 'issues_heating', 'issues_structural',
@@ -39,6 +39,7 @@ const leadFieldLabels = {
     address: 'Address',
     postcode: 'Postcode',
     tenantType: 'Tenant Type',
+    landlordName: 'Name of Landlord',
     livingDuration: 'Tenancy Duration',
     damp: 'Damp or Mould?',
     dampLocation: 'Damp/Mould Location',

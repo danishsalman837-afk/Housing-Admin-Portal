@@ -126,6 +126,7 @@ module.exports = async function handler(req, res) {
     children.push(qaRow("Address", val('address')));
     children.push(qaRow("Postcode", val('postcode')));
     children.push(qaRow("Are you a council tenant or a housing association tenant?", val('tenantType', ['tenant_type'])));
+    children.push(qaRow("Name of Landlord", val('landlordName', ['landlord_name'])));
     children.push(qaRow("How long have you been living in the property?", val('livingDuration', ['tenancyDuration', 'living_duration'])));
 
     // ── Section 2: Damp / Mould ──
