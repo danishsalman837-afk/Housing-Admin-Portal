@@ -834,11 +834,14 @@ window.openAddMemberModal = function (editId = null) {
             <div class="form-group"><label>Job Title</label><input type="text" id="mJobTitle" class="modern-input" value="${m.job_title || ''}"></div>
             <div class="form-group"><label>Mobile Base</label><input type="text" id="mMobile" class="modern-input" value="${m.mobile || ''}"></div>
             <div class="form-group"><label>Landline</label><input type="text" id="mLandline" class="modern-input" value="${m.landline || ''}"></div>
-            <div class="form-group full" style="display:flex; align-items:center; gap:12px; background:var(--surface-2); padding:10px; border-radius:8px;">
-                <input type="checkbox" id="mCanReceiveEmails" ${m.can_receive_emails !== false ? 'checked' : ''} style="width:20px; height:20px; cursor:pointer;">
-                <label for="mCanReceiveEmails" style="cursor:pointer; margin:0;">
-                    <div style="font-weight:700; color:var(--label-1);">Authorize for Emails</div>
-                    <div style="font-size:11px; color:var(--label-3);">Only authorized members will receive lead links via email.</div>
+            <div class="form-group full" style="margin-top: 8px; padding: 20px; background: var(--surface-2); border-radius: var(--r-lg); border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <span style="font-size: 14px; font-weight: 700; color: var(--label-1); letter-spacing: -0.2px;">Email Authorization</span>
+                    <span style="font-size: 12px; color: var(--label-3); line-height: 1.4; max-width: 420px;">Authorize this member to receive lead notifications and secure links via email.</span>
+                </div>
+                <label class="theme-switch" style="flex-shrink: 0;">
+                    <input type="checkbox" id="mCanReceiveEmails" ${m.can_receive_emails !== false ? 'checked' : ''}>
+                    <span class="slider"></span>
                 </label>
             </div>
         </div>
