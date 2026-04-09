@@ -6,13 +6,13 @@ module.exports = async function handler(req, res) {
   if (!assertEnv('service', res)) return;
   const supabase = createSupabaseClient('service');
 
-  const { action } = req.body;
+  const action = req.query.action || req.body.action;
 
   try {
     // ═════════════════════════════════════════════════
     // ACTION: UPLOAD
     // ═════════════════════════════════════════════════
-    if (action === 'upload' || !action) { // Default to upload if no action provided (backward compatibility for my previous change)
+    if (action === 'upload' || !action) {
       const { leadId, name, type, content } = req.body;
       if (!leadId || !content) return res.status(400).json({ error: "Missing required fields" });
 

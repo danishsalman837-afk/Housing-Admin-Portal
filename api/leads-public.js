@@ -7,7 +7,8 @@ module.exports = async function handler(req, res) {
   
   // Detect if it's a "draft" vs full "submit"
   // If the path includes 'save-draft' or explicitly marked
-  const isDraft = req.url.includes('save-draft') || req.body.isDraft === true;
+  const route = req.query.route || req.body.route;
+  const isDraft = route === 'draft' || req.url.includes('save-draft') || req.body.isDraft === true;
   const data = (req.method === 'POST') ? req.body : req.query;
 
   if (Object.keys(data).length === 0) {

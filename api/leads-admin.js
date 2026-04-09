@@ -4,12 +4,13 @@ module.exports = async function handler(req, res) {
   if (!assertEnv('service', res)) return;
   const supabase = createSupabaseClient('service');
   const method = req.method;
+  const route = req.query.route || req.body.route;
 
   try {
     // ═════════════════════════════════════════════════
     // GET: LIST ALL (Submissions)
     // ═════════════════════════════════════════════════
-    if (method === 'GET' && !req.query.phone) {
+    if (method === 'GET' && (route === 'list' || (!req.query.phone && !route))) {
       const { data, error } = await supabase
         .from('submissions')
         .select('*')
@@ -25,7 +26,7 @@ module.exports = async function handler(req, res) {
     // ═════════════════════════════════════════════════
     // GET: SINGLE BY PHONE (Get-Lead)
     // ═════════════════════════════════════════════════
-    if (method === 'GET' && req.query.phone) {
+    if (method === 'GET' && (req.query.phone || route === 'get')) {
       const { phone } = req.query;
       const { data, error } = await supabase
         .from('submissions')
@@ -53,7 +54,7 @@ module.exports = async function handler(req, res) {
           heatingIssues: 'issues_heating', structuralDamage: 'issues_structural', reportedOverMonth: 'reported',
           rentalArrears: 'arrears', dampLocation: 'dampLocation', leakLocation: 'leakLocation', leakSource: 'leakSource',
           leakStart: 'leakStart', leakDamage: 'leakDamage', leakBelongings: 'leakBelongings', reportCount: 'reportCount',
-          reportFirst: 'reportFirst', reportResponse: 'reportResponse', reportAttempt: 'reportAttempt', reportStatus: 'reportStatus',
+          reportFirst: 'reportFirst', reportLast: 'reportLast', reportResponse: 'reportResponse', reportAttempt: 'reportAttempt', reportStatus: 'reportStatus',
           arrearsAmount: 'arrearsAmount', additionalNotes: 'additionalNotes'
       };
       for (const [formKey, dbKey] of Object.entries(mapping)) {
