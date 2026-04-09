@@ -1579,4 +1579,61 @@ window.showToast = function(title, message, type = 'info') {
         toast.classList.add('fade-out');
         setTimeout(() => toast.remove(), 300);
     }, 5000);
-};
+};
+
+// ═══════════════════════════════════════
+// USER PROFILE & SESSION MANAGEMENT
+// ═══════════════════════════════════════
+async function initUser() {
+    const sessionStr = localStorage.getItem('admin_session');
+    if (!sessionStr) {
+        // Redirection logic should usually be handled by a dedicated auth check
+        // but adding here for immediate effect
+        if (window.location.pathname.includes('index.html')) {
+            // Check if we have a login form on the page
+            if (!document.getElementById('loginForm')) {
+                // window.location.href = '/login.html'; // Fallback if applicable
+            }
+        }
+        return;
+    }
+    
+    try {
+        const session = JSON.parse(sessionStr);
+        const user = session.user;
+        
+        // Get username from metadata (from our signup flow) or fallback to email
+        let username = user.user_metadata?.username || user.email.split('@')[0];
+        
+        // Update UI displays
+        const nameEl = document.getElementById('usernameDisplay');
+        const avatarEl = document.getElementById('userAvatar');
+        
+        if (nameEl) nameEl.innerText = username;
+        
+        if (avatarEl) {
+            let initials = 'AD'; // Default Admin
+            const parts = username.trim().split(/[\s_\.-]+/);
+            if (parts.length >= 2) {
+                initials = (parts[0][0] + parts[1][0]).toUpperCase();
+            } else if (username.length >= 2) {
+                initials = username.substring(0, 2).toUpperCase();
+            } else {
+                initials = username.substring(0, 1).toUpperCase();
+            }
+            avatarEl.innerText = initials;
+        }
+    } catch (e) {
+        console.error("Session init failed", e);
+    }
+}
+
+window.logout = function() {
+    if (confirm("Are you sure you want to log out?")) {
+        localStorage.removeItem('admin_session');
+        window.location.href = '/index.html';
+    }
+};
+
+// Initialize user on load
+initUser();

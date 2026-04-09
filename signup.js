@@ -5,6 +5,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const errorMsg = document.getElementById('errorMsg');
 
     if (signupForm) {
+        // --- Password Visibility Toggle ---
+        const passwordInput = document.getElementById('password');
+        const togglePwd = document.querySelector('.toggle-pwd');
+        
+        if (togglePwd && passwordInput) {
+            togglePwd.addEventListener('click', () => {
+                const isPassword = passwordInput.getAttribute('type') === 'password';
+                passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+                
+                // Toggle Lucide Icon
+                togglePwd.setAttribute('data-lucide', isPassword ? 'eye' : 'eye-off');
+                lucide.createIcons(); // Re-render icon
+            });
+        }
+
         signupForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
