@@ -16,8 +16,22 @@
             const theme = localStorage.getItem('theme') || 'light';
             if (theme === 'dark') {
                 document.documentElement.setAttribute('data-theme', 'dark');
+                window.addEventListener('DOMContentLoaded', () => {
+                    const cb = document.getElementById('checkbox');
+                    if (cb) cb.checked = true;
+                });
             }
         })();
+
+        window.toggleTheme = function(event) {
+            if (event.target.checked) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+            }
+        };
     </script>
 
     <style>
@@ -1546,14 +1560,6 @@
                     <input type="checkbox" id="checkbox" onchange="toggleTheme(event)" />
                     <div class="slider"></div>
                 </label>
-            </div>
-
-            <div class="user-pill">
-                <div class="user-avatar">AD</div>
-                <div class="user-info">
-                    <div class="user-name">Admin User</div>
-                    <div class="user-role">Super Administrator</div>
-                </div>
             </div>
         </div>
     </div>

@@ -160,8 +160,11 @@ module.exports = async function handler(req, res) {
       if (!action || !['accept', 'reject'].includes(action)) return res.status(400).json({ error: "Action must be 'accept' or 'reject'." });
 
       try {
-        const { data: lead, error: leadErr } = await supabase.from('submissions').select('id, name, first_name').eq('unique_token', token).single();
-        if (leadErr || !lead) return res.status(404).json({ error: "Lead not found or link is invalid." });
+        const { data: lead, error: leadErr } = await supabase.from('submissions').select('*').eq('unique_token', token).single();
+        if (leadErr || !lead) {
+          console.error("Lead Error:", leadErr);
+          return res.status(404).json({ error: "Lead not found or link is invalid." });
+        }
 
         const { data: activities, error: actErr } = await supabase.from('solicitor_activity').select('*').eq('lead_id', lead.id).order('created_at', { ascending: false }).limit(1);
         if (actErr || !activities || activities.length === 0) return res.status(404).json({ error: "No solicitor activity found for this lead." });
@@ -174,7 +177,7 @@ module.exports = async function handler(req, res) {
           if (updErr) return res.status(500).json({ error: updErr.message });
           await supabase.from('submissions').update({ actual_status: 'Assigned' }).eq('id', lead.id);
           
-          const { data: fullLead } = await supabase.from('submissions').select('email, phone, mobile_number, dob').eq('id', lead.id).single();
+          const { data: fullLead } = await supabase.from('submissions').select('*').eq('id', lead.id).single();
           const normalized = normalizeLead({ ...(fullLead || {}) });
           return res.status(200).json({ success: true, status: 'Accepted', contactDetails: { email: normalized.email || '---', phone: normalized.phone || normalized.mobile_number || '---', dob: normalized.dob || '---' } });
         } else if (action === 'reject') {

@@ -2,7 +2,7 @@ let submissionsData = [];
 let companiesData = [];
 let membersData = [];
 let activityData = [];
-let notifications = [];
+let notifications = JSON.parse(localStorage.getItem('hdr_notifications') || '[]');
 let charts = {};
 let selectedCompanyId = null;
 
@@ -885,6 +885,7 @@ window.initDashboard = async function () {
         initFilters();
         calculateDashboardStats();
         switchView('dashboard');
+        renderNotifications();
         initRealtimeSubscription();
     }
 };
@@ -1124,7 +1125,8 @@ window.viewRejectionReason = function (activityId) {
 function addNotification(message, color) {
     color = color || 'blue';
     notifications.unshift({ msg: message, color: color, time: new Date() });
-    if (notifications.length > 30) notifications.pop();
+    if (notifications.length > 50) notifications.pop();
+    localStorage.setItem('hdr_notifications', JSON.stringify(notifications));
     renderNotifications();
 }
 
@@ -1162,6 +1164,7 @@ window.toggleNotifDropdown = function () {
 window.clearNotifications = function (e) {
     if (e) e.stopPropagation();
     notifications = [];
+    localStorage.removeItem('hdr_notifications');
     renderNotifications();
 };
 
