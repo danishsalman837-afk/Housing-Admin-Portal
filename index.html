@@ -1643,6 +1643,22 @@
             gap: 10px;
             align-items: flex-start;
             transition: background 0.12s;
+            position: relative;
+        }
+
+        .notif-item.unread {
+            background: rgba(10, 132, 255, 0.05);
+        }
+
+        .notif-item.unread::after {
+            content: '';
+            position: absolute;
+            right: 12px;
+            top: 12px;
+            width: 8px;
+            height: 8px;
+            background: var(--blue);
+            border-radius: 50%;
         }
 
         .notif-item:last-child {
@@ -1785,7 +1801,10 @@
                     <div class="notif-dropdown" id="notifDropdown">
                         <div class="notif-header">
                             <span>Notifications</span>
-                            <button class="notif-clear" onclick="clearNotifications(event)">Clear All</button>
+                            <div style="display:flex; gap:12px;">
+                                <button class="notif-clear" onclick="markAllAsRead(event)" style="color:var(--green);">Mark All as Read</button>
+                                <button class="notif-clear" onclick="clearNotifications(event)">Clear All</button>
+                            </div>
                         </div>
                         <div id="notifList">
                             <div class="notif-empty">No new notifications</div>

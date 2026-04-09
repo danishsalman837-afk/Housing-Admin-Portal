@@ -1433,7 +1433,7 @@ window.viewRejectionReason = function (activityId) {
 
 function addNotification(message, color) {
     color = color || 'blue';
-    notifications.unshift({ msg: message, color: color, time: new Date() });
+    notifications.unshift({ msg: message, color: color, time: new Date(), read: false });
     if (notifications.length > 50) notifications.pop();
     localStorage.setItem('hdr_notifications', JSON.stringify(notifications));
     renderNotifications();
@@ -1450,20 +1450,41 @@ function renderNotifications() {
         return;
     }
 
-    countEl.textContent = notifications.length;
-    countEl.classList.add('visible');
+    const unreadCount = notifications.filter(n => !n.read).length;
+    if (unreadCount > 0) {
+        countEl.textContent = unreadCount;
+        countEl.classList.add('visible');
+    } else {
+        countEl.classList.remove('visible');
+    }
 
-    list.innerHTML = notifications.map(n => {
+    list.innerHTML = notifications.map((n, idx) => {
         const timeStr = n.time ? new Date(n.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-        return `<div class="notif-item">
+        return `<div class="notif-item ${n.read ? '' : 'unread'}" onclick="markAsRead(${idx}, event)">
             <div class="notif-dot ${n.color}"></div>
             <div class="notif-text">
                 <div class="notif-msg">${n.msg}</div>
-                <div class="notif-time">${timeStr}</div>
+                <div class="notif-time">${timeStr} ${n.read ? '' : '<span style="color:var(--blue); font-size:9px; margin-left:8px; font-weight:700;">● NEW</span>'}</div>
             </div>
         </div>`;
     }).join('');
 }
+
+window.markAsRead = function(index, e) {
+    if (e) e.stopPropagation();
+    if (notifications[index]) {
+        notifications[index].read = true;
+        localStorage.setItem('hdr_notifications', JSON.stringify(notifications));
+        renderNotifications();
+    }
+};
+
+window.markAllAsRead = function(e) {
+    if (e) e.stopPropagation();
+    notifications.forEach(n => n.read = true);
+    localStorage.setItem('hdr_notifications', JSON.stringify(notifications));
+    renderNotifications();
+};
 
 window.toggleNotifDropdown = function () {
     const dd = document.getElementById('notifDropdown');
