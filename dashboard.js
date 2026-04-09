@@ -6,9 +6,33 @@ let notifications = JSON.parse(localStorage.getItem('hdr_notifications') || '[]'
 let charts = {};
 let selectedCompanyId = null;
 
+// ═══════════════════════════════════════
+// THEME MANAGEMENT
+// ═══════════════════════════════════════
+window.toggleTheme = function(e) {
+    if (e.target.checked) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem('theme', 'dark');
+    } else {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('theme', 'light');
+    }
+    // Re-init charts to update grid/label colors
+    calculateDashboardStats();
+};
+
+function syncThemeToggle() {
+    const theme = localStorage.getItem('theme');
+    const toggle = document.getElementById('checkbox');
+    if (toggle) {
+        toggle.checked = (theme === 'dark');
+    }
+}
+
+
 const leadStatuses = [
     'New Lead', 'Allocated', 'Sent', 'Accepted', 'Rejected', 'Transferred',
-    'Not Yet Invoiced', 'Invoice Raised', 'Paid', 'Test Lead', 'Archived', 'Closed'
+    'Not Yet Invoiced', 'Invoice Raised', 'Paid', 'Test Lead', 'Closed'
 ];
 
 function getStatusColor(status) {
@@ -140,12 +164,20 @@ function initCharts(data, acceptedCount, totalCount) {
         data.forEach(item => {
             if (item.timestamp) { const date = new Date(item.timestamp); if (!isNaN(date)) monthlyCounts[date.getMonth()]++; }
         });
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const gridColor = isDark ? 'rgba(255,255,255,0.1)' : '#F2F3F5';
+        const textColor = isDark ? '#8E8E93' : '#636366';
+
         charts.flow = new Chart(ctxFlow, {
-            type: 'bar', // Highlevel "Funnel" / Opportunity Value style
-            data: { labels: months, datasets: [{ label: 'Leads Received', data: monthlyCounts, backgroundColor: '#3B82F6', borderRadius: 4 }] },
+            type: 'bar',
+            data: { labels: months, datasets: [{ label: 'Leads Received', data: monthlyCounts, backgroundColor: '#0A84FF', borderRadius: 4 }] },
             options: {
-                responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
-                scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: '#F2F3F5' } } }
+                responsive: true, maintainAspectRatio: false, 
+                plugins: { legend: { display: false } },
+                scales: { 
+                    x: { grid: { display: false }, ticks: { color: textColor } }, 
+                    y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor } } 
+                }
             }
         });
     }
@@ -233,9 +265,14 @@ function renderTable(data) {
 
     data.forEach((item, index) => {
         const tr = document.createElement("tr");
+        tr.className = 'lead-row';
+        tr.onclick = (e) => {
+            // Don't open modal if clicking on select or buttons
+            if (e.target.closest('select') || e.target.closest('.action-container')) return;
+            window.openViewModal(item.id, false);
+        };
 
-        // Build company options: only show active companies for assignment.
-        // If the current item is already assigned to an inactive company, include it (marked Inactive).
+        // Build company options
         let compOptions = '<option value="">Unassigned</option>';
         const activeCompanies = companiesData.filter(c => c.active !== false);
         compOptions += activeCompanies.map(c => {
@@ -266,12 +303,12 @@ function renderTable(data) {
         }
 
         tr.innerHTML = `
-            <td>${index + 1}</td>
+            <td style="color:var(--label-4); font-weight:600;">#${index + 1}</td>
             <td><strong>${item.name || item.first_name || "---"}</strong></td>
-            <td>${item.phone || item.mobile_number || "---"}</td>
-            <td>${item.timestamp ? new Date(item.timestamp).toLocaleDateString() : '---'}</td>
+            <td style="color:var(--label-3);">${item.phone || item.mobile_number || "---"}</td>
+            <td style="color:var(--label-3);">${item.timestamp ? new Date(item.timestamp).toLocaleDateString() : '---'}</td>
             <td>
-                <select class="modern-select" style="padding: 6px 30px 6px 12px; font-size: 11px; width:175px; text-overflow: ellipsis; white-space: nowrap;" onchange="window.handleFieldUpdate('${item.id}', 'assigned_company_id', this.value)">${compOptions}</select>
+                <select class="modern-select" style="padding: 6px 30px 6px 12px; font-size: 11px; width:100%; max-width:180px;" onchange="window.handleFieldUpdate('${item.id}', 'assigned_company_id', this.value)">${compOptions}</select>
                 ${solicitorDisplay}
             </td>
             <td>
@@ -279,32 +316,55 @@ function renderTable(data) {
                     ${leadStatuses.map(s => `<option value="${s}" ${item.leadStatus === s ? 'selected' : ''}>${s}</option>`).join('')}
                 </select>
             </td>
-            <td>
-                <div class="action-group">
-                    ${(item.agent_data || item.is_edited) ? `
-                    <button class="act-btn view" style="background:rgba(59,130,246,0.1); color:#3B82F6;" onclick="window.openViewModal('${item.id}', true)" title="View Original Agent Submission">
-                         Agent View
-                    </button>` : ''}
-                    <button class="act-btn view" onclick="window.openViewModal('${item.id}', false)" title="View Profile (Current)">
-                        <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg> Admin View
+            <td style="text-align:right;">
+                <div class="action-container">
+                    <button class="btn-more" onclick="window.toggleDropdown(event, 'drop-${item.id}')" title="Actions">
+                        <svg viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
                     </button>
-                    <button class="act-btn edit" onclick="window.openEditLeadModal('${item.id}')" title="Edit Data">
-                        <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg> Edit
-                    </button>
-                    <button class="act-btn notes" onclick="window.openNotesModal('${item.id}')" title="Internal Notes">
-                        <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg> Notes
-                    </button>
-                    <button class="act-btn dl" onclick="window.exportDocx('${item.id}')" title="Download Word Doc">
-                        <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg> Download
-                    </button>
-                    <button class="act-btn" style="background:rgba(255,69,58,.10);color:#CC3328;border-color:rgba(255,69,58,.20);" onclick="window.archiveLead('${item.id}')" title="Delete Lead (Archive)">
-                        <svg viewBox="0 0 24 24" style="fill:currentColor; width:14px; height:14px;"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg> Delete
-                    </button>
+                    <div id="drop-${item.id}" class="dropdown-menu">
+                        ${(item.agent_data || item.is_edited) ? `
+                        <button class="dropdown-item" onclick="window.openViewModal('${item.id}', true)">
+                            <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg> Agent View
+                        </button>` : ''}
+                        <button class="dropdown-item" onclick="window.openViewModal('${item.id}', false)">
+                            <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg> Admin View
+                        </button>
+                        <button class="dropdown-item" onclick="window.openEditLeadModal('${item.id}')">
+                            <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg> Edit Lead
+                        </button>
+                        <button class="dropdown-item" onclick="window.openNotesModal('${item.id}')">
+                            <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg> View Notes
+                        </button>
+                        <button class="dropdown-item" onclick="window.exportDocx('${item.id}')">
+                            <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg> Download Word
+                        </button>
+                        <div style="border-top:1px solid var(--border); margin:4px 0;"></div>
+                        <button class="dropdown-item danger" onclick="window.archiveLead('${item.id}')">
+                            <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg> Archive Lead
+                        </button>
+                    </div>
                 </div>
             </td>`;
         tbody.appendChild(tr);
     });
 }
+
+// DROPDOWN LOGIC
+window.toggleDropdown = function(e, id) {
+    if (e) e.stopPropagation();
+    const dropdown = document.getElementById(id);
+    if (!dropdown) return;
+    const isOpen = dropdown.classList.contains('active');
+    
+    // Close all others
+    document.querySelectorAll('.dropdown-menu').forEach(d => d.classList.remove('active'));
+    
+    if (!isOpen) dropdown.classList.add('active');
+};
+
+document.addEventListener('click', () => {
+    document.querySelectorAll('.dropdown-menu').forEach(d => d.classList.remove('active'));
+});
 
 window.handleFieldUpdate = async function (id, fieldName, value) {
     try {
