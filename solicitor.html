@@ -441,78 +441,6 @@
             cursor: not-allowed;
         }
 
-        /* ═══ CONTACT REVEAL ═══ */
-        .sol-contact-reveal {
-            padding: 24px;
-            text-align: center;
-        }
-
-        .sol-contact-reveal .reveal-icon {
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            background: var(--green-light);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 16px;
-            animation: popIn 0.4s var(--ease-spring);
-        }
-
-        @keyframes popIn {
-            from { transform: scale(0); }
-            to { transform: scale(1); }
-        }
-
-        .sol-contact-reveal .reveal-icon svg {
-            width: 28px;
-            height: 28px;
-            fill: #228B35;
-        }
-
-        .sol-contact-reveal h3 {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--label-1);
-            margin-bottom: 6px;
-        }
-
-        .sol-contact-reveal p {
-            font-size: 13px;
-            color: var(--label-3);
-            margin-bottom: 20px;
-        }
-
-        .sol-revealed-details {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 12px;
-            text-align: center;
-        }
-
-        .sol-revealed-item {
-            background: var(--surface-2);
-            border-radius: var(--r-md);
-            padding: 16px 12px;
-            border: 1px solid var(--border);
-        }
-
-        .sol-revealed-item .label {
-            font-size: 10px;
-            font-weight: 700;
-            color: var(--label-4);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 6px;
-        }
-
-        .sol-revealed-item .value {
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--blue);
-            word-break: break-all;
-        }
-
         /* ═══ RESULT STATES ═══ */
         .sol-result-banner {
             padding: 20px 24px;
@@ -667,11 +595,6 @@
         <!-- Result banner (shown after action) -->
         <div id="resultBanner" style="display:none;"></div>
 
-        <!-- Contact Reveal Card (shown after accept) -->
-        <div id="contactRevealCard" class="sol-card" style="display:none;">
-            <div id="contactRevealBody"></div>
-        </div>
-
         <!-- Client Info -->
         <div class="sol-card">
             <div class="sol-card-header">
@@ -784,8 +707,8 @@
             const clientFields = [
                 { label: 'Full Name', value: leadData.name },
                 { label: 'Tenancy Type', value: leadData.tenantType },
-                { label: 'Landlord', value: leadData.landlordName },
-                { label: 'Postcode', value: leadData.postcode },
+                { label: 'Landlord', value: leadData.landlordName, masked: !leadData.contactRevealed },
+                { label: 'Postcode', value: leadData.postcode, masked: !leadData.contactRevealed },
                 { label: 'Email', value: leadData.email, masked: !leadData.contactRevealed },
                 { label: 'Phone', value: leadData.phone, masked: !leadData.contactRevealed },
                 { label: 'Date of Birth', value: leadData.dob, masked: !leadData.contactRevealed },
@@ -913,43 +836,24 @@
         function showAcceptedResult(contactDetails) {
             updateStatusPill('Accepted');
             document.getElementById('actionButtons').style.display = 'none';
+            leadData.status = 'Accepted';
 
             // Show banner
             const banner = document.getElementById('resultBanner');
             banner.style.display = 'block';
             banner.className = 'sol-result-banner accepted';
-            banner.innerHTML = '<h3>✓ Lead Accepted</h3><p>The contact details are now revealed below. The admin team has been notified.</p>';
+            banner.innerHTML = '<h3>✓ Lead Accepted</h3><p>The contact details have been revealed in the section below. The admin team has been notified.</p>';
 
-            // Show contact details
+            // Unmask the main grid
+            leadData.contactRevealed = true;
             if (contactDetails) {
-                const revealCard = document.getElementById('contactRevealCard');
-                revealCard.style.display = 'block';
-                document.getElementById('contactRevealBody').innerHTML = `
-                    <div class="sol-contact-reveal">
-                        <div class="reveal-icon">
-                            <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
-                        </div>
-                        <h3>Contact Details Revealed</h3>
-                        <p>You can now contact the client directly</p>
-                        <div class="sol-revealed-details">
-                            <div class="sol-revealed-item">
-                                <div class="label">Email</div>
-                                <div class="value">${contactDetails.email}</div>
-                            </div>
-                            <div class="sol-revealed-item">
-                                <div class="label">Phone</div>
-                                <div class="value">${contactDetails.phone}</div>
-                            </div>
-                            <div class="sol-revealed-item">
-                                <div class="label">Date of Birth</div>
-                                <div class="value">${contactDetails.dob}</div>
-                            </div>
-                        </div>
-                    </div>`;
+                // Merge the revealed details into leadData
+                Object.assign(leadData, contactDetails);
             }
+            renderLeadData();
 
             // Update hero text
-            document.getElementById('heroSub').textContent = 'You have accepted this lead. Contact details are available below.';
+            document.getElementById('heroSub').textContent = 'You have accepted this lead. Contact details are revealed below.';
         }
 
         function showRejectedResult() {

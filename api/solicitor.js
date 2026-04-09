@@ -133,7 +133,7 @@ module.exports = async function handler(req, res) {
           status: activityStatus,
           name: normalized.name || normalized.first_name || '---',
           tenantType: normalized.tenantType || '---',
-          landlordName: normalized.landlordName || '---',
+          landlordName: isAccepted ? (normalized.landlordName || '---') : '••••••••',
           address: isAccepted ? (normalized.address || '---') : '••••••••••••••••••••',
           postcode: isAccepted ? (normalized.postcode || '---') : '••••••••',
           damp: normalized.damp || '---', dampLocation: normalized.dampLocation || '---', dampRooms: normalized.dampRooms || '---',
@@ -180,7 +180,18 @@ module.exports = async function handler(req, res) {
           
           const { data: fullLead } = await supabase.from('submissions').select('*').eq('id', lead.id).single();
           const normalized = normalizeLead({ ...(fullLead || {}) });
-          return res.status(200).json({ success: true, status: 'Accepted', contactDetails: { email: normalized.email || '---', phone: normalized.phone || normalized.mobile_number || '---', dob: normalized.dob || '---' } });
+          return res.status(200).json({ 
+            success: true, 
+            status: 'Accepted', 
+            contactDetails: { 
+              email: normalized.email || '---', 
+              phone: normalized.phone || normalized.mobile_number || '---', 
+              dob: normalized.dob || '---',
+              address: normalized.address || '---',
+              postcode: normalized.postcode || '---',
+              landlordName: normalized.landlordName || '---'
+            } 
+          });
         } else if (action === 'reject') {
           if (!rejection_reason || !rejection_reason.trim()) return res.status(400).json({ error: "A rejection reason is required." });
           const { error: updErr } = await supabase.from('solicitor_activity').update({ status: 'Rejected', rejection_reason: rejection_reason.trim() }).eq('id', activity.id);
