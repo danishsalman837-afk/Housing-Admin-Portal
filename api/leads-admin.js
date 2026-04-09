@@ -64,6 +64,13 @@ module.exports = async function handler(req, res) {
           }
       }
 
+      // Backup original agent data if this is the first edit
+      const { data: currentLead } = await supabase.from('submissions').select('*').eq('id', id).single();
+      if (currentLead && !currentLead.agent_data) {
+          updates.agent_data = currentLead;
+          updates.is_edited = true;
+      }
+
       const { data, error } = await supabase.from('submissions').update(updates).eq('id', id).select();
       if (error) return res.status(500).json({ error: error.message });
       return res.status(200).json(data[0] || {});

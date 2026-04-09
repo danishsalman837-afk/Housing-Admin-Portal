@@ -266,8 +266,12 @@ function renderTable(data) {
             </td>
             <td>
                 <div class="action-group">
-                    <button class="act-btn view" onclick="window.openViewModal('${item.id}')" title="View Profile">
-                        <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg> View
+                    ${(item.agent_data || item.is_edited) ? `
+                    <button class="act-btn view" style="background:rgba(59,130,246,0.1); color:#3B82F6;" onclick="window.openViewModal('${item.id}', true)" title="View Original Agent Submission">
+                         Agent View
+                    </button>` : ''}
+                    <button class="act-btn view" onclick="window.openViewModal('${item.id}', false)" title="View Profile (Current)">
+                        <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg> Admin View
                     </button>
                     <button class="act-btn edit" onclick="window.openEditLeadModal('${item.id}')" title="Edit Data">
                         <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg> Edit
@@ -420,22 +424,53 @@ function formatDob(val) {
     return val;
 }
 
-window.openViewModal = function (id) {
+window.openViewModal = function (id, showOriginal = false) {
     const s = submissionsData.find(x => String(x.id) === String(id));
     if (!s) return;
 
-    const ignoreKeys = ['id', 'created_at', 'notes', 'assigned_company_id', 'assigned_solicitor_id', 'call_notes'];
+    let leadData = s;
+    let titlePrefix = "Current Lead Profile";
+
+    if (showOriginal && s.agent_data) {
+        // Apply normalizeLead logic if it's not already normalized (it likely isn't if stored raw)
+        // But since normalizeLead overwrites, we should clone it
+        leadData = JSON.parse(JSON.stringify(s.agent_data));
+        
+        // Ensure some fields from the main record are available if missing in backup
+        if (!leadData.attachments && s.attachments) leadData.attachments = s.attachments;
+        if (!leadData.id) leadData.id = s.id;
+        
+        // We need to normalize it since it's raw DB row
+        // In this environment normalizeLead is not global, but we can replicate it or just use it if possible
+        // Wait, normalizeLead is available in the API, but here in dashboard.js it's not.
+        // However, dashboard.js has its own display mappings.
+        titlePrefix = "Original Agent Submission";
+    } else if (showOriginal) {
+        titlePrefix = "Original Submission (No Edits)";
+    }
+
+    const ignoreKeys = ['id', 'created_at', 'notes', 'assigned_company_id', 'assigned_solicitor_id', 'call_notes', 'agent_data', 'is_edited'];
     let dataHtml = '';
-    const shownKeys = new Set();
 
     // 1. Show fields in the predefined order
     leadViewOrder.forEach(key => {
         if (ignoreKeys.includes(key)) return;
-        if (s[key] === undefined || s[key] === null) return;
+        
+        // Handle potential snake_case vs camelCase if leadData is raw
+        let val = leadData[key];
+        if (val === undefined || val === null) {
+            // Try common snake_case mappings
+            if (key === 'dateOfBirth') val = leadData['dob'];
+            else if (key === 'tenancyDuration') val = leadData['livingDuration'];
+            else if (key === 'name') val = leadData['first_name'];
+            else if (key === 'phone') val = leadData['mobile_number'];
+            else if (key === 'agentName') val = leadData['agent_name'];
+            // ... and so on. Better yet, just check if val is still undefined.
+        }
 
-        shownKeys.add(key);
+        if (val === undefined || val === null) return;
+
         let label = leadFieldLabels[key] || key.replace(/_/g, ' ');
-        let val = s[key];
 
         if (key === 'dob' || key === 'dateOfBirth') val = formatDob(val);
         if (typeof val === 'object' && val !== null) val = JSON.stringify(val);
@@ -447,11 +482,12 @@ window.openViewModal = function (id) {
             </div>`;
     });
 
-
-
     document.getElementById('modalBox').innerHTML = `
         <div class="modal-header">
-            <h2 style="font-size:20px; font-weight:800; letter-spacing:-0.5px;">Lead Profile: ${s.name || s.first_name || 'Client'}</h2>
+            <div>
+                <div style="font-size:11px; font-weight:700; color:var(--blue); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">${titlePrefix}</div>
+                <h2 style="font-size:20px; font-weight:800; letter-spacing:-0.5px;">${leadData.name || leadData.first_name || 'Client'}</h2>
+            </div>
             <button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button>
         </div>
         <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:24px; padding:0 8px; max-height:75vh; overflow-y:auto;">
@@ -464,7 +500,7 @@ window.openViewModal = function (id) {
                     Photo Evidence
                 </h3>
                 <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap:12px;">
-                    ${(s.attachments || []).map(a => `
+                    ${(leadData.attachments || []).map(a => `
                         <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:6px; box-shadow:var(--shadow-xs);">
                             <a href="${a.url}" target="_blank">
                                 <img src="${a.url}" style="width:100%; height:85px; object-fit:cover; border-radius:6px;">
@@ -472,7 +508,7 @@ window.openViewModal = function (id) {
                             <div style="font-size:9px; color:var(--label-3); margin-top:4px; text-align:center; overflow:hidden; text-overflow:ellipsis;">${a.name}</div>
                         </div>
                     `).join('')}
-                    ${(!s.attachments || s.attachments.length === 0) ? '<p style="font-size:13px; color:var(--label-4); font-style:italic; grid-column:1/-1; text-align:center;">No pictures attached.</p>' : ''}
+                    ${(!leadData.attachments || leadData.attachments.length === 0) ? '<p style="font-size:13px; color:var(--label-4); font-style:italic; grid-column:1/-1; text-align:center;">No pictures attached.</p>' : ''}
                 </div>
             </div>
         </div>
@@ -1115,10 +1151,17 @@ function renderActivityTable(data) {
                 Send Link
             </button>`;
         } else if (a.status === 'Rejected' && a.rejection_reason) {
-            actionsHtml = `<button class="act-btn notes" onclick="window.viewRejectionReason('${a.id}')" title="View Reason">
-                <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
-                Reason
-            </button>`;
+            actionsHtml = `
+                <div style="display:flex; gap:6px;">
+                    <button class="act-btn notes" style="padding: 6px 10px;" onclick="window.viewRejectionReason('${a.id}')" title="View Reason">
+                        <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+                        Reason
+                    </button>
+                    <button class="act-btn" style="background:var(--blue-light); color:var(--blue); border-color:var(--blue-ring); padding: 6px 10px;" onclick="window.openAllocateModal('${a.lead_id}')" title="Reallocate Lead">
+                        <svg viewBox="0 0 24 24" style="width:12px; height:12px; margin-right:4px;"><path d="M17 16l4-4-4-4M3 12h18"/></svg>
+                        Reallocate
+                    </button>
+                </div>`;
         } else {
             actionsHtml = '<span style="color:var(--label-4); font-size:11px;">—</span>';
         }
@@ -1140,21 +1183,25 @@ function renderActivityTable(data) {
 // SOLICITOR ACTIVITY — ALLOCATE MODAL
 // ═══════════════════════════════════════
 
-window.openAllocateModal = function () {
+window.openAllocateModal = function (preSelectedLeadId = null) {
     const allocatedLeadIds = activityData
         .filter(a => a.status === 'Allocated' || a.status === 'Sent')
         .map(a => String(a.lead_id));
 
     const availableLeads = submissionsData.filter(s => {
+        // If we have a preSelectedLeadId, make sure it's included even if "Allocated" (though usually it won't be if it's Rejected)
+        if (String(s.id) === String(preSelectedLeadId)) return true;
+        
         return !allocatedLeadIds.includes(String(s.id)) &&
                s.leadStatus !== 'Archived' &&
                s.leadStatus !== 'Agent Saved';
     });
 
-    let leadOptions = '<option value="" disabled selected>Select a lead…</option>';
+    let leadOptions = `<option value="" disabled ${!preSelectedLeadId ? 'selected' : ''}>Select a lead…</option>`;
     availableLeads.forEach(s => {
         const n = s.name || s.first_name || 'Unknown';
-        leadOptions += `<option value="${s.id}">${n} — ${s.phone || s.email || 'No contact'}</option>`;
+        const isSelected = String(s.id) === String(preSelectedLeadId);
+        leadOptions += `<option value="${s.id}" ${isSelected ? 'selected' : ''}>${n} — ${s.phone || s.email || 'No contact'}</option>`;
     });
 
     let solOptions = '<option value="" disabled selected>Select a solicitor…</option>';
