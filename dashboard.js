@@ -23,11 +23,7 @@ window.toggleTheme = function(e) {
 
 function syncThemeToggle() {
     const theme = localStorage.getItem('theme');
-    const toggle = document.getElementById('checkbox');
     const dropdownToggle = document.getElementById('dropdownThemeToggle');
-    if (toggle) {
-        toggle.checked = (theme === 'dark');
-    }
     if (dropdownToggle) {
         dropdownToggle.checked = (theme === 'dark');
     }
@@ -1631,10 +1627,20 @@ async function initUser() {
         // Update UI displays
         const nameEl = document.getElementById('usernameDisplay');
         const emailEl = document.getElementById('userEmailDisplay');
+        const roleEl = document.getElementById('userRoleDisplay');
         const avatarEl = document.getElementById('userAvatar');
         
         if (nameEl) nameEl.innerText = fullName;
         if (emailEl) emailEl.innerText = user.email;
+        
+        // Conditional Role Display
+        if (roleEl) {
+            if (user.email === 'danish@energygrants.online') {
+                roleEl.innerText = 'Administrator';
+            } else {
+                roleEl.innerText = 'User Logged In';
+            }
+        }
         
         if (avatarEl) {
             let initials = 'AD'; // Default Admin
