@@ -1,4 +1,4 @@
-const { createSupabaseClient, assertEnv } = require("./supabaseClient");
+const { createSupabaseClient, assertEnv } = require("./_supabaseClient");
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {

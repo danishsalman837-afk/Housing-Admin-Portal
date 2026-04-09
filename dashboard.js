@@ -876,7 +876,7 @@ window.initDashboard = async function () {
         const resMembers = await fetch('/api/members');
         if (resMembers.ok) membersData = JSON.parse(await resMembers.text());
 
-        const resActivity = await fetch('/api/solicitor-activity');
+        const resActivity = await fetch('/api/solicitor?route=activity');
         if (resActivity.ok) activityData = JSON.parse(await resActivity.text());
 
     } catch (e) {
@@ -1031,7 +1031,7 @@ window.submitAllocate = async function () {
     if (!leadId || !solId) return alert('Please select both a lead and a solicitor.');
 
     try {
-        const res = await fetch('/api/solicitor-activity', {
+        const res = await fetch('/api/solicitor?route=activity', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ lead_id: leadId, solicitor_id: solId, status: 'Allocated' })
@@ -1068,7 +1068,7 @@ window.sendLink = async function (activityId) {
     }
 
     try {
-        const res = await fetch('/api/send-link', {
+        const res = await fetch('/api/solicitor?route=send-link', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ activity_id: activityId })
@@ -1181,7 +1181,7 @@ document.addEventListener('click', function (e) {
 function initRealtimeSubscription() {
     setInterval(async () => {
         try {
-            const res = await fetch('/api/solicitor-activity');
+            const res = await fetch('/api/solicitor?route=activity');
             if (!res.ok) return;
             const freshData = await res.json();
 

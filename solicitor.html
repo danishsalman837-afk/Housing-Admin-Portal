@@ -753,7 +753,7 @@
 
         async function loadLeadData() {
             try {
-                const res = await fetch('/api/solicitor-view?token=' + encodeURIComponent(token));
+                const res = await fetch('/api/solicitor?route=view&token=' + encodeURIComponent(token));
                 if (!res.ok) {
                     const err = await res.json();
                     throw new Error(err.error || 'Failed to load lead data.');
@@ -858,7 +858,7 @@
             btn.innerHTML = '<div class="sol-spinner" style="width:18px;height:18px;border-width:2px;"></div> Accepting…';
 
             try {
-                const res = await fetch('/api/solicitor-view', {
+                const res = await fetch('/api/solicitor?route=view', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ token, action: 'accept' })
@@ -953,7 +953,7 @@
             submitBtn.textContent = 'Submitting…';
 
             try {
-                const res = await fetch('/api/solicitor-view', {
+                const res = await fetch('/api/solicitor?route=view', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ token, action: 'reject', rejection_reason: reason })

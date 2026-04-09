@@ -1,4 +1,4 @@
-const { createSupabaseClient, assertEnv } = require("./supabaseClient");
+const { createSupabaseClient, assertEnv } = require("./_supabaseClient");
 const crypto = require("crypto");
 
 // Webhook for Primo Dialler to push leads directly to Admin Dashboard

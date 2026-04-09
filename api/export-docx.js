@@ -1,4 +1,4 @@
-const { createSupabaseClient, assertEnv } = require("./supabaseClient");
+const { createSupabaseClient, assertEnv } = require("./_supabaseClient");
 const docx = require("docx");
 const {
   Document, Packer, Paragraph, TextRun,

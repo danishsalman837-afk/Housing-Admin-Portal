@@ -1,4 +1,4 @@
-const { createSupabaseClient, assertEnv } = require("./supabaseClient");
+const { createSupabaseClient, assertEnv } = require("./_supabaseClient");
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -11,7 +11,7 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: "Email and password are required." });
   }
 
-  const { createSupabaseClient, assertEnv } = require("./supabaseClient");
+  const { createSupabaseClient, assertEnv } = require("./_supabaseClient");
 
   if (!assertEnv('anon', res)) return;
   const supabase = createSupabaseClient('anon');

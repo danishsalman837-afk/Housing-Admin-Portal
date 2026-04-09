@@ -1,4 +1,4 @@
-const { createSupabaseClient, assertEnv, normalizeLead } = require("./supabaseClient");
+const { createSupabaseClient, assertEnv, normalizeLead } = require("./_supabaseClient");
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') {
