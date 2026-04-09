@@ -7,12 +7,13 @@ module.exports = async function handler(req, res) {
 
   try {
     const { action, id, ...fields } = req.body;
-    const type = req.query.type || (req.body.type); // "company" or "member"
+    // Prioritize the query parameter 'type' from the URL rewrite (company or member)
+    const resourceType = req.query.type || req.body.resourceType; 
 
     // ═════════════════════════════════════════════════
     // CRUD: COMPANIES
     // ═════════════════════════════════════════════════
-    if (type === 'company' || req.url.includes('companies')) {
+    if (resourceType === 'company' || req.url.includes('companies')) {
       if (method === 'GET') {
         const { data, error } = await supabase.from('solicitor_firms').select('*').order('name');
         if (error) return res.status(500).json({ error: error.message });
@@ -39,7 +40,7 @@ module.exports = async function handler(req, res) {
     // ═════════════════════════════════════════════════
     // CRUD: MEMBERS
     // ═════════════════════════════════════════════════
-    if (type === 'member' || req.url.includes('members')) {
+    if (resourceType === 'member' || req.url.includes('members')) {
       if (method === 'POST') {
         if (id && action === 'delete') {
           const { error } = await supabase.from('company_members').delete().eq('id', id);
@@ -62,7 +63,7 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    return res.status(405).json({ error: 'Method Not Allowed or Invalid Type' });
+    return res.status(405).json({ error: 'Method Not Allowed or Invalid Resource Type: ' + resourceType });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: "Server Error" });
