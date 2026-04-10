@@ -1332,6 +1332,25 @@ window.archiveLead = async function (id) {
     }
 };
 
+window.deleteActivity = async function (id) {
+    if (!confirm("Are you sure you want to delete this activity record?")) return;
+    try {
+        const res = await fetch('/api/solicitor?route=activity', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'delete', id })
+        });
+        if (!res.ok) throw new Error("Failed up delete activity");
+
+        activityData = activityData.filter(a => String(a.id) !== String(id));
+        renderFilteredActivity();
+        showToast('Activity Deleted', 'The record has been permanently removed.', 'info');
+    } catch (e) {
+        console.error("Delete Activity Error", e);
+        showToast('Error', "Could not remove activity record. Please try again.", 'danger');
+    }
+};
+
 window.initDashboard = async function () {
     try {
         const resSub = await fetch('/api/submissions');
@@ -1426,14 +1445,23 @@ function renderActivityTable(data) {
         const dateStr = a.created_at ? new Date(a.created_at).toLocaleDateString() : '---';
 
         let actionsHtml = '';
-        if (a.status === 'Allocated') {
-            actionsHtml = `<button class="sa-send-btn" id="send-btn-${a.id}" onclick="window.sendLink('${a.id}')">
-                <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-                Send Link
+        const deleteBtn = `
+            <button class="act-btn" style="background:rgba(255,69,58,0.1); color:var(--red); border-color:rgba(255,69,58,0.2); padding: 6px 8px; width:30px; height:30px; display:flex; align-items:center; justify-content:center; border-radius:6px; transition:all 0.2s;" onclick="window.deleteActivity('${a.id}')" title="Delete Activity">
+                <svg viewBox="0 0 24 24" style="width:14px; height:14px; fill:currentColor;"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
             </button>`;
+
+        if (a.status === 'Allocated') {
+            actionsHtml = `
+                <div style="display:flex; gap:6px; align-items:center;">
+                    <button class="sa-send-btn" id="send-btn-${a.id}" onclick="window.sendLink('${a.id}')">
+                        <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                        Send Link
+                    </button>
+                    ${deleteBtn}
+                </div>`;
         } else if (a.status === 'Accepted' || a.status === 'Rejected') {
             actionsHtml = `
-                <div style="display:flex; gap:6px;">
+                <div style="display:flex; gap:6px; align-items:center;">
                     <button class="act-btn view" style="padding: 6px 10px;" onclick="window.viewActivityDetail('${a.id}')" title="View Details">
                         <svg viewBox="0 0 24 24"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
                         Details
@@ -1444,12 +1472,17 @@ function renderActivityTable(data) {
                             Reallocate
                         </button>
                     ` : ''}
+                    ${deleteBtn}
                 </div>`;
         } else {
-            actionsHtml = `<button class="act-btn view" style="padding: 6px 10px; opacity:0.6;" onclick="window.viewActivityDetail('${a.id}')" title="View Progress">
-                    <svg viewBox="0 0 24 24"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
-                    Track
-                </button>`;
+            actionsHtml = `
+                <div style="display:flex; gap:6px; align-items:center;">
+                    <button class="act-btn view" style="padding: 6px 10px; opacity:0.6;" onclick="window.viewActivityDetail('${a.id}')" title="View Progress">
+                        <svg viewBox="0 0 24 24"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+                        Track
+                    </button>
+                    ${deleteBtn}
+                </div>`;
         }
 
         const tr = document.createElement('tr');
