@@ -3,25 +3,29 @@
 ═══════════════════════════════════════ */
 :root {
     /* Base Palette (Light Theme) */
-    --bg-main:         #F8FAFC;          
+    --bg-main:         #F8F9FA;          
     --bg-surface:      #FFFFFF;          
-    --bg-surface-2:    #F1F5F9;
+    --bg-surface-2:    #F8F9FA;
     --bg-elevated:     #FFFFFF;
 
     /* Semantic UI */
-    --text-main:       #0F172A;
-    --text-muted:      #64748B;
-    --text-light:      #94A3B8;
+    --text-main:       #212529;
+    --text-muted:      #6C757D;
+    --text-light:      #ADB5BD;
 
     /* Borders */
-    --border-light:    #E2E8F0;
-    --border-strong:   #CBD5E1;
+    --border-light:    #DEE2E6;
+    --border-strong:   #CED4DA;
 
-    /* Primary Accent - Indigo */
-    --primary:         #4F46E5;
-    --primary-hover:   #4338CA;
-    --primary-light:   #EEF2FF;
-    --primary-text:    #3730A3;
+    /* Primary Accent - Refined Blue */
+    --primary:         #0D6EFD;
+    --primary-hover:   #0B5ED7;
+    --primary-light:   #E7F1FF;
+    --primary-text:    #0A58CA;
+    
+    /* Elevated Surface for Cards */
+    --surface-elevated: #FFFFFF;
+    --surface-elevated-hover: #F8F9FA;
     
     /* Status Colors */
     --status-success-bg: #DCFCE7;
@@ -761,14 +765,24 @@ body {
 
 .modern-input, .modern-select {
     width: 100%;
-    padding: 9px 14px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border-strong);
-    background: var(--bg-surface-2);
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: 2px solid var(--border-light);
+    background: var(--bg-surface);
     color: var(--text-main);
-    font-size: 13px;
+    font-size: 14px;
     outline: none;
-    transition: var(--transition);
+    transition: all 0.2s ease;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);
+}
+.modern-input:focus, .modern-select:focus {
+    background: var(--bg-surface);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(13, 111, 253, 0.25);
+}
+.modern-input::placeholder, .modern-select::placeholder {
+    color: var(--text-muted);
+    opacity: 0.7;
 }
 
 .modern-input:focus, .modern-select:focus {
@@ -1229,6 +1243,7 @@ select.status-pill {
     grid-template-columns: 260px 1fr;
     gap: 32px;
     align-items: start;
+    margin-top: 20px;
 }
 
 #settingsView .settings-sidebar {
@@ -1237,6 +1252,8 @@ select.status-pill {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    width: 260px;
+    flex-shrink: 0;
 }
 
 #settingsView .settings-nav-item {
@@ -1254,18 +1271,31 @@ select.status-pill {
     background: transparent;
     width: 100%;
     text-align: left;
+    position: relative;
+    overflow: hidden;
 }
 
 #settingsView .settings-nav-item:hover {
     background: var(--bg-surface-2);
     color: var(--text-main);
+    transform: translateX(4px);
 }
 
 #settingsView .settings-nav-item.active {
-    background: var(--bg-surface);
+    background: var(--primary-light);
     color: var(--primary);
-    border-color: var(--border-light);
+    border-color: var(--primary);
     box-shadow: var(--shadow-sm);
+    position: relative;
+}
+#settingsView .settings-nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 4px;
+    background: var(--primary);
 }
 
 #settingsView .settings-nav-item svg {
@@ -1281,6 +1311,22 @@ select.status-pill {
     border-radius: 20px;
     padding: 40px;
     box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+#settingsView .settings-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+#settingsView .settings-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 4px;
+    width: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--primary-hover));
 }
 
 #settingsView .settings-card-header {
@@ -1288,16 +1334,28 @@ select.status-pill {
 }
 
 #settingsView .settings-title {
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 800;
     color: var(--text-main);
     letter-spacing: -0.5px;
     margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+#settingsView .settings-title::before {
+    content: '';
+    width: 4px;
+    height: 24px;
+    background: var(--primary);
+    border-radius: 2px;
 }
 
 #settingsView .settings-desc {
     font-size: 14px;
     color: var(--text-muted);
+    line-height: 1.6;
+    max-width: 400px;
 }
 
 /* Avatar UI */
@@ -1376,12 +1434,12 @@ select.status-pill {
 
 .settings-label {
     display: block;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .settings-footer {
