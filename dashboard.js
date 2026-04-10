@@ -464,6 +464,22 @@ window.handleFieldUpdate = async function (id, fieldName, value) {
             updateParams['assigned_solicitor_id'] = null;
         }
 
+        // SYNC: If status becomes "New Lead", we MUST unassign everything and clear activity tracking
+        if (fieldName === 'leadStatus' && value === 'New Lead') {
+            updateParams['assigned_company_id'] = null;
+            updateParams['assigned_solicitor_id'] = null;
+            
+            // Delete activities in background
+            fetch('/api/solicitor?route=activity', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'delete', lead_id: id })
+            }).then(() => {
+                activityData = activityData.filter(a => String(a.lead_id) !== String(id));
+                if (document.getElementById('activityView')?.classList.contains('active')) renderFilteredActivity();
+            }).catch(err => console.error("Activity deletion failed", err));
+        }
+
         const res = await fetch('/api/update', { 
             method: 'POST', 
             headers: { 'Content-Type': 'application/json' }, 
@@ -477,6 +493,10 @@ window.handleFieldUpdate = async function (id, fieldName, value) {
         if (lead) {
             lead[fieldName] = sanitizedValue;
             if (fieldName === 'assigned_company_id' && sanitizedValue === null) {
+                lead['assigned_solicitor_id'] = null;
+            }
+            if (fieldName === 'leadStatus' && sanitizedValue === 'New Lead') {
+                lead['assigned_company_id'] = null;
                 lead['assigned_solicitor_id'] = null;
             }
         }

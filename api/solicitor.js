@@ -31,9 +31,14 @@ module.exports = async function handler(req, res) {
     if (req.method === 'POST') {
       try {
         const { id, action, ...fields } = req.body;
-        if (id && action === 'delete') {
-          const { error } = await supabase.from('solicitor_activity').delete().eq('id', id);
-          if (error) return res.status(500).json({ error: error.message });
+        if (action === 'delete') {
+          if (id) {
+            const { error } = await supabase.from('solicitor_activity').delete().eq('id', id);
+            if (error) return res.status(500).json({ error: error.message });
+          } else if (fields.lead_id) {
+            const { error } = await supabase.from('solicitor_activity').delete().eq('lead_id', fields.lead_id);
+            if (error) return res.status(500).json({ error: error.message });
+          }
           return res.status(200).json({ success: true });
         }
         if (id) {
