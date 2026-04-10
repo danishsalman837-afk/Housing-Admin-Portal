@@ -923,6 +923,7 @@ tr:hover .btn-action-icon {
     cursor: pointer;
     outline: none;
     font-family: inherit;
+    text-transform: uppercase;
 }
 
 select.status-pill {
