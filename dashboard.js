@@ -388,12 +388,33 @@ document.addEventListener('click', () => {
 window.handleFieldUpdate = async function (id, fieldName, value) {
     try {
         const updateParams = { id };
-        updateParams[fieldName] = value;
-        const res = await fetch('/api/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updateParams) });
-        if (!res.ok) throw new Error("Update failed");
+        
+        // Convert empty strings to null for database compatibility (UUID/Int fields)
+        let sanitizedValue = (value === "" || value === "null" || value === undefined) ? null : value;
+        updateParams[fieldName] = sanitizedValue;
+
+        // SYNC: If we unassign a company, we MUST also unassign the solicitor member
+        if (fieldName === 'assigned_company_id' && sanitizedValue === null) {
+            updateParams['assigned_solicitor_id'] = null;
+        }
+
+        const res = await fetch('/api/update', { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify(updateParams) 
+        });
+        
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error || "Update failed");
         
         const lead = submissionsData.find(s => String(s.id) === String(id));
-        if (lead) lead[fieldName] = value;
+        if (lead) {
+            lead[fieldName] = sanitizedValue;
+            if (fieldName === 'assigned_company_id' && sanitizedValue === null) {
+                lead['assigned_solicitor_id'] = null;
+            }
+        }
+        
         if (fieldName === 'leadStatus') calculateDashboardStats();
         
         // If we updated assignments or status, refresh the table to reflect changes (especially solicitor names)
@@ -404,7 +425,7 @@ window.handleFieldUpdate = async function (id, fieldName, value) {
         showToast('Update Successful', `The ${fieldName.replace(/_/g, ' ')} has been updated.`, 'success');
     } catch (e) { 
         console.error(e); 
-        showToast('Update Failed', e.message, 'danger');
+        showToast('Update Error', e.message, 'danger');
     }
 };
 
@@ -1346,17 +1367,40 @@ function renderActivityTable(data) {
 // SOLICITOR ACTIVITY — ALLOCATE MODAL
 // ═══════════════════════════════════════
 
+window.updateAllocMemberOptions = function(companyId) {
+    const memberSelect = document.getElementById('allocMemberSelect');
+    const memberGroup = document.getElementById('allocMemberGroup');
+    if (!memberSelect || !memberGroup) return;
+
+    if (!companyId) {
+        memberGroup.style.display = 'none';
+        return;
+    }
+
+    const members = membersData.filter(m => String(m.company_id) === String(companyId) && m.can_receive_emails !== false);
+    
+    if (members.length === 0) {
+        memberSelect.innerHTML = '<option value="" disabled selected>No authorized members found for this firm</option>';
+    } else {
+        let options = '<option value="" disabled selected>Select an authorized person…</option>';
+        members.forEach(m => {
+            const mName = ((m.first_name || '') + ' ' + (m.last_name || '')).trim() || 'Unknown';
+            options += `<option value="${m.id}">${mName}</option>`;
+        });
+        memberSelect.innerHTML = options;
+    }
+    memberGroup.style.display = 'block';
+};
+
 window.openAllocateModal = function (preSelectedLeadId = null) {
     const allocatedLeadIds = activityData
         .filter(a => a.status === 'Allocated' || a.status === 'Sent')
         .map(a => String(a.lead_id));
 
     const availableLeads = submissionsData.filter(s => {
-        // If we are reallocating a specific lead, ONLY show that lead to prevent mistakes
         if (preSelectedLeadId) {
             return String(s.id) === String(preSelectedLeadId);
         }
-        
         return !allocatedLeadIds.includes(String(s.id)) &&
                s.leadStatus !== 'Archived' &&
                s.leadStatus !== 'Agent Saved';
@@ -1371,21 +1415,12 @@ window.openAllocateModal = function (preSelectedLeadId = null) {
         leadOptions += `<option value="${s.id}" ${isSelected ? 'selected' : ''}>${n} — ${s.phone || s.email || 'No contact'}</option>`;
     });
 
-    let solOptions = '<option value="" disabled selected>Select a solicitor…</option>';
-    const activeCompanyIds = companiesData.filter(c => c.active !== false).map(c => String(c.id));
-    // Only show authorized members for selection
-    const activeMembers = membersData.filter(m => activeCompanyIds.includes(String(m.company_id)) && m.can_receive_emails !== false);
-    
-    if (activeMembers.length === 0) {
-        solOptions = '<option value="" disabled selected>No authorized solicitors found…</option>';
-    } else {
-        activeMembers.forEach(m => {
-            const mName = ((m.first_name || '') + ' ' + (m.last_name || '')).trim() || 'Unknown';
-            const comp = companiesData.find(c => String(c.id) === String(m.company_id));
-            const compName = comp?.name || comp?.company_name || '';
-            solOptions += `<option value="${m.id}">${compName ? compName + ' — ' : ''}${mName}</option>`;
-        });
-    }
+    let firmOptions = '<option value="" disabled selected>Select a firm…</option>';
+    const activeCompanies = companiesData.filter(c => c.active !== false);
+    activeCompanies.forEach(c => {
+        const cName = c.name || c.company_name || 'Unnamed Firm';
+        firmOptions += `<option value="${c.id}">${cName}</option>`;
+    });
 
     document.getElementById('modalBox').innerHTML = `
         <div class="modal-header">
@@ -1398,8 +1433,12 @@ window.openAllocateModal = function (preSelectedLeadId = null) {
                 <select id="allocLeadSelect" class="modern-select">${leadOptions}</select>
             </div>
             <div class="form-group full">
-                <label>Assign to Solicitor</label>
-                <select id="allocSolSelect" class="modern-select">${solOptions}</select>
+                <label>Assign to Firm</label>
+                <select id="allocCompanySelect" class="modern-select" onchange="window.updateAllocMemberOptions(this.value)">${firmOptions}</select>
+            </div>
+            <div class="form-group full" id="allocMemberGroup" style="display:none; transition: all 0.3s ease;">
+                <label>Select Authorized Person</label>
+                <select id="allocMemberSelect" class="modern-select"></select>
             </div>
         </div>
         <button class="btn-action" style="margin-top:24px; width:100%; justify-content:center; padding:12px;" onclick="window.submitAllocate()">${preSelectedLeadId ? 'Reallocate Lead' : 'Allocate Lead'}</button>
@@ -1409,7 +1448,7 @@ window.openAllocateModal = function (preSelectedLeadId = null) {
 
 window.submitAllocate = async function () {
     const leadId = document.getElementById('allocLeadSelect')?.value;
-    const solId = document.getElementById('allocSolSelect')?.value;
+    const solId = document.getElementById('allocMemberSelect')?.value;
 
     if (!leadId || !solId) return showToast('Selection Required', 'Please select both a lead and a solicitor.', 'warning');
 
