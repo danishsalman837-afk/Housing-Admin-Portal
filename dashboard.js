@@ -1928,7 +1928,7 @@ window.handleProfilePicUpload = async function(input) {
         const session = JSON.parse(localStorage.getItem('admin_session'));
 
         // Use the dedicated profile pic upload endpoint
-        const res = await fetch('/api/upload-profile-pic', {
+        const res = await fetch('/api/profile?route=upload-avatar', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

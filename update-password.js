@@ -31,7 +31,7 @@ if (updateForm) {
         errorMsg.innerText = '';
 
         try {
-            const res = await fetch('/api/update-password', {
+            const res = await fetch('/api/auth?action=update-password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 

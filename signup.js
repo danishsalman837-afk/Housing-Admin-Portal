@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const password = document.getElementById('password').value;
 
             try {
-                const res = await fetch('/api/signup', {
+                const res = await fetch('/api/auth?action=signup', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ fullName, email, password })
