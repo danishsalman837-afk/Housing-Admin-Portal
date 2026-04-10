@@ -2237,6 +2237,15 @@ window.finalizeAvatarAdjustment = async function(fileName, fileType) {
         document.getElementById('settingsAvatarImg').style.display = 'block';
         document.getElementById('settingsAvatarInitials').style.display = 'none';
         
+        // Instant top-bar update (preview only until Save Profile)
+        const topImg = document.getElementById('userAvatarImg');
+        const topInitials = document.getElementById('userInitials');
+        if (topImg && topInitials) {
+            topImg.src = imgUrl;
+            topImg.style.display = 'block';
+            topInitials.style.display = 'none';
+        }
+        
         window._pendingAvatarUrl = imgUrl;
         document.getElementById('modalOverlay').style.display = 'none';
         showToast('Avatar Adjusted', 'Profile photo updated successfully. Click "Save Profile" to finalize.', 'success');
