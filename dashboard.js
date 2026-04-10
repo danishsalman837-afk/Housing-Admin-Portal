@@ -2188,9 +2188,11 @@ window.saveProfileSettings = async function() {
 };
 
 window.savePasswordSettings = async function() {
+    const currPass = document.getElementById('settingsCurrentPassword').value;
     const newPass = document.getElementById('settingsNewPassword').value;
     const confPass = document.getElementById('settingsConfirmPassword').value;
 
+    if (!currPass) return showToast('Error', 'Please enter your current password for verification.', 'warning');
     if (!newPass) return showToast('Error', 'Please enter a new password.', 'warning');
     if (newPass !== confPass) return showToast('Mismatch', 'Passwords do not match.', 'danger');
     if (newPass.length < 6) return showToast('Weak Password', 'Password should be at least 6 characters.', 'warning');
@@ -2209,6 +2211,7 @@ window.savePasswordSettings = async function() {
         if (!res.ok) throw new Error(result.error || 'Failed to update password');
 
         showToast('Password Updated', 'Your password has been changed successfully.', 'success');
+        document.getElementById('settingsCurrentPassword').value = '';
         document.getElementById('settingsNewPassword').value = '';
         document.getElementById('settingsConfirmPassword').value = '';
     } catch (e) {
