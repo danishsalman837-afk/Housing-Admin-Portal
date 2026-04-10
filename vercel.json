@@ -10,10 +10,12 @@
   ],
   "rewrites": [
     { "source": "/api/upload", "destination": "/api/attachments?action=upload" },
+    { "source": "/api/upload-profile-pic", "destination": "/api/upload-profile-pic" },
     { "source": "/api/delete-attachment", "destination": "/api/attachments?action=delete" },
     { "source": "/api/companies", "destination": "/api/crm?type=company" },
     { "source": "/api/members", "destination": "/api/crm?type=member" },
     { "source": "/api/update", "destination": "/api/leads-admin?route=update" },
+    { "source": "/api/profile", "destination": "/api/profile" },
     { "source": "/api/get-lead", "destination": "/api/leads-admin?route=get" },
     { "source": "/api/submissions", "destination": "/api/leads-admin?route=list" },
     { "source": "/api/submit", "destination": "/api/leads-public?route=submit" },

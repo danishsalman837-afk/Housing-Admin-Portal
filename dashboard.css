@@ -1208,3 +1208,85 @@ select.status-pill {
 .hdr-toast-info .hdr-toast-icon    { background: #007AFF; box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3); }
 
 
+
+/* ═══════════════════════════════════════
+   SETTINGS VIEW STYLES
+   ═══════════════════════════════════════ */
+
+.panel {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-small {
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.user-avatar-trigger {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    overflow: hidden;
+    position: relative;
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
+}
+
+.user-avatar-trigger:hover {
+    transform: scale(1.05);
+    box-shadow: var(--shadow-md);
+}
+
+/* Internal Settings Layout */
+#settingsView .nav-item {
+    border-radius: var(--radius-md);
+    margin-bottom: 4px;
+}
+
+#settingsView .nav-item.active {
+    background: var(--primary-light);
+    color: var(--primary-text);
+}
+
+#settingsView .nav-item:not(.active):hover {
+    background: var(--bg-surface-2);
+}
+
+/* Colors for specific UI elements */
+.orange-light { background: rgba(255, 159, 10, 0.1); }
+.blue-light { background: var(--primary-light); }
+.green { background: #34C759; color: white; }
+.green:hover { background: #28a745; }
+
+/* Responsive Settings */
+@media (max-width: 992px) {
+    #settingsView > div {
+        grid-template-columns: 1fr !important;
+    }
+    #settingsView .panel:first-child {
+        position: static !important;
+    }
+}

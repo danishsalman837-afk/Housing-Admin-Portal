@@ -121,12 +121,48 @@ window.switchView = function (view) {
         document.getElementById('activityView').classList.add('active');
         navItems[2].classList.add('active');
         renderFilteredActivity();
+    } else if (view === 'settings') {
+        document.getElementById('settingsView').classList.add('active');
+        navItems[4].classList.add('active');
+        populateSettings();
     } else {
         document.getElementById('leadsView').classList.add('active');
         navItems[3].classList.add('active');
         renderFilteredLeads();
     }
 };
+
+function populateSettings() {
+    const sessionStr = localStorage.getItem('admin_session');
+    if (!sessionStr) return;
+    const session = JSON.parse(sessionStr);
+    const user = session.user;
+
+    const fullName = user.user_metadata?.full_name || user.user_metadata?.username || user.email.split('@')[0];
+    
+    document.getElementById('settingsFullName').value = fullName;
+    document.getElementById('settingsEmail').value = user.email;
+
+    // Avatar preview
+    const avatarUrl = user.user_metadata?.avatar_url;
+    const initialsEl = document.getElementById('settingsAvatarInitials');
+    const imgEl = document.getElementById('settingsAvatarImg');
+    
+    if (avatarUrl) {
+        initialsEl.style.display = 'none';
+        imgEl.src = avatarUrl;
+        imgEl.style.display = 'block';
+    } else {
+        initialsEl.style.display = 'flex';
+        imgEl.style.display = 'none';
+        // Generate initials
+        let initials = 'AD';
+        const parts = fullName.trim().split(/[\s_\.-]+/);
+        if (parts.length >= 2) initials = (parts[0][0] + parts[1][0]).toUpperCase();
+        else if (fullName.length >= 2) initials = fullName.substring(0, 2).toUpperCase();
+        initialsEl.innerText = initials;
+    }
+}
 
 function calculateDashboardStats() {
     const total = submissionsData.length;
@@ -1799,31 +1835,32 @@ async function initUser() {
         const emailEl = document.getElementById('userEmailDisplay');
         const roleEl = document.getElementById('userRoleDisplay');
         const avatarEl = document.getElementById('userAvatar');
+        const initialsEl = document.getElementById('userInitials');
+        const imgEl = document.getElementById('userAvatarImg');
         
         if (nameEl) nameEl.innerText = fullName;
         if (emailEl) emailEl.innerText = user.email;
         
-        // Conditional Role Display
-        if (roleEl) {
-            if (user.email === 'danish@energygrants.online') {
-                roleEl.innerText = 'Administrator';
-            } else {
-                roleEl.innerText = 'User Logged In';
-            }
-        }
-        
-        if (avatarEl) {
-            let initials = 'AD'; // Default Admin
+        // Avatar logic
+        const avatarUrl = user.user_metadata?.avatar_url;
+        if (avatarUrl && imgEl && initialsEl) {
+            initialsEl.style.display = 'none';
+            imgEl.src = avatarUrl;
+            imgEl.style.display = 'block';
+        } else if (avatarEl) {
+            if (imgEl) imgEl.style.display = 'none';
+            if (initialsEl) initialsEl.style.display = 'inline';
+            
+            let initials = 'AD'; 
             const parts = fullName.trim().split(/[\s_\.-]+/);
             if (parts.length >= 2) {
-                // Take first letter of first part and first letter of second part (Jane Smith -> JS)
                 initials = (parts[0][0] + parts[1][0]).toUpperCase();
             } else if (fullName.length >= 2) {
                 initials = fullName.substring(0, 2).toUpperCase();
             } else {
                 initials = fullName.substring(0, 1).toUpperCase();
             }
-            avatarEl.innerText = initials;
+            if (initialsEl) initialsEl.innerText = initials;
         }
 
         syncThemeToggle();
@@ -1870,6 +1907,152 @@ window.logout = function() {
     setTimeout(() => {
         window.location.href = '/login.html';
     }, 400);
+};
+
+// ═══════════════════════════════════════
+// SETTINGS ACTIONS
+// ═══════════════════════════════════════
+
+window.handleProfilePicUpload = async function(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    try {
+        const reader = new FileReader();
+        const base64Promise = new Promise((resolve) => {
+            reader.onload = () => resolve(reader.result);
+            reader.readAsDataURL(file);
+        });
+
+        const base64Content = await base64Promise;
+        const session = JSON.parse(localStorage.getItem('admin_session'));
+
+        // Use the dedicated profile pic upload endpoint
+        const res = await fetch('/api/upload-profile-pic', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId: session.user.id,
+                name: file.name,
+                type: file.type,
+                content: base64Content
+            })
+        });
+
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error || 'Upload failed');
+
+        const imgUrl = result.url;
+        
+        const previewImg = document.getElementById('settingsAvatarImg');
+        const previewInitials = document.getElementById('settingsAvatarInitials');
+        previewImg.src = imgUrl;
+        previewImg.style.display = 'block';
+        previewInitials.style.display = 'none';
+
+        // Store temporary avatar URL to be saved with profile
+        window._pendingAvatarUrl = imgUrl;
+        showToast('Avatar Uploaded', 'Click "Save Changes" to apply.', 'success');
+
+    } catch (e) {
+        console.error(e);
+        showToast('Upload Error', e.message, 'danger');
+    }
+};
+
+window.removeProfilePic = function() {
+    const previewImg = document.getElementById('settingsAvatarImg');
+    const previewInitials = document.getElementById('settingsAvatarInitials');
+    previewImg.src = '';
+    previewImg.style.display = 'none';
+    previewInitials.style.display = 'flex';
+    window._pendingAvatarUrl = null;
+    window._profilePicRemoved = true;
+};
+
+window.saveProfileSettings = async function() {
+    const fullName = document.getElementById('settingsFullName').value.trim();
+    const email = document.getElementById('settingsEmail').value.trim();
+    const session = JSON.parse(localStorage.getItem('admin_session'));
+    const userId = session.user.id;
+
+    const payload = {
+        id: userId,
+        username: fullName,
+        email: email
+    };
+
+    if (window._pendingAvatarUrl) {
+        payload.avatar_url = window._pendingAvatarUrl;
+    } else if (window._profilePicRemoved) {
+        payload.avatar_url = null;
+    }
+
+    try {
+        const res = await fetch('/api/profile?route=update-profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error || 'Failed to update profile');
+
+        // Update local session
+        session.user = result.user;
+        localStorage.setItem('admin_session', JSON.stringify(session));
+
+        showToast('Profile Updated', 'Your settings have been saved.', 'success');
+        initUser(); // Refresh top bar
+    } catch (e) {
+        console.error(e);
+        showToast('Update Failed', e.message, 'danger');
+    }
+};
+
+window.savePasswordSettings = async function() {
+    const newPass = document.getElementById('settingsNewPassword').value;
+    const confPass = document.getElementById('settingsConfirmPassword').value;
+
+    if (!newPass) return showToast('Error', 'Please enter a new password.', 'warning');
+    if (newPass !== confPass) return showToast('Mismatch', 'Passwords do not match.', 'danger');
+    if (newPass.length < 6) return showToast('Weak Password', 'Password should be at least 6 characters.', 'warning');
+
+    const session = JSON.parse(localStorage.getItem('admin_session'));
+    const userId = session.user.id;
+
+    try {
+        const res = await fetch('/api/profile?route=update-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: userId, password: newPass })
+        });
+
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error || 'Failed to update password');
+
+        showToast('Password Updated', 'Your password has been changed successfully.', 'success');
+        document.getElementById('settingsNewPassword').value = '';
+        document.getElementById('settingsConfirmPassword').value = '';
+    } catch (e) {
+        console.error(e);
+        showToast('Update Error', e.message, 'danger');
+    }
+};
+
+window.scrollIntoView = function(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    
+    // Update active state in settings nav
+    document.querySelectorAll('#settingsView .nav-item').forEach(btn => {
+        if (btn.innerText.includes(id === 'profile-section' ? 'Profile' : 'Security')) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
 };
 
 // Initialize user on load
