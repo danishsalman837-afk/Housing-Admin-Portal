@@ -179,7 +179,10 @@ module.exports = async function handler(req, res) {
         if (activity.status === 'Accepted' || activity.status === 'Rejected') return res.status(400).json({ error: `This lead has already been ${activity.status.toLowerCase()}.` });
 
         if (action === 'accept') {
-          const { error: updErr } = await supabase.from('solicitor_activity').update({ status: 'Accepted' }).eq('id', activity.id);
+          const { error: updErr } = await supabase.from('solicitor_activity').update({ 
+            status: 'Accepted',
+            accepted_at: new Date().toISOString()
+          }).eq('id', activity.id);
           if (updErr) return res.status(500).json({ error: updErr.message });
           await supabase.from('submissions').update({ 
               actual_status: 'Assigned',

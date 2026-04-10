@@ -1412,8 +1412,17 @@ function renderActivityTable(data) {
                         Reallocate
                     </button>
                 </div>`;
+        } else if (a.status === 'Accepted') {
+            actionsHtml = `
+                <button class="act-btn view" style="padding: 6px 10px;" onclick="window.viewActivityDetail('${a.id}')" title="View Details">
+                    <svg viewBox="0 0 24 24"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+                    Details
+                </button>`;
         } else {
-            actionsHtml = '<span style="color:var(--label-4); font-size:11px;">—</span>';
+            actionsHtml = `<button class="act-btn view" style="padding: 6px 10px; opacity:0.6;" onclick="window.viewActivityDetail('${a.id}')" title="View Progress">
+                    <svg viewBox="0 0 24 24"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+                    Track
+                </button>`;
         }
 
         const tr = document.createElement('tr');
@@ -1629,6 +1638,98 @@ window.viewRejectionReason = function (activityId) {
         <div style="background:#FEF2F2; border:1px solid rgba(255,69,58,0.2); border-radius:12px; padding:16px;">
             <label style="font-size:11px; font-weight:700; color:#CC3328; text-transform:uppercase; letter-spacing:0.5px;">Reason for Rejection</label>
             <div style="font-size:14px; color:#1C1C1E; margin-top:8px; line-height:1.6; white-space:pre-wrap;">${a.rejection_reason || 'No reason provided.'}</div>
+        </div>
+    `;
+    document.getElementById('modalOverlay').style.display = 'flex';
+};
+
+window.viewActivityDetail = function (activityId) {
+    const a = activityData.find(x => String(x.id) === String(activityId));
+    if (!a) return;
+
+    const lead = submissionsData.find(s => String(s.id) === String(a.lead_id));
+    const member = membersData.find(m => String(m.id) === String(a.solicitor_id));
+    const company = member ? companiesData.find(c => String(c.id) === String(member.company_id)) : null;
+
+    const leadName = lead?.name || lead?.first_name || '---';
+    const memberName = member ? ((member.first_name || '') + ' ' + (member.last_name || '')).trim() : '---';
+    const companyName = company?.name || company?.company_name || '---';
+    
+    // Professional date/time formatting
+    const dtOptions = { 
+        day: '2-digit', 
+        month: 'short', 
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+    };
+    
+    const sentAt = a.sent_at ? new Date(a.sent_at).toLocaleString('en-GB', dtOptions) : 'Pending / Not Sent';
+    const acceptedAt = a.accepted_at ? new Date(a.accepted_at).toLocaleString('en-GB', dtOptions) : (a.status === 'Accepted' ? 'Timestamp Unavailable' : 'Awaiting Solicitor Response');
+
+    document.getElementById('modalBox').innerHTML = `
+        <div class="modal-header">
+            <div>
+                <div style="font-size:11px; font-weight:700; color:var(--blue); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">Solicitor Compliance</div>
+                <h2 style="font-size:20px; font-weight:800; letter-spacing:-0.5px;">Lead Activity Detail</h2>
+            </div>
+            <button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button>
+        </div>
+        
+        <div style="display:flex; flex-direction:column; gap:20px; padding:8px 0;">
+            <!-- Info Card -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; background:var(--surface-2); padding:20px; border-radius:16px; border:1px solid var(--border);">
+                <div>
+                    <label style="font-size:10px; font-weight:700; color:var(--label-4); text-transform:uppercase; letter-spacing:0.8px;">Client Profile</label>
+                    <div style="font-size:15px; font-weight:700; color:var(--label-1); margin-top:4px;">${leadName}</div>
+                </div>
+                 <div>
+                    <label style="font-size:10px; font-weight:700; color:var(--label-4); text-transform:uppercase; letter-spacing:0.8px;">Current Status</label>
+                    <div style="margin-top:6px;"><span class="sa-badge ${a.status.toLowerCase()}">${a.status}</span></div>
+                </div>
+                <div style="grid-column: span 2; border-top:1px solid var(--border); margin-top:4px; padding-top:12px;"></div>
+                <div>
+                    <label style="font-size:10px; font-weight:700; color:var(--label-4); text-transform:uppercase; letter-spacing:0.8px;">Assigned Representative</label>
+                    <div style="font-size:14px; font-weight:700; color:var(--label-1); margin-top:4px;">${memberName}</div>
+                </div>
+                <div>
+                    <label style="font-size:10px; font-weight:700; color:var(--label-4); text-transform:uppercase; letter-spacing:0.8px;">Solicitor Firm</label>
+                    <div style="font-size:14px; font-weight:700; color:var(--label-1); margin-top:4px;">${companyName}</div>
+                </div>
+            </div>
+
+            <!-- Workflow Timeline -->
+            <div style="padding:4px 8px;">
+                <h3 style="font-size:14px; font-weight:800; color:var(--label-1); margin-bottom:20px; display:flex; align-items:center; gap:10px;">
+                     <svg style="width:20px; height:20px; fill:var(--blue); opacity:0.8;" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                    Process Timeline
+                </h3>
+                
+                <div style="display:flex; flex-direction:column; gap:0; border-left:2px dashed var(--border); margin-left:10px; padding-left:24px;">
+                    <!-- Sent Event -->
+                    <div style="position:relative; padding-bottom:32px;">
+                        <div style="position:absolute; left:-31px; top:0; width:12px; height:12px; border-radius:50%; background:${a.sent_at ? 'var(--blue)' : 'var(--surface-3)'}; border:3px solid var(--surface-1); box-shadow:0 0 0 1px ${a.sent_at ? 'var(--blue)' : 'var(--border)'};"></div>
+                        <div style="font-size:13px; font-weight:700; color:var(--label-1);">Lead Link Forwarded</div>
+                        <div style="font-size:11px; font-weight:500; color:var(--label-3); margin-top:4px; display:flex; align-items:center; gap:5px;">
+                            <svg style="width:12px; height:12px; fill:currentColor;" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                            ${sentAt}
+                        </div>
+                    </div>
+                    
+                    <!-- Accepted Event -->
+                    <div style="position:relative;">
+                        <div style="position:absolute; left:-31px; top:0; width:12px; height:12px; border-radius:50%; background:${a.accepted_at ? 'var(--green)' : 'var(--surface-3)'}; border:3px solid var(--surface-1); box-shadow:0 0 0 1px ${a.accepted_at ? 'var(--green)' : 'var(--border)'};"></div>
+                        <div style="font-size:13px; font-weight:700; color:var(--label-1);">Solicitor Digital Acceptance</div>
+                        <div style="font-size:11px; font-weight:500; color:var(--label-3); margin-top:4px; display:flex; align-items:center; gap:5px;">
+                            <svg style="width:12px; height:12px; fill:currentColor;" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                            ${acceptedAt}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="btn-action" style="margin-top:12px; width:100%; justify-content:center; padding:14px; background:var(--surface-1); color:var(--label-1); border:1px solid var(--border-med); box-shadow:none; font-weight:700; letter-spacing:0.2px;" onclick="document.getElementById('modalOverlay').style.display='none'">Close Activity Review</button>
         </div>
     `;
     document.getElementById('modalOverlay').style.display = 'flex';
