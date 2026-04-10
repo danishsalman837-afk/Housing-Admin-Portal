@@ -59,13 +59,12 @@
             to { opacity: 0; transform: translateY(-20px); }
         }
 
-        /* Overlay to soften the background image like in the mockup */
+        /* Darker subtle overlay to keep header text readable while making the image clear */
         body::before {
             content: '';
             position: absolute;
             inset: 0;
-            background: rgba(248, 250, 252, 0.85); /* Light translucent overlay */
-            backdrop-filter: blur(10px);
+            background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.3));
             z-index: 1;
         }
 
@@ -85,13 +84,15 @@
             gap: 12px;
             font-weight: 700;
             font-size: 18px;
-            color: var(--text-main);
+            color: #FFFFFF;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.3);
         }
 
         .logo-icon {
             width: 32px;
             height: 32px;
-            color: #1e293b;
+            color: #FFFFFF;
+            filter: drop-shadow(0 1px 4px rgba(0,0,0,0.3));
         }
 
         .nav-links {
@@ -102,9 +103,16 @@
 
         .nav-links a {
             text-decoration: none;
-            color: var(--text-main);
-            font-weight: 500;
+            color: #FFFFFF;
+            font-weight: 600;
             font-size: 14px;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+            opacity: 0.9;
+            transition: opacity 0.2s;
+        }
+
+        .nav-links a:hover {
+            opacity: 1;
         }
 
         .review-badge {

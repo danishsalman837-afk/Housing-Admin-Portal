@@ -57,10 +57,11 @@
             to { opacity: 0; transform: translateY(-20px); }
         }
 
+        /* Darker overlay to make white text/logo readable while keeping the image visible */
         body::before {
             content: '';
-            position: absolute;inset: 0;
-            background: rgba(248, 250, 252, 0.85);backdrop-filter: blur(10px);
+            position: absolute; inset: 0;
+            background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.3));
             z-index: 1;
         }
 
@@ -72,12 +73,16 @@
 
         .logo-container {
             display: flex;align-items: center;gap: 12px;
-            font-weight: 700;font-size: 18px;color: var(--text-main);
+            font-weight: 700;font-size: 18px;color: #FFFFFF;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.3);
         }
 
         .nav-links a {
-            text-decoration: none;color: var(--text-main);font-weight: 500;font-size: 14px;
+            text-decoration: none;color: #FFFFFF;font-weight: 600;font-size: 14px;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+            opacity: 0.9;
         }
+        .nav-links a:hover { opacity: 1; }
 
         main {
             position: relative;z-index: 10;
