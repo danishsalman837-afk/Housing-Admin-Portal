@@ -234,6 +234,12 @@ body {
     color: white;
     flex-shrink: 0;
     box-shadow: var(--shadow-sm);
+    transition: var(--transition);
+}
+
+.logo-icon:hover {
+    transform: rotate(-3deg) scale(1.05);
+    box-shadow: var(--shadow-md);
 }
 
 .logo-icon svg { width: 20px; height: 20px; fill: white; }
@@ -1208,85 +1214,210 @@ select.status-pill {
 .hdr-toast-info .hdr-toast-icon    { background: #007AFF; box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3); }
 
 
-
 /* ═══════════════════════════════════════
    SETTINGS VIEW STYLES
    ═══════════════════════════════════════ */
 
-.panel {
+#settingsView .panel {
     background: var(--bg-surface);
     border: 1px solid var(--border-light);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
+    padding: 32px;
 }
 
-.btn-small {
-    padding: 8px 16px;
-    border-radius: var(--radius-sm);
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
+#settingsView .settings-sub-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+#settingsView .settings-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
+    color: var(--text-muted);
+    font-weight: 500;
     transition: var(--transition);
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
 }
 
-.icon-btn {
+#settingsView .settings-nav-item .nav-icon {
+    width: 20px;
+    height: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
-    transition: var(--transition);
 }
 
-.user-avatar-trigger {
-    width: 36px;
-    height: 36px;
+#settingsView .settings-nav-item .nav-icon svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+}
+
+#settingsView .settings-nav-item:hover {
+    background: var(--bg-surface-2);
+    color: var(--text-main);
+}
+
+#settingsView .settings-nav-item.active {
+    background: var(--primary-light);
+    color: var(--primary-text);
+    font-weight: 600;
+}
+
+/* Avatar Preview UI Control */
+.settings-avatar-container {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 24px;
+    background: var(--bg-surface-2);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-light);
+}
+
+.settings-avatar-preview {
+    position: relative;
+    width: 100px;
+    height: 100px;
+}
+
+.avatar-preview-circle {
+    width: 100%;
+    height: 100%;
     border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary) 0%, #818CF8 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: 800;
+    color: white;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    border: 3px solid var(--bg-surface);
+}
+
+.avatar-preview-circle img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-edit-badge {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 32px;
+    height: 32px;
     background: var(--primary);
     color: white;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 700;
-    font-size: 14px;
-    cursor: pointer;
-    overflow: hidden;
-    position: relative;
     box-shadow: var(--shadow-sm);
+    border: 2px solid var(--bg-surface);
+    cursor: pointer;
     transition: var(--transition);
 }
 
-.user-avatar-trigger:hover {
-    transform: scale(1.05);
-    box-shadow: var(--shadow-md);
+.avatar-edit-badge:hover {
+    transform: scale(1.1);
+    background: var(--primary-hover);
 }
 
-/* Internal Settings Layout */
-#settingsView .nav-item {
-    border-radius: var(--radius-md);
+.avatar-edit-badge svg {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+}
+
+/* Form Styles */
+.settings-section-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: -0.5px;
     margin-bottom: 4px;
 }
 
-#settingsView .nav-item.active {
-    background: var(--primary-light);
-    color: var(--primary-text);
+.settings-section-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 24px;
 }
 
-#settingsView .nav-item:not(.active):hover {
+.form-field-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.settings-info-box {
+    padding: 16px;
+    border-radius: var(--radius-md);
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.settings-info-box.warning {
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    color: #92400E;
+}
+
+.settings-info-box.warning svg {
+    fill: #F59E0B;
+}
+
+/* Buttons */
+.btn-save {
+    padding: 12px 32px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    background: var(--primary);
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-save:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-ghost {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+}
+
+.btn-ghost:hover {
     background: var(--bg-surface-2);
-}
-
-/* Colors for specific UI elements */
-.orange-light { background: rgba(255, 159, 10, 0.1); }
-.blue-light { background: var(--primary-light); }
-.green { background: #34C759; color: white; }
-.green:hover { background: #28a745; }
-
-/* Responsive Settings */
-@media (max-width: 992px) {
-    #settingsView > div {
-        grid-template-columns: 1fr !important;
-    }
-    #settingsView .panel:first-child {
-        position: static !important;
-    }
+    color: var(--text-main);
 }

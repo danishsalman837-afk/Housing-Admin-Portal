@@ -2046,8 +2046,8 @@ window.scrollIntoView = function(id) {
     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     
     // Update active state in settings nav
-    document.querySelectorAll('#settingsView .nav-item').forEach(btn => {
-        if (btn.innerText.includes(id === 'profile-section' ? 'Profile' : 'Security')) {
+    document.querySelectorAll('.settings-nav-item').forEach(btn => {
+        if (btn.getAttribute('onclick')?.includes(`'${id}'`)) {
             btn.classList.add('active');
         } else {
             btn.classList.remove('active');
