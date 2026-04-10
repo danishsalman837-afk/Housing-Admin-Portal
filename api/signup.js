@@ -16,14 +16,13 @@ module.exports = async function handler(req, res) {
   const supabase = createSupabaseClient('service');
 
   try {
-    // 1. Sign up the user in Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    // 1. Create the user using the Admin API to bypass email rate limits
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email,
       password,
-      options: {
-        data: {
-          full_name: fullName
-        }
+      email_confirm: true,
+      user_metadata: {
+        full_name: fullName
       }
     });
 
