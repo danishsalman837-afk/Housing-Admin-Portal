@@ -292,13 +292,28 @@ function renderTable(data) {
 
         const statusSelectTheme = getStatusColor(item.leadStatus || 'New Lead');
 
-        // Solicitor Name display
+        // Solicitor Display logic — Interactive Dropdown
         let solicitorDisplay = '';
-        if (item.assigned_solicitor_id) {
-            const member = membersData.find(m => String(m.id) === String(item.assigned_solicitor_id));
-            if (member) {
-                const mName = ((member.first_name || '') + ' ' + (member.last_name || '')).trim();
-                solicitorDisplay = `<div style="font-size:11px; font-weight:700; color:var(--blue); margin-top:4px;">👤 ${mName}</div>`;
+        if (item.assigned_company_id) {
+            // Find all authorized members for this specific firm
+            const firmMembers = membersData.filter(m => String(m.company_id) === String(item.assigned_company_id) && m.can_receive_emails !== false);
+            
+            if (firmMembers.length > 0) {
+                const solOptions = firmMembers.map(m => {
+                    const mName = ((m.first_name || '') + ' ' + (m.last_name || '')).trim() || 'Unnamed';
+                    return `<option value="${m.id}" ${String(item.assigned_solicitor_id) === String(m.id) ? 'selected' : ''}>${mName}</option>`;
+                }).join('');
+                
+                solicitorDisplay = `
+                    <div style="display:flex; align-items:center; gap:5px; margin-top:6px; padding-left:2px;">
+                        <span style="font-size:11px; opacity:0.8;">👤</span>
+                        <select class="modern-select" style="padding: 2px 20px 2px 6px; font-size: 10px; border:none; background:var(--blue-light); color:var(--blue); font-weight:700; width:auto; min-width:130px; border-radius:6px; cursor:pointer;" onchange="window.handleFieldUpdate('${item.id}', 'assigned_solicitor_id', this.value)">
+                            <option value="">Select Solicitor...</option>
+                            ${solOptions}
+                        </select>
+                    </div>`;
+            } else {
+                solicitorDisplay = `<div style="font-size:10px; color:var(--label-4); margin-top:6px; font-style:italic; padding-left:18px;">No authorized solicitors</div>`;
             }
         }
 
@@ -380,6 +395,11 @@ window.handleFieldUpdate = async function (id, fieldName, value) {
         const lead = submissionsData.find(s => String(s.id) === String(id));
         if (lead) lead[fieldName] = value;
         if (fieldName === 'leadStatus') calculateDashboardStats();
+        
+        // If we updated assignments or status, refresh the table to reflect changes (especially solicitor names)
+        if (fieldName === 'assigned_company_id' || fieldName === 'assigned_solicitor_id' || fieldName === 'leadStatus') {
+            if (document.getElementById('leadsView').classList.contains('active')) renderFilteredLeads();
+        }
         
         showToast('Update Successful', `The ${fieldName.replace(/_/g, ' ')} has been updated.`, 'success');
     } catch (e) { 
