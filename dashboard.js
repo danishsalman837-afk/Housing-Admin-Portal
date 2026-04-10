@@ -1383,7 +1383,7 @@ window.openAllocateModal = function (preSelectedLeadId = null) {
             const mName = ((m.first_name || '') + ' ' + (m.last_name || '')).trim() || 'Unknown';
             const comp = companiesData.find(c => String(c.id) === String(m.company_id));
             const compName = comp?.name || comp?.company_name || '';
-            solOptions += `<option value="${m.id}">${mName}${compName ? ' — ' + compName : ''}</option>`;
+            solOptions += `<option value="${m.id}">${compName ? compName + ' — ' : ''}${mName}</option>`;
         });
     }
 
@@ -1451,7 +1451,11 @@ window.submitAllocate = async function () {
         }
 
         const mName = member ? ((member.first_name || '') + ' ' + (member.last_name || '')).trim() : 'Solicitor';
-        showToast('Success', `Lead successfully allocated to ${mName}.`, 'success');
+        const comp = member ? companiesData.find(c => String(c.id) === String(member.company_id)) : null;
+        const compName = comp?.name || comp?.company_name || '';
+        const displayTarget = compName ? `${compName} — ${mName}` : mName;
+
+        showToast('Success', `Lead successfully allocated to ${displayTarget}.`, 'success');
 
         document.getElementById('modalOverlay').style.display = 'none';
         renderFilteredActivity();
