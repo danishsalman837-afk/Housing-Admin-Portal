@@ -1984,7 +1984,316 @@
         .app-toast-danger .app-toast-icon  { background: #FF3B30 !important; box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3) !important; }
         .app-toast-warning .app-toast-icon { background: #FF9500 !important; box-shadow: 0 4px 12px rgba(255, 149, 0, 0.3) !important; }
         .app-toast-info .app-toast-icon    { background: #007AFF !important; box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3) !important; }
+    /* ═══════════════════════════════════════
+           SETTINGS VIEW — Professional Revamp
+        ═══════════════════════════════════════ */
+        #settingsView .settings-main-grid {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 40px;
+            align-items: start;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        #settingsView .settings-sidebar {
+            position: sticky;
+            top: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            background: var(--surface-1);
+            padding: 12px;
+            border-radius: var(--r-lg);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+        }
+
+        #settingsView .settings-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: var(--r-md);
+            color: var(--label-3);
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.25s var(--ease);
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+            font-family: inherit;
+        }
+
+        #settingsView .settings-nav-item svg {
+            width: 18px;
+            height: 18px;
+            min-width: 18px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transition: all 0.25s var(--ease);
+        }
+
+        #settingsView .settings-nav-item:hover {
+            background: var(--surface-2);
+            color: var(--label-1);
+            transform: translateX(4px);
+        }
+
+        #settingsView .settings-nav-item.active {
+            background: var(--blue-light);
+            color: var(--blue);
+        }
+
+        #settingsView .settings-nav-item.active svg {
+            color: var(--blue);
+            transform: scale(1.1);
+        }
+
+        /* Settings Cards */
+        #settingsView .settings-card {
+            background: var(--surface-1);
+            border: 1px solid var(--border);
+            border-radius: var(--r-xl);
+            padding: 40px;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 32px;
+            transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
+        }
+
+        #settingsView .settings-card:hover {
+            box-shadow: var(--shadow-lg);
+        }
+
+        #settingsView .settings-card-header {
+            margin-bottom: 36px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 24px;
+        }
+
+        #settingsView .settings-title {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--label-1);
+            letter-spacing: -0.8px;
+            margin-bottom: 8px;
+        }
+
+        #settingsView .settings-desc {
+            font-size: 14px;
+            color: var(--label-3);
+            line-height: 1.5;
+        }
+
+        /* Avatar Upload Region */
+        .avatar-upload-box {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+            margin-bottom: 40px;
+            padding: 32px;
+            background: var(--surface-2);
+            border-radius: var(--r-lg);
+            border: 1px dashed var(--border-med);
+            transition: border-color 0.2s;
+        }
+
+        .avatar-upload-box:hover {
+            border-color: var(--blue);
+        }
+
+        .avatar-container-fixed {
+            position: relative;
+            width: 110px;
+            height: 110px;
+            flex-shrink: 0;
+        }
+
+        .avatar-circle-fixed {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--blue) 0%, var(--indigo) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: 800;
+            color: white;
+            overflow: hidden;
+            border: 4px solid var(--surface-1);
+            box-shadow: var(--shadow-md);
+            position: relative;
+        }
+
+        .avatar-circle-fixed img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .avatar-edit-badge-fixed {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 32px;
+            height: 32px;
+            background: var(--blue);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid var(--surface-1);
+            cursor: pointer;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s var(--ease-spring);
+            z-index: 10;
+        }
+
+        .avatar-edit-badge-fixed:hover {
+            transform: scale(1.15);
+            background: var(--blue-hover);
+        }
+
+        .avatar-edit-badge-fixed svg {
+            width: 14px;
+            height: 14px;
+            fill: white;
+        }
+
+        /* Form Controls */
+        .settings-form-group {
+            margin-bottom: 24px;
+        }
+
+        .settings-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--label-3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        /* Premium Buttons */
+        .btn-premium {
+            padding: 12px 28px;
+            border-radius: var(--r-md);
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s var(--ease);
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: 1px solid transparent;
+        }
+
+        .btn-premium.primary {
+            background: var(--blue);
+            color: white;
+            box-shadow: 0 4px 14px rgba(10, 132, 255, 0.3);
+        }
+
+        .btn-premium.primary:hover {
+            background: var(--blue-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(10, 132, 255, 0.4);
+        }
+
+        .btn-premium.primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-premium.ghost {
+            background: transparent;
+            border: 1px solid var(--border-med);
+            color: var(--label-2);
+        }
+
+        .btn-premium.ghost:hover {
+            background: var(--surface-2);
+            border-color: var(--label-4);
+            color: var(--label-1);
+        }
+
+        .settings-footer {
+            margin-top: 40px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 16px;
+        }
+
+        /* Security Banner */
+        .info-banner {
+            background: var(--blue-light);
+            border-radius: var(--r-md);
+            padding: 20px;
+            margin-bottom: 32px;
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+            border: 1px solid var(--blue-ring);
+        }
+
+        .info-banner svg {
+            width: 20px;
+            height: 20px;
+            min-width: 20px;
+            fill: var(--blue);
+            margin-top: 2px;
+        }
+
+        .info-banner div {
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--label-2);
+        }
+
+        /* Responsive Settings */
+        @media (max-width: 1024px) {
+            #settingsView .settings-main-grid {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+            #settingsView .settings-sidebar {
+                position: relative;
+                top: 0;
+                flex-direction: row;
+                overflow-x: auto;
+                padding: 8px;
+            }
+            #settingsView .settings-nav-item {
+                white-space: nowrap;
+                width: auto;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .avatar-upload-box {
+                flex-direction: column;
+                text-align: center;
+                gap: 24px;
+            }
+            #settingsView .settings-card {
+                padding: 24px;
+            }
+        }
     </style>
+
 </head>
 
 <body onload="initDashboard()">
