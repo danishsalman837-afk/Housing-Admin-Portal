@@ -405,7 +405,7 @@ body {
     display: flex;
     flex-direction: column;
     height: 100vh;
-    overflow-y: auto;
+    overflow-y: scroll; /* Force scrollbar visibility as requested */
     background: var(--bg-main);
 }
 
@@ -1081,11 +1081,11 @@ select.status-pill {
 
 /* ═══════════════════════════════════════
    SCROLLBAR & UTILS
-═══════════════════════════════════════ */
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+═══════════════════════════════════════/* SCROLLBAR & UTILS */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: rgba(0,0,0,0.02); }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 99px; border: 2px solid transparent; background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); border: 2px solid transparent; background-clip: content-box; }
 
 /* Responsive adjustments */
 @media (max-width: 1024px) {
