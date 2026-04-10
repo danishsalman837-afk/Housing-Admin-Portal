@@ -48,6 +48,34 @@
     --status-purple-txt: #7E22CE;
     --status-purple-border: #E9D5FF;
 
+    --status-new-bg:     #E0F2FE;
+    --status-new-txt:    #0369A1;
+    --status-new-border: #BAE6FD;
+
+    --status-allocated-bg: #DBEAFE;
+    --status-allocated-txt: #1E40AF;
+    --status-allocated-border: #BFDBFE;
+
+    --status-sent-bg:      #FEF9C3;
+    --status-sent-txt:     #713F12;
+    --status-sent-border:  #FEF08A;
+
+    --status-paid-bg:      #DCFCE7;
+    --status-paid-txt:     #166534;
+    --status-paid-border:  #BBF7D0;
+
+    --status-brown-bg:     #FDEBD0;
+    --status-brown-txt:    #784212;
+    --status-brown-border: #FAD7A0;
+
+    --status-pink-bg:      #FCE7F3;
+    --status-pink-txt:     #9D174D;
+    --status-pink-border:  #FBCFE8;
+
+    --status-orange-bg:    #FFEDD5;
+    --status-orange-txt:   #9A3412;
+    --status-orange-border: #FED7AA;
+
     /* Sidebar Constraints */
     --sidebar-w:       260px;
     --sidebar-w-col:   80px;
@@ -109,6 +137,34 @@
     --status-purple-bg:  rgba(88, 28, 135, 0.5);
     --status-purple-txt: #C084FC;
     --status-purple-border: #6B21A8;
+
+    --status-new-bg:     rgba(12, 74, 110, 0.5);
+    --status-new-txt:    #7DD3FC;
+    --status-new-border: #0369A1;
+
+    --status-allocated-bg: rgba(30, 58, 138, 0.5);
+    --status-allocated-txt: #93C5FD;
+    --status-allocated-border: #1E40AF;
+
+    --status-sent-bg:      rgba(113, 63, 18, 0.5);
+    --status-sent-txt:     #FDE047;
+    --status-sent-border:  #713F12;
+
+    --status-paid-bg:      rgba(20, 83, 45, 0.5);
+    --status-paid-txt:     #4ADE80;
+    --status-paid-border:  #14532D;
+
+    --status-brown-bg:     rgba(66, 33, 11, 0.5);
+    --status-brown-txt:    #D97706;
+    --status-brown-border: #42210B;
+
+    --status-pink-bg:      rgba(157, 23, 77, 0.5);
+    --status-pink-txt:     #F9A8D4;
+    --status-pink-border:  #9D174D;
+
+    --status-orange-bg:    rgba(124, 45, 18, 0.5);
+    --status-orange-txt:   #FB923C;
+    --status-orange-border: #7C2D12;
 
     --shadow-glass:    0 8px 32px 0 rgba(0, 0, 0, 0.4);
 }
@@ -877,14 +933,18 @@ select.status-pill {
     background-position: right 10px center;
 }
 
-.status-pill[data-color="new"] { background: var(--status-info-bg); color: var(--status-info-txt); border-color: var(--status-info-border); }
+.status-pill[data-color="new"] { background: var(--status-new-bg); color: var(--status-new-txt); border-color: var(--status-new-border); }
 .status-pill[data-color="success"] { background: var(--status-success-bg); color: var(--status-success-txt); border-color: var(--status-success-border); }
 .status-pill[data-color="danger"] { background: var(--status-danger-bg); color: var(--status-danger-txt); border-color: var(--status-danger-border); }
-.status-pill[data-color="warning"] { background: var(--status-warning-bg); color: var(--status-warning-txt); border-color: var(--status-warning-border); }
+.status-pill[data-color="warning"] { background: var(--status-orange-bg); color: var(--status-orange-txt); border-color: var(--status-orange-border); }
 .status-pill[data-color="purple"] { background: var(--status-purple-bg); color: var(--status-purple-txt); border-color: var(--status-purple-border); }
 .status-pill[data-color="gray"] { background: var(--status-neutral-bg); color: var(--text-muted); border-color: var(--border-light); }
-.status-pill[data-color="allocated"] { background: #EEF2FF; color: #4F46E5; border-color: #C7D2FE; }
-.status-pill[data-color="sent"] { background: #F5F3FF; color: #7C3AED; border-color: #DDD6FE; }
+.status-pill[data-color="allocated"] { background: var(--status-allocated-bg); color: var(--status-allocated-txt); border-color: var(--status-allocated-border); }
+.status-pill[data-color="sent"] { background: var(--status-sent-bg); color: var(--status-sent-txt); border-color: var(--status-sent-border); }
+.status-pill[data-color="paid"] { background: var(--status-paid-bg); color: var(--status-paid-txt); border-color: var(--status-paid-border); }
+.status-pill[data-color="brown"] { background: var(--status-brown-bg); color: var(--status-brown-txt); border-color: var(--status-brown-border); }
+.status-pill[data-color="pink"] { background: var(--status-pink-bg); color: var(--status-pink-txt); border-color: var(--status-pink-border); }
+.status-pill[data-color="orange"] { background: var(--status-orange-bg); color: var(--status-orange-txt); border-color: var(--status-orange-border); }
  
 .badge {
     display: inline-flex;

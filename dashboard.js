@@ -37,13 +37,16 @@ const leadStatuses = [
 
 function getStatusColor(status) {
     if (status === 'New Lead') return 'new';
-    if (status === 'Accepted' || status === 'Paid') return 'success';
-    if (status === 'Rejected') return 'danger';
-    if (status === 'Archived' || status === 'Closed') return 'gray';
+    if (status === 'Accepted') return 'success';
+    if (status === 'Paid') return 'paid';
+    if (status === 'Rejected') return 'orange';
+    if (status === 'Closed') return 'danger';
     if (status === 'Transferred') return 'purple';
-    if (status === 'Invoice Raised' || status === 'Not Yet Invoiced') return 'warning';
+    if (status === 'Not Yet Invoiced') return 'brown';
+    if (status === 'Invoice Raised') return 'pink';
     if (status === 'Allocated') return 'allocated';
     if (status === 'Sent') return 'sent';
+    if (status === 'Test Lead' || status === 'test') return 'gray';
     return 'gray';
 }
 
@@ -183,9 +186,32 @@ function initCharts(data, acceptedCount, totalCount) {
     }
 
     if (ctxStatus) {
+        // Colors mapping for leadStatuses:
+        // 'New Lead', 'Allocated', 'Sent', 'Accepted', 'Rejected', 'Transferred', 'Not Yet Invoiced', 'Invoice Raised', 'Paid', 'Test Lead', 'Closed'
+        const statusColors = [
+            '#0EA5E9', // New Lead (light blue)
+            '#1E40AF', // Allocated (dark blue)
+            '#EAB308', // Sent (yellow)
+            '#10B981', // Accepted (light green)
+            '#EA580C', // Rejected (orange)
+            '#9333EA', // Transferred (purple)
+            '#78350F', // Not Yet Invoiced (brown)
+            '#DB2777', // Invoice Raised (pink)
+            '#166534', // Paid (dark green)
+            '#94A3B8', // Test Lead (gray)
+            '#EF4444'  // Closed (red)
+        ];
+
         charts.status = new Chart(ctxStatus, {
             type: 'doughnut',
-            data: { labels: leadStatuses, datasets: [{ data: leadStatuses.map(s => data.filter(x => x.leadStatus === s).length), backgroundColor: ['#3B82F6', '#6D28D9', '#10B981', '#F53F3F', '#F59E0B', '#F59E0B', '#00B42A', '#9CA3AF'], borderWidth: 0 }] },
+            data: { 
+                labels: leadStatuses, 
+                datasets: [{ 
+                    data: leadStatuses.map(s => data.filter(x => x.leadStatus === s).length), 
+                    backgroundColor: statusColors, 
+                    borderWidth: 0 
+                }] 
+            },
             options: { responsive: true, maintainAspectRatio: false, cutout: '80%', plugins: { legend: { display: false } } }
         });
     }
@@ -195,7 +221,7 @@ function initCharts(data, acceptedCount, totalCount) {
         if (totalCount === 0) remainder = 1; // So we can show a grey circle when empty
         charts.conv = new Chart(ctxConv, {
             type: 'doughnut',
-            data: { datasets: [{ data: [acceptedCount, remainder], backgroundColor: ['#10B981', '#E5E6EB'], borderWidth: 0 }] },
+            data: { datasets: [{ data: [acceptedCount, remainder], backgroundColor: ['#166534', '#E5E6EB'], borderWidth: 0 }] },
             options: { responsive: true, maintainAspectRatio: false, cutout: '80%', plugins: { legend: { display: false }, tooltip: { enabled: false } } }
         });
     }
