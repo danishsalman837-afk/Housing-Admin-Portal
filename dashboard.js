@@ -1344,10 +1344,17 @@ window.initDashboard = async function () {
 
 function updateActivityStats() {
     const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
-    setEl('saAllocated', activityData.filter(a => a.status === 'Allocated').length);
-    setEl('saSent', activityData.filter(a => a.status === 'Sent').length);
-    setEl('saAccepted', activityData.filter(a => a.status === 'Accepted').length);
-    setEl('saRejected', activityData.filter(a => a.status === 'Rejected').length);
+    
+    // Filter out activity linked to Closed leads for accurate stats
+    const activeActivity = activityData.filter(a => {
+        const lead = submissionsData.find(s => String(s.id) === String(a.lead_id));
+        return lead && lead.leadStatus !== 'Closed' && lead.leadStatus !== 'Archived';
+    });
+
+    setEl('saAllocated', activeActivity.filter(a => a.status === 'Allocated').length);
+    setEl('saSent', activeActivity.filter(a => a.status === 'Sent').length);
+    setEl('saAccepted', activeActivity.filter(a => a.status === 'Accepted').length);
+    setEl('saRejected', activeActivity.filter(a => a.status === 'Rejected').length);
 }
 
 window.renderFilteredActivity = function () {
@@ -1355,13 +1362,17 @@ window.renderFilteredActivity = function () {
     const searchVal = (document.getElementById('searchActivity')?.value || '').toLowerCase();
 
     const filtered = activityData.filter(a => {
+        const lead = submissionsData.find(s => String(s.id) === String(a.lead_id));
+        
+        // Hide leads that are closed or archived in Lead Management
+        if (!lead || lead.leadStatus === 'Closed' || lead.leadStatus === 'Archived') return false;
+
         let matchStatus = statusFilter === 'All' || a.status === statusFilter;
         let matchSearch = true;
 
         if (searchVal) {
-            const lead = submissionsData.find(s => String(s.id) === String(a.lead_id));
             const member = membersData.find(m => String(m.id) === String(a.solicitor_id));
-            const leadName = (lead?.name || lead?.first_name || '').toLowerCase();
+            const leadName = (lead.name || lead.first_name || '').toLowerCase();
             const memberName = ((member?.first_name || '') + ' ' + (member?.last_name || '')).toLowerCase();
             matchSearch = leadName.includes(searchVal) || memberName.includes(searchVal);
         }
