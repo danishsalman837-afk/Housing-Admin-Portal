@@ -48,13 +48,13 @@ function getStatusColor(status) {
 }
 
 const leadViewOrder = [
-    'name', 'email', 'phone', 'agentName', 'dob', 'address', 'postcode',
+    'name', 'email', 'phone', 'dob', 'address', 'postcode',
     'tenantType', 'landlordName', 'livingDuration',
     'damp', 'dampLocation', 'dampRooms', 'dampSurface', 'dampDuration', 'dampCause', 'dampDamage', 'dampHealth',
     'leak', 'leakLocation', 'leakSource', 'leakStart', 'leakDamage', 'leakCracks', 'leakBelongings',
     'issues_electrics', 'issues_heating', 'issues_structural',
     'reported', 'reportCount', 'reportFirst', 'reportLast', 'reportResponse', 'reportAttempt', 'reportStatus',
-    'arrears', 'arrearsAmount', 'alreadySubmitted', 'additionalNotes'
+    'arrears', 'arrearsAmount', 'alreadySubmitted', 'additionalNotes', 'agentName'
 ];
 
 const leadFieldLabels = {
