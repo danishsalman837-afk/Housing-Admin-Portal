@@ -146,9 +146,12 @@ function calculateDashboardStats() {
     const activeCompaniesCount = companiesData.filter(c => c.active !== false).length;
     setEl('dashboardActive', activeCompaniesCount);
 
-    // Update Paid Leads count
+    // Update Paid Leads count (top box)
     setEl('dashboardPaidLeads', paidCount);
-    setEl('dashboardPaidDonutVal', paidCount);
+
+    // Update Conversion Rate (Donut Gauge)
+    let convRate = total > 0 ? ((paidCount / total) * 100).toFixed(1) : '0';
+    setEl('dashboardConvRateDonut', convRate + '%');
 
     initCharts(submissionsData, paidCount, total);
 }
@@ -222,7 +225,7 @@ function initCharts(data, paidCount, totalCount) {
         if (totalCount === 0) remainder = 1; 
         charts.conv = new Chart(ctxConv, {
             type: 'doughnut',
-            data: { datasets: [{ data: [paidCount, remainder], backgroundColor: ['#BF5AF2', '#E5E6EB'], borderWidth: 0 }] },
+            data: { datasets: [{ data: [paidCount, remainder], backgroundColor: ['#30D158', '#E5E6EB'], borderWidth: 0 }] },
             options: { responsive: true, maintainAspectRatio: false, cutout: '80%', plugins: { legend: { display: false }, tooltip: { enabled: false } } }
         });
     }

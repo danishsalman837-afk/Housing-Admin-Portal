@@ -2158,12 +2158,11 @@
                 </div>
 
                 <div class="dashboard-card">
-                    <div class="card-title">Payment Status</div>
+                    <div class="card-title">Conversion Gauge</div>
                     <div class="circle-chart-wrapper">
                         <canvas id="conversionDonutChart"></canvas>
                         <div class="circle-inner-text">
-                            <span class="circle-value" id="dashboardPaidDonutVal">0</span>
-                            <span class="circle-label">Paid Leads</span>
+                            <span class="circle-value" id="dashboardConvRateDonut">0%</span>
                         </div>
                     </div>
                 </div>
@@ -2399,11 +2398,8 @@
         // Sync new dashboard stats boxes via standard functions
         function syncDonutStats() {
             const total = document.getElementById('dashboardTotal')?.innerText;
-            const paid  = document.getElementById('dashboardPaidLeads')?.innerText;
             if (document.getElementById('dashboardTotalDonut'))
                 document.getElementById('dashboardTotalDonut').innerText = total || '0';
-            if (document.getElementById('dashboardPaidDonutVal'))
-                document.getElementById('dashboardPaidDonutVal').innerText = paid || '0';
         }
         // Stats are updated in calculateDashboardStats, so we'll call sync once here
         window.addEventListener('load', syncDonutStats);
