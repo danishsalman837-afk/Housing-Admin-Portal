@@ -118,7 +118,7 @@ module.exports = async function handler(req, res) {
     children.push(
       new Paragraph({
         children: [
-          new TextRun({ text: "HOUSING DISREPAIR FORM", bold: true, size: 40, color: WHITE, font: "Calibri" })
+          new TextRun({ text: "HOUSING STANDARDS — DISREPAIR FORM", bold: true, size: 40, color: WHITE, font: "Calibri" })
         ],
         alignment: AlignmentType.CENTER,
         shading: { type: ShadingType.SOLID, color: MID_BLUE },
@@ -236,7 +236,7 @@ module.exports = async function handler(req, res) {
     // ─── Pack & Send ─────────────────────────────────────────────────────────
 
     const doc = new Document({
-      creator: "Housing Admin Portal",
+      creator: "HOUSING STANDARDS Portal",
       title: `Lead - ${lead.name || lead.id}`,
       sections: [{
         properties: {

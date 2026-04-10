@@ -90,21 +90,23 @@
         }
 
         .sol-logo-icon {
-            width: 34px;
-            height: 34px;
-            background: linear-gradient(145deg, #0A84FF 0%, #0050D0 100%);
+            width: 44px;
+            height: 44px;
             border-radius: 9px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 3px 10px rgba(10,132,255,.30);
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0,0,0,.15);
         }
 
-        .sol-logo-icon span {
-            color: white;
-            font-weight: 800;
-            font-size: 16px;
+        .sol-logo-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
+
+
 
         .sol-logo-text {
             font-size: 15px;
@@ -568,8 +570,8 @@
     <div class="sol-topbar">
         <div class="sol-topbar-inner">
             <div class="sol-logo">
-                <div class="sol-logo-icon"><span>H</span></div>
-                <span class="sol-logo-text">HDR Lead Review</span>
+                <div class="sol-logo-icon"><img src="logo.png" alt="Logo"></div>
+                <span class="sol-logo-text">HOUSING STANDARDS Lead Review</span>
             </div>
             <div id="statusPill" class="sol-status-pill sent" style="display:none;"></div>
         </div>
