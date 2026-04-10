@@ -322,13 +322,16 @@ function renderTable(data) {
                         <svg viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
                     </button>
                     <div id="drop-${item.id}" class="dropdown-menu">
-                        ${(item.agent_data || item.is_edited) ? `
-                        <button class="dropdown-item" onclick="window.openViewModal('${item.id}', true)">
-                            <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg> Agent Form
-                        </button>` : ''}
+                        ${item.is_edited ? `
                         <button class="dropdown-item" onclick="window.openViewModal('${item.id}', false)">
                             <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg> Admin Edits
                         </button>
+                        <button class="dropdown-item" onclick="window.openViewModal('${item.id}', true)">
+                            <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg> Agent Form
+                        </button>` : `
+                        <button class="dropdown-item" onclick="window.openViewModal('${item.id}', true)">
+                            <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg> Agent Form
+                        </button>`}
                         <button class="dropdown-item" onclick="window.openEditLeadModal('${item.id}')">
                             <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg> Edit Lead
                         </button>
@@ -1329,13 +1332,17 @@ window.openAllocateModal = function (preSelectedLeadId = null) {
         .map(a => String(a.lead_id));
 
     const availableLeads = submissionsData.filter(s => {
-        // If we have a preSelectedLeadId, make sure it's included even if "Allocated" (though usually it won't be if it's Rejected)
-        if (String(s.id) === String(preSelectedLeadId)) return true;
+        // If we are reallocating a specific lead, ONLY show that lead to prevent mistakes
+        if (preSelectedLeadId) {
+            return String(s.id) === String(preSelectedLeadId);
+        }
         
         return !allocatedLeadIds.includes(String(s.id)) &&
                s.leadStatus !== 'Archived' &&
                s.leadStatus !== 'Agent Saved';
     });
+
+    const modalTitle = preSelectedLeadId ? 'Reallocate Lead' : 'Allocate Lead to Solicitor';
 
     let leadOptions = `<option value="" disabled ${!preSelectedLeadId ? 'selected' : ''}>Select a lead…</option>`;
     availableLeads.forEach(s => {
@@ -1362,7 +1369,7 @@ window.openAllocateModal = function (preSelectedLeadId = null) {
 
     document.getElementById('modalBox').innerHTML = `
         <div class="modal-header">
-            <h2 style="font-size:20px; font-weight:800; letter-spacing:-0.5px;">Allocate Lead to Solicitor</h2>
+            <h2 style="font-size:20px; font-weight:800; letter-spacing:-0.5px;">${modalTitle}</h2>
             <button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button>
         </div>
         <div class="form-grid">
@@ -1375,7 +1382,7 @@ window.openAllocateModal = function (preSelectedLeadId = null) {
                 <select id="allocSolSelect" class="modern-select">${solOptions}</select>
             </div>
         </div>
-        <button class="btn-action" style="margin-top:24px; width:100%; justify-content:center; padding:12px;" onclick="window.submitAllocate()">Allocate Lead</button>
+        <button class="btn-action" style="margin-top:24px; width:100%; justify-content:center; padding:12px;" onclick="window.submitAllocate()">${preSelectedLeadId ? 'Reallocate Lead' : 'Allocate Lead'}</button>
     `;
     document.getElementById('modalOverlay').style.display = 'flex';
 };
