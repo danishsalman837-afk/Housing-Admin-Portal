@@ -36,17 +36,19 @@ const leadStatuses = [
 ];
 
 function getStatusColor(status) {
-    if (status === 'New Lead') return 'new';
-    if (status === 'Accepted') return 'success';
-    if (status === 'Paid') return 'paid';
-    if (status === 'Rejected') return 'orange';
-    if (status === 'Closed') return 'danger';
-    if (status === 'Transferred') return 'purple';
-    if (status === 'Not Yet Invoiced') return 'brown';
-    if (status === 'Invoice Raised') return 'pink';
-    if (status === 'Allocated') return 'allocated';
-    if (status === 'Sent') return 'sent';
-    if (status === 'Test Lead' || status === 'test') return 'gray';
+    if (!status || typeof status !== 'string') return 'gray';
+    const s = status.trim();
+    if (s === 'New Lead') return 'new';
+    if (s === 'Accepted') return 'success';
+    if (s === 'Paid') return 'paid';
+    if (s === 'Rejected') return 'orange';
+    if (s === 'Closed') return 'danger';
+    if (s === 'Transferred') return 'purple';
+    if (s === 'Not Yet Invoiced') return 'brown';
+    if (s === 'Invoice Raised') return 'pink';
+    if (s === 'Allocated') return 'allocated';
+    if (s === 'Sent') return 'sent';
+    if (s === 'Test Lead' || s === 'test') return 'gray';
     return 'gray';
 }
 
@@ -144,15 +146,14 @@ function calculateDashboardStats() {
     const activeCompaniesCount = companiesData.filter(c => c.active !== false).length;
     setEl('dashboardActive', activeCompaniesCount);
 
-    // Conversion rate is now based on PAID leads
-    let convRate = total > 0 ? ((paidCount / total) * 100).toFixed(1) : '0';
-    setEl('dashboardConvRate', convRate + '%');
-    setEl('dashboardConvRateDonut', convRate + '%');
+    // Update Paid Leads count
+    setEl('dashboardPaidLeads', paidCount);
+    setEl('dashboardPaidDonutVal', paidCount);
 
     initCharts(submissionsData, paidCount, total);
 }
 
-function initCharts(data, acceptedCount, totalCount) {
+function initCharts(data, paidCount, totalCount) {
     const ctxFlow = document.getElementById('leadsFlowChart');
     const ctxStatus = document.getElementById('statusDonutChart');
     const ctxConv = document.getElementById('conversionDonutChart');
@@ -217,11 +218,11 @@ function initCharts(data, acceptedCount, totalCount) {
     }
 
     if (ctxConv) {
-        let remainder = totalCount - acceptedCount;
-        if (totalCount === 0) remainder = 1; // So we can show a grey circle when empty
+        let remainder = totalCount - paidCount;
+        if (totalCount === 0) remainder = 1; 
         charts.conv = new Chart(ctxConv, {
             type: 'doughnut',
-            data: { datasets: [{ data: [acceptedCount, remainder], backgroundColor: ['#166534', '#E5E6EB'], borderWidth: 0 }] },
+            data: { datasets: [{ data: [paidCount, remainder], backgroundColor: ['#BF5AF2', '#E5E6EB'], borderWidth: 0 }] },
             options: { responsive: true, maintainAspectRatio: false, cutout: '80%', plugins: { legend: { display: false }, tooltip: { enabled: false } } }
         });
     }

@@ -1101,38 +1101,40 @@
         /* ═══════════════════════════════════════
            STATUS BADGES
         ═══════════════════════════════════════ */
-        .status-badge {
-            padding: 6px 14px;
+        .status-pill {
+            padding: 7px 14px;
             border-radius: 99px;
             font-size: 11px;
             font-weight: 700;
-            border: none;
+            border: 1.5px solid transparent;
             cursor: pointer;
             outline: none;
-            letter-spacing: 0.1px;
+            letter-spacing: 0.5px;
             font-family: inherit;
-            transition: all 0.2s var(--ease);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             text-transform: uppercase;
-        }
-
-        select.status-badge {
-            padding-right: 28px;
-            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
-            background-repeat: no-repeat;
-            background-position: right 10px center;
-            background-size: 8px;
+            text-align: center;
             appearance: none;
             -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
+            background-repeat: no-repeat !important;
+            background-position: right 10px center !important;
+            padding-right: 28px !important;
+            display: inline-block;
+            min-width: 130px;
         }
 
-        .status-badge[data-color="new"]     { background: #E0F2FE; color: #0369A1; }
-        .status-badge[data-color="warning"] { background: #FEF3C7; color: #92400E; }
-        .status-badge[data-color="success"] { background: #DCFCE7; color: #166534; }
-        .status-badge[data-color="danger"]  { background: #FEE2E2; color: #991B1B; }
-        .status-badge[data-color="purple"]  { background: #F3E8FF; color: #6B21A8; }
-        .status-badge[data-color="gray"]    { background: #F3F4F6; color: #374151; }
-        .status-badge[data-color="allocated"] { background: #E0E7FF; color: #4338CA; }
-        .status-badge[data-color="sent"] { background: #E0F2FE; color: #0369A1; }
+        .status-pill[data-color="new"]       { background: #E0F2FE !important; color: #0369A1 !important; border-color: #BAE6FD !important; }
+        .status-pill[data-color="success"]   { background: #DCFCE7 !important; color: #166534 !important; border-color: #BBF7D0 !important; }
+        .status-pill[data-color="paid"]      { background: #ECFDF5 !important; color: #059669 !important; border-color: #A7F3D0 !important; }
+        .status-pill[data-color="danger"]    { background: #FEE2E2 !important; color: #991B1B !important; border-color: #FECACA !important; }
+        .status-pill[data-color="orange"]    { background: #FFEDD5 !important; color: #9A3412 !important; border-color: #FED7AA !important; }
+        .status-pill[data-color="purple"]    { background: #F3E8FF !important; color: #6B21A8 !important; border-color: #E9D5FF !important; }
+        .status-pill[data-color="allocated"] { background: #EEF2FF !important; color: #3730A3 !important; border-color: #C7D2FE !important; }
+        .status-pill[data-color="sent"]      { background: #FFFBEB !important; color: #92400E !important; border-color: #FDE68A !important; }
+        .status-pill[data-color="pink"]      { background: #FCE7F3 !important; color: #9D174D !important; border-color: #FBCFE8 !important; }
+        .status-pill[data-color="brown"]     { background: #FEF3C7 !important; color: #92400E !important; border-color: #FDE68A !important; }
+        .status-pill[data-color="gray"]      { background: #F3F4F6 !important; color: #374151 !important; border-color: #E5E7EB !important; }
 
         /* ═══════════════════════════════════════
            MODERN ACTION DROPDOWN
@@ -2128,10 +2130,10 @@
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon purple">
-                        <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm4.24 16L12 15.45 7.77 18l1.12-4.81-3.73-3.23 4.92-.42L12 5l1.92 4.53 4.92.42-3.73 3.23L16.23 18z"/></svg>
+                        <svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
                     </div>
-                    <div class="stat-value" id="dashboardConvRate">0%</div>
-                    <div class="stat-label">Conversion Rate</div>
+                    <div class="stat-value" id="dashboardPaidLeads">0</div>
+                    <div class="stat-label">Paid Leads</div>
                 </div>
             </div>
 
@@ -2156,11 +2158,12 @@
                 </div>
 
                 <div class="dashboard-card">
-                    <div class="card-title">Conversion Gauge</div>
+                    <div class="card-title">Payment Status</div>
                     <div class="circle-chart-wrapper">
                         <canvas id="conversionDonutChart"></canvas>
                         <div class="circle-inner-text">
-                            <span class="circle-value" id="dashboardConvRateDonut">0%</span>
+                            <span class="circle-value" id="dashboardPaidDonutVal">0</span>
+                            <span class="circle-label">Paid Leads</span>
                         </div>
                     </div>
                 </div>
@@ -2391,16 +2394,16 @@
 
         // Sync new dashboard stats boxes
         const _origCalc = window.calculateDashboardStats || null;
-        // The dashboardTotalDonut and dashboardConvRateDonut mirrors are synced via initCharts calls
+        // The dashboardTotalDonut and dashboardPaidDonutVal mirrors are synced via initCharts calls
         // We hook into the DOM after initDashboard is done to copy values
         // Sync new dashboard stats boxes via standard functions
         function syncDonutStats() {
             const total = document.getElementById('dashboardTotal')?.innerText;
-            const conv  = document.getElementById('dashboardConvRate')?.innerText;
+            const paid  = document.getElementById('dashboardPaidLeads')?.innerText;
             if (document.getElementById('dashboardTotalDonut'))
                 document.getElementById('dashboardTotalDonut').innerText = total || '0';
-            if (document.getElementById('dashboardConvRateDonut'))
-                document.getElementById('dashboardConvRateDonut').innerText = conv || '0%';
+            if (document.getElementById('dashboardPaidDonutVal'))
+                document.getElementById('dashboardPaidDonutVal').innerText = paid || '0';
         }
         // Stats are updated in calculateDashboardStats, so we'll call sync once here
         window.addEventListener('load', syncDonutStats);
