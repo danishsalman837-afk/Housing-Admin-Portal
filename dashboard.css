@@ -1215,21 +1215,28 @@ select.status-pill {
 
 
 /* ═══════════════════════════════════════
-   SETTINGS VIEW STYLES
+   SETTINGS VIEW STYLES (FIXED)
    ═══════════════════════════════════════ */
 
-#settingsView .panel {
-    background: var(--bg-surface);
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-sm);
-    padding: 32px;
+#settingsView {
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
 }
 
-#settingsView .settings-sub-nav {
+#settingsView .settings-main-grid {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 32px;
+    align-items: start;
+}
+
+#settingsView .settings-sidebar {
+    position: sticky;
+    top: 24px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 8px;
 }
 
 #settingsView .settings-nav-item {
@@ -1237,29 +1244,16 @@ select.status-pill {
     align-items: center;
     gap: 12px;
     padding: 12px 16px;
-    border-radius: var(--radius-md);
+    border-radius: 12px;
     color: var(--text-muted);
-    font-weight: 500;
-    transition: var(--transition);
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s ease;
     cursor: pointer;
-    border: none;
+    border: 1px solid transparent;
     background: transparent;
     width: 100%;
     text-align: left;
-}
-
-#settingsView .settings-nav-item .nav-icon {
-    width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-#settingsView .settings-nav-item .nav-icon svg {
-    width: 18px;
-    height: 18px;
-    fill: currentColor;
 }
 
 #settingsView .settings-nav-item:hover {
@@ -1268,54 +1262,89 @@ select.status-pill {
 }
 
 #settingsView .settings-nav-item.active {
-    background: var(--primary-light);
-    color: var(--primary-text);
-    font-weight: 600;
+    background: var(--bg-surface);
+    color: var(--primary);
+    border-color: var(--border-light);
+    box-shadow: var(--shadow-sm);
 }
 
-/* Avatar Preview UI Control */
-.settings-avatar-container {
+#settingsView .settings-nav-item svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+}
+
+/* Card Styling */
+#settingsView .settings-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: var(--shadow-sm);
+}
+
+#settingsView .settings-card-header {
+    margin-bottom: 32px;
+}
+
+#settingsView .settings-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text-main);
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+}
+
+#settingsView .settings-desc {
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+/* Avatar UI */
+.avatar-upload-box {
     display: flex;
     align-items: center;
-    gap: 24px;
-    padding: 24px;
-    background: var(--bg-surface-2);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--border-light);
+    gap: 32px;
+    margin-bottom: 40px;
+    padding: 32px;
+    background: var(--bg-main);
+    border-radius: 16px;
+    border: 1px dashed var(--border-strong);
 }
 
-.settings-avatar-preview {
+.avatar-container-fixed {
     position: relative;
-    width: 100px;
-    height: 100px;
+    width: 120px;
+    height: 120px;
+    flex-shrink: 0;
 }
 
-.avatar-preview-circle {
-    width: 100%;
-    height: 100%;
+.avatar-circle-fixed {
+    width: 120px;
+    height: 120px;
     border-radius: 50%;
     background: linear-gradient(135deg, var(--primary) 0%, #818CF8 100%);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 32px;
+    font-size: 40px;
     font-weight: 800;
     color: white;
     overflow: hidden;
+    border: 4px solid var(--bg-surface);
     box-shadow: var(--shadow-md);
-    border: 3px solid var(--bg-surface);
 }
 
-.avatar-preview-circle img {
+.avatar-circle-fixed img {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
-.avatar-edit-badge {
+.avatar-edit-badge-fixed {
     position: absolute;
-    bottom: 0;
-    right: 0;
+    bottom: 4px;
+    right: 4px;
     width: 32px;
     height: 32px;
     background: var(--primary);
@@ -1324,100 +1353,94 @@ select.status-pill {
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: var(--shadow-sm);
     border: 2px solid var(--bg-surface);
     cursor: pointer;
-    transition: var(--transition);
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s ease;
 }
 
-.avatar-edit-badge:hover {
+.avatar-edit-badge-fixed:hover {
     transform: scale(1.1);
-    background: var(--primary-hover);
 }
 
-.avatar-edit-badge svg {
+.avatar-edit-badge-fixed svg {
     width: 16px;
     height: 16px;
-    fill: currentColor;
+    fill: white;
 }
 
-/* Form Styles */
-.settings-section-title {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--text-main);
-    letter-spacing: -0.5px;
-    margin-bottom: 4px;
-}
-
-.settings-section-desc {
-    font-size: 13px;
-    color: var(--text-muted);
+/* Form refinement */
+.settings-form-group {
     margin-bottom: 24px;
 }
 
-.form-field-label {
+.settings-label {
+    display: block;
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    margin-bottom: 8px;
-    display: block;
+    margin-bottom: 10px;
 }
 
-.settings-info-box {
-    padding: 16px;
-    border-radius: var(--radius-md);
+.settings-footer {
+    margin-top: 40px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border-light);
     display: flex;
-    gap: 12px;
-    margin-bottom: 24px;
-    font-size: 13px;
-    line-height: 1.5;
+    justify-content: flex-end;
+    gap: 16px;
 }
 
-.settings-info-box.warning {
-    background: rgba(245, 158, 11, 0.1);
-    border: 1px solid rgba(245, 158, 11, 0.2);
-    color: #92400E;
-}
-
-.settings-info-box.warning svg {
-    fill: #F59E0B;
-}
-
-/* Buttons */
-.btn-save {
+.btn-premium {
     padding: 12px 32px;
+    border-radius: 12px;
     font-size: 14px;
-    font-weight: 600;
-    border-radius: var(--radius-md);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-premium.primary {
     background: var(--primary);
     color: white;
     border: none;
-    cursor: pointer;
-    transition: var(--transition);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
 }
 
-.btn-save:hover {
+.btn-premium.primary:hover {
     background: var(--primary-hover);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(79, 70, 229, 0.3);
 }
 
-.btn-ghost {
+.btn-premium.ghost {
     background: transparent;
-    border: none;
-    color: var(--text-muted);
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    padding: 8px 12px;
-    border-radius: var(--radius-sm);
-    transition: var(--transition);
+    border: 1px solid var(--border-light);
+    color: var(--text-main);
 }
 
-.btn-ghost:hover {
+.btn-premium.ghost:hover {
     background: var(--bg-surface-2);
+}
+
+.info-banner {
+    background: rgba(79, 70, 229, 0.05);
+    border-left: 4px solid var(--primary);
+    padding: 16px 20px;
+    border-radius: 0 12px 12px 0;
+    margin-bottom: 32px;
+    display: flex;
+    gap: 16px;
+    font-size: 13px;
+    line-height: 1.6;
     color: var(--text-main);
+}
+
+.info-banner svg {
+    width: 20px;
+    height: 20px;
+    fill: var(--primary);
+    flex-shrink: 0;
 }
