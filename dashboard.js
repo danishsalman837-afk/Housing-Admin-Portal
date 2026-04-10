@@ -1866,6 +1866,9 @@ function initRealtimeSubscription() {
 
                         existing.status = fresh.status;
                         existing.rejection_reason = fresh.rejection_reason;
+                        existing.sent_at = fresh.sent_at;
+                        existing.accepted_at = fresh.accepted_at;
+                        existing.rejected_at = fresh.rejected_at;
 
                         // Local UI refresh
                         if (document.getElementById('leadsView').classList.contains('active')) renderFilteredLeads();
