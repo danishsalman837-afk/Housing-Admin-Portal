@@ -2090,28 +2090,141 @@ window.logout = function() {
 // SETTINGS ACTIONS
 // ═══════════════════════════════════════
 
-window.handleProfilePicUpload = async function(input) {
+window.handleProfilePicUpload = function(input) {
     const file = input.files[0];
     if (!file) return;
 
+    if (!file.type.startsWith('image/')) {
+        showToast('Invalid File', 'Please select an image file.', 'warning');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        window.openAdjustAvatarModal(e.target.result, file.name, file.type);
+    };
+    reader.readAsDataURL(file);
+    input.value = ''; // Reset for next selection
+};
+
+window.openAdjustAvatarModal = function(imgSrc, fileName, fileType) {
+    const modal = document.getElementById('modalBox');
+    const overlay = document.getElementById('modalOverlay');
+    
+    modal.innerHTML = `
+        <div class="modal-header">
+            <h2 style="font-size:18px; font-weight:700;">Adjust Profile Picture</h2>
+            <button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button>
+        </div>
+        <p style="font-size:13px; color:var(--label-3); margin-bottom:20px; text-align:center;">Drag the image to center it and use the slider to zoom.</p>
+        
+        <div class="crop-container" id="cropContainer">
+            <img src="${imgSrc}" class="crop-image" id="cropImage" style="transform: translate(0px, 0px) scale(1);">
+        </div>
+        
+        <div class="zoom-controls">
+            <svg style="width:16px; height:16px; fill:var(--label-4);" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            <input type="range" class="zoom-slider" id="zoomSlider" min="0.5" max="3" step="0.01" value="1">
+            <svg style="width:18px; height:18px; fill:var(--label-4);" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14zM10 7H9v2H7v1h2v2h1v-2h2V9h-2V7z"/></svg>
+        </div>
+        
+        <div style="display:flex; gap:12px;">
+            <button class="btn-action" style="flex:1; justify-content:center; background:#10B981;" onclick="window.finalizeAvatarAdjustment('${fileName}', '${fileType}')">Save & Apply</button>
+            <button class="btn-outline" style="flex:0.5; justify-content:center;" onclick="document.getElementById('modalOverlay').style.display='none'">Cancel</button>
+        </div>
+    `;
+    
+    overlay.style.display = 'flex';
+    
+    // Drag/Zoom Logic
+    const img = document.getElementById('cropImage');
+    const container = document.getElementById('cropContainer');
+    const slider = document.getElementById('zoomSlider');
+    
+    let isDragging = false;
+    let startX, startY;
+    let currentX = 0, currentY = 0;
+    let scale = 1;
+
+    // Center image initially
+    img.onload = () => {
+        const ratio = img.naturalWidth / img.naturalHeight;
+        if (ratio > 1) { // Wide
+            img.style.height = '100%';
+            img.style.width = 'auto';
+        } else { // Tall
+            img.style.width = '100%';
+            img.style.height = 'auto';
+        }
+    };
+
+    const updateTransform = () => {
+        img.style.transform = `translate(${currentX}px, ${currentY}px) scale(${scale})`;
+    };
+
+    container.onmousedown = (e) => {
+        isDragging = true;
+        startX = e.clientX - currentX;
+        startY = e.clientY - currentY;
+    };
+
+    window.onmousemove = (e) => {
+        if (!isDragging) return;
+        currentX = e.clientX - startX;
+        currentY = e.clientY - startY;
+        updateTransform();
+    };
+
+    window.onmouseup = () => {
+        isDragging = false;
+    };
+
+    slider.oninput = (e) => {
+        scale = parseFloat(e.target.value);
+        updateTransform();
+    };
+};
+
+window.finalizeAvatarAdjustment = async function(fileName, fileType) {
+    const img = document.getElementById('cropImage');
+    const container = document.getElementById('cropContainer');
+    const slider = document.getElementById('zoomSlider');
+    
+    // Create a canvas to extract the circular area
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = 400; // Final size
+    canvas.height = 400;
+    
+    // Calculate relative positioning
+    const rect = img.getBoundingClientRect();
+    const contRect = container.getBoundingClientRect();
+    
+    const scaleX = img.naturalWidth / rect.width;
+    const scaleY = img.naturalHeight / rect.height;
+    
+    const sourceX = (contRect.left - rect.left) * scaleX;
+    const sourceY = (contRect.top - rect.top) * scaleY;
+    const sourceW = contRect.width * scaleX;
+    const sourceH = contRect.height * scaleY;
+    
+    ctx.beginPath();
+    ctx.arc(200, 200, 200, 0, Math.PI * 2);
+    ctx.clip();
+    
+    ctx.drawImage(img, sourceX, sourceY, sourceW, sourceH, 0, 0, 400, 400);
+    
+    const base64Content = canvas.toDataURL(fileType, 0.9);
+    
     try {
-        const reader = new FileReader();
-        const base64Promise = new Promise((resolve) => {
-            reader.onload = () => resolve(reader.result);
-            reader.readAsDataURL(file);
-        });
-
-        const base64Content = await base64Promise;
         const session = JSON.parse(localStorage.getItem('admin_session'));
-
-        // Use the dedicated profile pic upload endpoint
         const res = await fetch('/api/profile?route=upload-avatar', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 userId: session.user.id,
-                name: file.name,
-                type: file.type,
+                name: fileName,
+                type: fileType,
                 content: base64Content
             })
         });
@@ -2120,20 +2233,16 @@ window.handleProfilePicUpload = async function(input) {
         if (!res.ok) throw new Error(result.error || 'Upload failed');
 
         const imgUrl = result.url;
+        document.getElementById('settingsAvatarImg').src = imgUrl;
+        document.getElementById('settingsAvatarImg').style.display = 'block';
+        document.getElementById('settingsAvatarInitials').style.display = 'none';
         
-        const previewImg = document.getElementById('settingsAvatarImg');
-        const previewInitials = document.getElementById('settingsAvatarInitials');
-        previewImg.src = imgUrl;
-        previewImg.style.display = 'block';
-        previewInitials.style.display = 'none';
-
-        // Store temporary avatar URL to be saved with profile
         window._pendingAvatarUrl = imgUrl;
-        showToast('Avatar Uploaded', 'Click "Save Changes" to apply.', 'success');
-
+        document.getElementById('modalOverlay').style.display = 'none';
+        showToast('Avatar Adjusted', 'Profile photo updated successfully. Click "Save Profile" to finalize.', 'success');
     } catch (e) {
         console.error(e);
-        showToast('Upload Error', e.message, 'danger');
+        showToast('Update Failed', e.message, 'danger');
     }
 };
 
