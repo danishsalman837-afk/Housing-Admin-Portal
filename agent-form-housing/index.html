@@ -447,6 +447,12 @@
 
           const postcodeVal = urlParams.get('postcode') || urlParams.get('Postcode');
           if (postcodeVal) document.querySelector('[name="postcode"]').value = postcodeVal;
+
+          const agentVal = urlParams.get('dialler') || urlParams.get('Dialler') || urlParams.get('agentName') || urlParams.get('AgentName') || urlParams.get('agent') || urlParams.get('Agent') || urlParams.get('agent_name');
+          if (agentVal) {
+              const agentInput = document.querySelector('[name="agentName"]');
+              if (agentInput) agentInput.value = agentVal;
+          }
       };
 
       fillFromURL();

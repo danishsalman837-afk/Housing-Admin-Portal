@@ -138,7 +138,7 @@ module.exports = async function handler(req, res) {
     children.push(qaRow("Are you a council tenant or a housing association tenant?", val('tenantType', ['tenant_type'])));
     children.push(qaRow("Name of Landlord", val('landlordName', ['landlord_name'])));
     children.push(qaRow("How long have you been living in the property?", val('livingDuration', ['tenancyDuration', 'living_duration'])));
-    children.push(qaRow("Agent Name", val('agent_name', ['agentName'])));
+
 
     // ── Section 2: Damp / Mould ──
     children.push(spacer(160), sectionHeading("Section 2 — Damp / Mould"), spacer(60));
