@@ -205,7 +205,11 @@ module.exports = async function handler(req, res) {
           });
         } else if (action === 'reject') {
           if (!rejection_reason || !rejection_reason.trim()) return res.status(400).json({ error: "A rejection reason is required." });
-          const { error: updErr } = await supabase.from('solicitor_activity').update({ status: 'Rejected', rejection_reason: rejection_reason.trim() }).eq('id', activity.id);
+          const { error: updErr } = await supabase.from('solicitor_activity').update({ 
+            status: 'Rejected', 
+            rejection_reason: rejection_reason.trim(),
+            rejected_at: new Date().toISOString()
+          }).eq('id', activity.id);
           if (updErr) return res.status(500).json({ error: updErr.message });
           await supabase.from('submissions').update({ 
               actual_status: 'Re-assign',
