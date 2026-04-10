@@ -27,8 +27,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await res.json();
 
                 if (res.ok) {
-                    alert('Registration successful! You can now log in.');
-                    window.location.href = '/index.html';
+                    // Registration successful - smooth transition to login
+                    document.body.classList.add('page-exit');
+                    setTimeout(() => {
+                        window.location.href = '/login.html';
+                    }, 500); // Match transition duration
                 } else {
                     errorMsg.innerText = data.error || 'Registration failed.';
                     signupBtn.innerText = 'Get Started';

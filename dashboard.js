@@ -1793,7 +1793,10 @@ window.switchThemeFromDropdown = function() {
 
 window.logout = function() {
     localStorage.removeItem('admin_session');
-    window.location.href = '/login.html';
+    document.body.classList.add('page-exit');
+    setTimeout(() => {
+        window.location.href = '/login.html';
+    }, 400);
 };
 
 // Initialize user on load

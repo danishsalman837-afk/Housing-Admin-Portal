@@ -26,8 +26,11 @@ if (loginForm) {
                 // Save access token (Supabase standard)
                 localStorage.setItem('admin_session', JSON.stringify(data.session));
                 
-                // Redirect to dashboard
-                window.location.href = '/index.html';
+                // Redirect to dashboard with smooth transition
+                document.body.classList.add('page-exit');
+                setTimeout(() => {
+                    window.location.href = '/index.html';
+                }, 500);
             } else {
                 errorMsg.innerText = data.error || 'Access Denied: Invalid credentials.';
                 loginBtn.innerText = 'Secure Log In';

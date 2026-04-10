@@ -13,6 +13,17 @@
 
     <script>
         (function() {
+            // IMMEDIATE AUTH CHECK to prevent flickering
+            const session = localStorage.getItem('admin_session');
+            const isAuthPage = window.location.pathname.includes('login.html') || window.location.pathname.includes('signup.html');
+            
+            if (!session && !isAuthPage) {
+                // If no session and not on login/signup, redirect IMMEDIATELY
+                window.location.href = '/login.html';
+                // Add a style to hide the body just in case it takes a moment to redirect
+                document.documentElement.style.display = 'none';
+            }
+
             const theme = localStorage.getItem('theme') || 'light';
             if (theme === 'dark') {
                 document.documentElement.setAttribute('data-theme', 'dark');
@@ -147,6 +158,22 @@
             overflow: hidden;
             font-size: 14px;
             line-height: 1.5;
+            opacity: 0;
+            animation: fadeInPage 0.4s ease forwards;
+        }
+
+        @keyframes fadeInPage {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .page-exit {
+            animation: fadeOutPage 0.3s ease forwards !important;
+        }
+
+        @keyframes fadeOutPage {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.98); }
         }
 
         /* ═══════════════════════════════════════

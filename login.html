@@ -6,6 +6,15 @@
     <title>Housing Admin Portal — Secure Log In</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        (function() {
+            // If already logged in, redirect to dashboard immediately
+            if (localStorage.getItem('admin_session')) {
+                window.location.href = '/index.html';
+                document.documentElement.style.display = 'none';
+            }
+        })();
+    </script>
     <style>
         :root {
             --blue-primary: #1A73E8;
@@ -30,6 +39,22 @@
             flex-direction: column;
             overflow: hidden;
             position: relative;
+            opacity: 0;
+            animation: fadeInPage 0.4s ease forwards;
+        }
+
+        @keyframes fadeInPage {
+            from { opacity: 0; transform: scale(1.02); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .page-exit {
+            animation: fadeOutPage 0.5s ease forwards !important;
+        }
+
+        @keyframes fadeOutPage {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-20px); }
         }
 
         body::before {
@@ -192,6 +217,19 @@
                     input.type = isPassword ? 'text' : 'password';
                     toggle.setAttribute('data-lucide', isPassword ? 'eye-off' : 'eye');
                     lucide.createIcons();
+                }
+            }
+
+            // Smooth link transitions
+            const link = e.target.closest('a');
+            if (link && link.getAttribute('href') && !link.getAttribute('target')) {
+                const href = link.getAttribute('href');
+                if (href.startsWith('/') || href.endsWith('.html')) {
+                    e.preventDefault();
+                    document.body.classList.add('page-exit');
+                    setTimeout(() => {
+                        window.location.href = href;
+                    }, 400);
                 }
             }
         });
