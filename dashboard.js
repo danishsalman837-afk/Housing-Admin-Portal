@@ -661,6 +661,8 @@ window.openViewModal = function (id, showOriginal = false) {
         // Wait, normalizeLead is available in the API, but here in dashboard.js it's not.
         // However, dashboard.js has its own display mappings.
         titlePrefix = "Original Agent Submission";
+        const agentName = s.agentName || s.agent_name || (s.agent_data && (s.agent_data.agentName || s.agent_data.agent_name));
+        if (agentName) titlePrefix += ` — Agent: ${agentName}`;
     } else if (showOriginal) {
         titlePrefix = "Original Submission (No Edits)";
     }
@@ -692,7 +694,7 @@ window.openViewModal = function (id, showOriginal = false) {
             // ... and so on. Better yet, just check if val is still undefined.
         }
 
-        if (val === undefined || val === null) return;
+        if (key !== 'agentName' && (val === undefined || val === null)) return;
 
         let label = leadFieldLabels[key] || key.replace(/_/g, ' ');
 

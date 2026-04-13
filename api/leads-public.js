@@ -37,7 +37,7 @@ module.exports = async function handler(req, res) {
 
     data.timestamp = new Date().toISOString();
 
-    if (!data.phone) return res.status(400).json({ error: "Phone number is required." });
+    if (!data.phone && !data.mobile_number) return res.status(400).json({ error: "Phone number is required." });
 
     // 2. Find existing
     const { data: existing, error: findError } = await supabase.from('submissions').select('id, leadStatus').eq('phone', data.phone).order('timestamp', { ascending: false }).limit(1);
