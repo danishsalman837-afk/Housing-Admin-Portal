@@ -666,10 +666,18 @@ window.openViewModal = function (id, showOriginal = false) {
     }
 
     const ignoreKeys = ['id', 'created_at', 'notes', 'assigned_company_id', 'assigned_solicitor_id', 'call_notes', 'agent_data', 'is_edited'];
+    if (!showOriginal) ignoreKeys.push('agentName');
+    
     let dataHtml = '';
 
+    // Put agentName at top for Agent Submission view
+    let displayOrder = [...leadViewOrder];
+    if (showOriginal) {
+        displayOrder = ['agentName', ...leadViewOrder.filter(k => k !== 'agentName')];
+    }
+
     // 1. Show fields in the predefined order
-    leadViewOrder.forEach(key => {
+    displayOrder.forEach(key => {
         if (ignoreKeys.includes(key)) return;
         
         // Handle potential snake_case vs camelCase if leadData is raw
@@ -704,6 +712,7 @@ window.openViewModal = function (id, showOriginal = false) {
                 <div style="font-size:11px; font-weight:700; color:var(--blue); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">${titlePrefix}</div>
                 <h2 style="font-size:20px; font-weight:800; letter-spacing:-0.5px;">${leadData.name || leadData.first_name || 'Client'}</h2>
             </div>
+            ${showOriginal ? `<div style="text-align:right;"><span style="font-size:10px; font-weight:700; color:#94A3B8; text-transform:uppercase; display:block; margin-bottom:2px;">Ref ID</span><span style="font-size:12px; color:#1E293B; font-weight:700;">#${s.id}</span></div>` : ''}
             <button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button>
         </div>
         <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:24px; padding:0 8px; max-height:75vh; overflow-y:auto;">
@@ -736,7 +745,7 @@ window.openEditLeadModal = function (id) {
     const s = submissionsData.find(x => String(x.id) === String(id));
     if (!s) return;
 
-    const ignoreKeys = ['id', 'created_at', 'notes', 'assigned_company_id', 'assigned_solicitor_id', 'call_notes'];
+    const ignoreKeys = ['id', 'created_at', 'notes', 'assigned_company_id', 'assigned_solicitor_id', 'call_notes', 'agentName'];
     let html = '';
     const shownKeys = new Set();
 
