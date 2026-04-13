@@ -301,7 +301,8 @@ window.renderFilteredLeads = function () {
         let matchStatus = false;
         if (statusFilter === 'All') {
             // By default, 'All' hides 'Closed' unless the checkbox is checked
-            if (item.leadStatus === 'Closed') {
+            const ls = (item.leadStatus || '').trim().toLowerCase();
+            if (ls === 'closed') {
                 matchStatus = showClosed;
             } else {
                 matchStatus = true;
@@ -506,6 +507,8 @@ window.handleFieldUpdate = async function (id, fieldName, value) {
         // If we updated assignments or status, refresh the table to reflect changes (especially solicitor names)
         if (fieldName === 'assigned_company_id' || fieldName === 'assigned_solicitor_id' || fieldName === 'leadStatus') {
             if (document.getElementById('leadsView').classList.contains('active')) renderFilteredLeads();
+            // Also refresh activity if we are on that view, as status changes might hide/show items
+            if (document.getElementById('activityView')?.classList.contains('active')) renderFilteredActivity();
         }
         
         showToast('Update Successful', `The ${fieldName.replace(/_/g, ' ')} has been updated.`, 'success');
@@ -1354,7 +1357,15 @@ window.deleteActivity = async function (id) {
 window.initDashboard = async function () {
     try {
         const resSub = await fetch('/api/submissions');
-        if (resSub.ok) submissionsData = JSON.parse(await resSub.text());
+        if (resSub.ok) {
+            submissionsData = JSON.parse(await resSub.text());
+            // Normalize lead status to remove whitespace
+            submissionsData.forEach(s => {
+                if (s.leadStatus && typeof s.leadStatus === 'string') {
+                    s.leadStatus = s.leadStatus.trim();
+                }
+            });
+        }
 
         const resComp = await fetch('/api/companies');
         if (resComp.ok) companiesData = JSON.parse(await resComp.text());
@@ -1387,7 +1398,9 @@ function updateActivityStats() {
     // Filter out activity linked to Closed leads for accurate stats
     const activeActivity = activityData.filter(a => {
         const lead = submissionsData.find(s => String(s.id) === String(a.lead_id));
-        return lead && lead.leadStatus !== 'Closed' && lead.leadStatus !== 'Archived';
+        if (!lead || !lead.leadStatus) return true; // Keep if lead missing or no status
+        const s = lead.leadStatus.trim().toLowerCase();
+        return s !== 'closed' && s !== 'archived';
     });
 
     setEl('saAllocated', activeActivity.filter(a => a.status === 'Allocated').length);
@@ -1403,8 +1416,10 @@ window.renderFilteredActivity = function () {
     const filtered = activityData.filter(a => {
         const lead = submissionsData.find(s => String(s.id) === String(a.lead_id));
         
-        // Hide leads that are closed or archived in Lead Management
-        if (!lead || lead.leadStatus === 'Closed' || lead.leadStatus === 'Archived') return false;
+        // Hide leads that are closed or archived in Lead Management (case-insensitive)
+        if (!lead || !lead.leadStatus) return false;
+        const ls = lead.leadStatus.trim().toLowerCase();
+        if (ls === 'closed' || ls === 'archived') return false;
 
         let matchStatus = statusFilter === 'All' || a.status === statusFilter;
         let matchSearch = true;
