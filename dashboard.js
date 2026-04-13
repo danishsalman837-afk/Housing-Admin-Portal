@@ -666,7 +666,7 @@ window.openViewModal = function (id, showOriginal = false) {
     }
 
     const ignoreKeys = ['id', 'created_at', 'notes', 'assigned_company_id', 'assigned_solicitor_id', 'call_notes', 'agent_data', 'is_edited'];
-    if (!showOriginal) ignoreKeys.push('agentName');
+    // Agent name should always be visible if present
     
     let dataHtml = '';
 
@@ -745,7 +745,7 @@ window.openEditLeadModal = function (id) {
     const s = submissionsData.find(x => String(x.id) === String(id));
     if (!s) return;
 
-    const ignoreKeys = ['id', 'created_at', 'notes', 'assigned_company_id', 'assigned_solicitor_id', 'call_notes', 'agentName'];
+    const ignoreKeys = ['id', 'created_at', 'notes', 'assigned_company_id', 'assigned_solicitor_id', 'call_notes'];
     let html = '';
     const shownKeys = new Set();
 
@@ -1920,13 +1920,42 @@ document.addEventListener('click', function (e) {
 function initRealtimeSubscription() {
     setInterval(async () => {
         try {
-            const res = await fetch('/api/solicitor?route=activity');
-            if (!res.ok) return;
-            const freshData = await res.json();
+            // 1. POLLING FOR NEW SUBMISSIONS (LEADS)
+            const resSub = await fetch('/api/submissions');
+            if (resSub.ok) {
+                const freshSubmissions = await resSub.json();
+                
+                // Identify completely new leads
+                freshSubmissions.forEach(fresh => {
+                    const exists = submissionsData.some(s => String(s.id) === String(fresh.id));
+                    if (!exists) {
+                        // NEW LEAD RECEIVED
+                        submissionsData.unshift(fresh);
+                        const leadName = fresh.name || fresh.first_name || 'New Client';
+                        
+                        // Show visual pop/toast
+                        showToast('New Lead Received', `<strong>${leadName}</strong> has just submitted a form.`, 'success');
+                        
+                        // Add to persistent notifications
+                        addNotification(`New lead received from <strong>${leadName}</strong>.`, 'blue');
+                        
+                        // Refresh active view if needed
+                        if (document.getElementById('leadsView')?.classList.contains('active')) renderFilteredLeads();
+                        calculateDashboardStats();
+                    }
+                });
+            }
 
-            freshData.forEach(async (fresh) => {
+            // 2. POLLING FOR SOLICITOR ACTIVITY UPDATES
+            const resAct = await fetch('/api/solicitor?route=activity');
+            if (!resAct.ok) return;
+            const freshActivity = await resAct.json();
+
+            freshActivity.forEach(async (fresh) => {
                 const existing = activityData.find(a => String(a.id) === String(fresh.id));
+                
                 if (existing) {
+                    // Check for status changes (Accepted/Rejected)
                     if (existing.status !== fresh.status) {
                         const lead = submissionsData.find(s => String(s.id) === String(fresh.lead_id));
                         const leadName = lead?.name || lead?.first_name || 'A lead';
@@ -1934,6 +1963,8 @@ function initRealtimeSubscription() {
                         // SYNC: Update the main lead status in Management to match Solicitor Activity status
                         if (lead) {
                             lead.leadStatus = fresh.status;
+                            // Optionally sync back to DB if needed (though solicitor likely already did this)
+                            // We do it here to ensure consistency if the solicitor only updated solicitor_activity
                             fetch('/api/update', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
@@ -1942,16 +1973,17 @@ function initRealtimeSubscription() {
                         }
 
                         if (fresh.status === 'Accepted') {
-                            addNotification(`<strong>${leadName}</strong> has been <strong style="color:#228B35">accepted</strong>.`, 'green');
-                            showToast('Lead Accepted', `${leadName} has been accepted by the solicitor.`, 'success');
+                            addNotification(`<strong>${leadName}</strong> has been <strong style="color:#228B35">accepted</strong> by solicitor.`, 'green');
+                            showToast('Lead Accepted', `<strong>${leadName}</strong> has been accepted.`, 'success');
                         } else if (fresh.status === 'Rejected') {
-                            addNotification(`<strong>${leadName}</strong> has been <strong style="color:#CC3328">rejected</strong>.`, 'red');
-                            showToast('Lead Rejected', `${leadName} was rejected by the solicitor.`, 'danger');
+                            addNotification(`<strong>${leadName}</strong> has been <strong style="color:#CC3328">rejected</strong> by solicitor.`, 'red');
+                            showToast('Lead Rejected', `<strong>${leadName}</strong> was rejected.`, 'danger');
                         } else if (fresh.status === 'Sent') {
                             addNotification(`Link for <strong>${leadName}</strong> has been sent.`, 'blue');
                             showToast('Link Sent', `Lead details link sent for ${leadName}.`, 'info');
                         }
 
+                        // Update local object
                         existing.status = fresh.status;
                         existing.rejection_reason = fresh.rejection_reason;
                         existing.sent_at = fresh.sent_at;
@@ -1959,11 +1991,31 @@ function initRealtimeSubscription() {
                         existing.rejected_at = fresh.rejected_at;
 
                         // Local UI refresh
-                        if (document.getElementById('leadsView').classList.contains('active')) renderFilteredLeads();
+                        if (document.getElementById('leadsView')?.classList.contains('active')) renderFilteredLeads();
                         calculateDashboardStats();
                     }
                 } else {
+                    // New activity record created (lead was newly allocated/sent)
                     activityData.unshift(fresh);
+                    
+                    // If it's already Accepted/Rejected (e.g. if solicitor acted instantly before next poll)
+                    if (fresh.status === 'Accepted' || fresh.status === 'Rejected') {
+                        const lead = submissionsData.find(s => String(s.id) === String(fresh.lead_id));
+                        const leadName = lead?.name || lead?.first_name || 'A lead';
+                        
+                        // Sync lead status
+                        if (lead) lead.leadStatus = fresh.status;
+
+                        if (fresh.status === 'Accepted') {
+                            addNotification(`<strong>${leadName}</strong> has been <strong style="color:#228B35">accepted</strong>.`, 'green');
+                            showToast('Lead Accepted', `<strong>${leadName}</strong> has been accepted.`, 'success');
+                        } else {
+                            addNotification(`<strong>${leadName}</strong> has been <strong style="color:#CC3328">rejected</strong>.`, 'red');
+                            showToast('Lead Rejected', `<strong>${leadName}</strong> was rejected.`, 'danger');
+                        }
+                        
+                        calculateDashboardStats();
+                    }
                 }
             });
 
@@ -1971,9 +2023,9 @@ function initRealtimeSubscription() {
                 renderFilteredActivity();
             }
         } catch (e) {
-            // Silently fail — next poll will retry
+            console.warn("Realtime poll failed:", e);
         }
-    }, 10000);
+    }, 10000); // Poll every 10 seconds
 }
 
 window.showToast = function(title, message, type = 'info') {
