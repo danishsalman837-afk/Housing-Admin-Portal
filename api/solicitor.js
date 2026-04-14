@@ -105,30 +105,12 @@ module.exports = async function handler(req, res) {
       const emailHtml = buildEmailTemplate(leadName, solicitUrl, member, lead);
 
       // 3. Determine SMTP Configuration
-      // Intelligent Secure Flag: Port 587 or 25 should almost always be secure:false (STARTTLS)
-      if (smtpConfig.port === 587 || smtpConfig.port === 25) {
-        smtpConfig.secure = false;
-      }
+      // Check if this is Felix Legal (by member email or company name)
+      const isFelix = (member.email || '').toLowerCase().includes('felix') || 
+                      (company && (company.name || '').toLowerCase().includes('felix'));
 
-      // Check for firm-specific SMTP (e.g. Felix Legal)
-      if (company && company.smtp_host && company.smtp_user && company.smtp_pass) {
-        const port = parseInt(company.smtp_port || '587');
-        smtpConfig = {
-          host: company.smtp_host,
-          port: port,
-          secure: port === 465, // Force false for 587 (STARTTLS)
-          auth: { user: company.smtp_user, pass: company.smtp_pass },
-          tls: { rejectUnauthorized: false }
-        };
-        // Allow DB override but respect protocol standards
-        if (company.smtp_secure === false) smtpConfig.secure = false;
-        if (company.smtp_secure === true && port !== 587) smtpConfig.secure = true;
-        
-        // Safety: If it's port 587, it MUST be false for STARTTLS in nodemailer
-        if (port === 587) smtpConfig.secure = false;
-      } 
-      // Special case for Felix Legal (if no DB settings provided)
-      else if (company && (company.name || '').toLowerCase().includes('felix')) {
+      if (isFelix) {
+        console.log(`[SMTP Debug] Detected Felix Legal. Using direct SMTP (Office 365).`);
         smtpConfig = {
           host: 'smtp.office365.com',
           port: 587,
@@ -136,6 +118,39 @@ module.exports = async function handler(req, res) {
           auth: { 
             user: 'claims@felixlegal.co.uk', 
             pass: 'bjwtflrfvfgbsrrt' 
+          },
+          tls: {
+            rejectUnauthorized: false,
+            minVersion: 'TLSv1.2'
+          }
+        };
+      } 
+      // 2. Fetch from database for other solicitors
+      else if (company && company.smtp_host && company.smtp_user && company.smtp_pass) {
+        console.log(`[SMTP Debug] Using Database config for: ${company.name}`);
+        const port = parseInt(company.smtp_port || '587');
+        smtpConfig = {
+          host: company.smtp_host,
+          port: port,
+          secure: port === 465, 
+          auth: { user: company.smtp_user, pass: company.smtp_pass },
+          tls: {
+            rejectUnauthorized: false,
+            minVersion: 'TLSv1.2'
+          }
+        };
+        if (port === 587) smtpConfig.secure = false;
+      } 
+      // 3. Final Fallback (Global ENV)
+      else {
+        console.log(`[SMTP Debug] Using Global Default config.`);
+        smtpConfig = {
+          host: process.env.SMTP_HOST || 'smtp.gmail.com',
+          port: parseInt(process.env.SMTP_PORT || '587'),
+          secure: process.env.SMTP_SECURE === 'true',
+          auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS
           },
           tls: {
             rejectUnauthorized: false,
@@ -151,13 +166,8 @@ module.exports = async function handler(req, res) {
         ? smtpConfig.auth.user 
         : (process.env.SMTP_FROM || process.env.SMTP_USER);
 
-      const fromName = (company && (company.name || '').toLowerCase().includes('felix'))
-        ? "Felix Legal Claims"
-        : "HOUSING STANDARDS";
-
-      const replyToEmail = (company && (company.name || '').toLowerCase().includes('felix'))
-        ? "claims@felixlegal.co.uk"
-        : fromEmail;
+      const fromName = isFelix ? "Felix Legal Claims" : "HOUSING STANDARDS";
+      const replyToEmail = isFelix ? "claims@felixlegal.co.uk" : fromEmail;
 
       await transporter.sendMail({
         from: `"${fromName}" <${fromEmail}>`,
@@ -178,10 +188,17 @@ module.exports = async function handler(req, res) {
       console.error("SMTP Error Details:", {
         host: smtpConfig?.host || 'unknown',
         port: smtpConfig?.port || 'unknown',
-        secure: smtpConfig?.secure || 'unknown',
-        user: smtpConfig?.auth?.user ? (smtpConfig.auth.user.substring(0, 3) + '***') : 'none'
+        user: smtpConfig?.auth?.user
       }, err.message);
-      return res.status(500).json({ error: `Failed to send email via ${smtpConfig?.host || 'SMTP'}: ` + err.message });
+
+      let hint = "";
+      if (err.message.includes('535 5.7.139')) {
+        hint = " (HINT: 'Authenticated SMTP' is likely DISABLED for this mailbox in Microsoft 365 Admin Center)";
+      } else if (err.message.includes('535')) {
+        hint = " (HINT: Invalid credentials. If using MFA, ensure you are using a 16-character App Password)";
+      }
+
+      return res.status(500).json({ error: `Failed to send email via ${smtpConfig?.host || 'SMTP'}: ` + err.message + hint });
     }
   }
 
