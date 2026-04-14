@@ -135,7 +135,7 @@ module.exports = async function handler(req, res) {
           secure: false, 
           auth: { 
             user: 'claims@felixlegal.co.uk', 
-            pass: 'bjwtflrfvgbsrrt' 
+            pass: 'bjwtflrfvfgbsrrt' 
           },
           tls: {
             rejectUnauthorized: false,
