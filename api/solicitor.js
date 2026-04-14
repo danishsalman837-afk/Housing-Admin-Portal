@@ -105,37 +105,55 @@ module.exports = async function handler(req, res) {
         auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
       };
 
+      // Intelligent Secure Flag: Port 587 or 25 should almost always be secure:false (STARTTLS)
+      if (smtpConfig.port === 587 || smtpConfig.port === 25) {
+        smtpConfig.secure = false;
+      }
+
       // Check for firm-specific SMTP (e.g. Felix Legal)
-      // These fields can be stored in the 'companies' table
       if (company && company.smtp_host && company.smtp_user && company.smtp_pass) {
         smtpConfig = {
           host: company.smtp_host,
           port: parseInt(company.smtp_port || '587'),
-          secure: company.smtp_secure !== false,
+          secure: company.smtp_port === 465, // Force false for 587
           auth: { user: company.smtp_user, pass: company.smtp_pass }
         };
+        // Allow DB override but respect port defaults
+        if (company.smtp_secure === false) smtpConfig.secure = false;
+        if (company.smtp_secure === true) smtpConfig.secure = true;
       } 
-      // Special case for Felix Legal if credentials are in Env Vars
+      // Special case for Felix Legal
       else if (company && (company.name || '').toLowerCase().includes('felix')) {
-        if (process.env.FELIX_SMTP_USER && process.env.FELIX_SMTP_PASS) {
-          smtpConfig.auth.user = process.env.FELIX_SMTP_USER;
-          smtpConfig.auth.pass = process.env.FELIX_SMTP_PASS;
-          smtpConfig.host = process.env.FELIX_SMTP_HOST || smtpConfig.host;
-          smtpConfig.port = parseInt(process.env.FELIX_SMTP_PORT || smtpConfig.port);
-        }
+        smtpConfig = {
+          host: 'smtp.office365.com',
+          port: 587,
+          secure: false, // Office 365 on 587 MUST be false
+          auth: { 
+            user: 'claims@felixlegal.co.uk', 
+            pass: 'bjwtflrfvgbsrrt' 
+          }
+        };
       }
 
       const transporter = nodemailer.createTransport(smtpConfig);
 
       // 4. Send the email
-      // Use company or member email as the 'from' if we are using their specific SMTP
       const fromEmail = (smtpConfig.auth.user && smtpConfig.auth.user.includes('@')) 
         ? smtpConfig.auth.user 
         : (process.env.SMTP_FROM || process.env.SMTP_USER);
 
+      const fromName = (company && (company.name || '').toLowerCase().includes('felix'))
+        ? "Felix Legal Claims"
+        : "HOUSING STANDARDS";
+
+      const replyToEmail = (company && (company.name || '').toLowerCase().includes('felix'))
+        ? "claims@felixlegal.co.uk"
+        : fromEmail;
+
       await transporter.sendMail({
-        from: `"HOUSING STANDARDS" <${fromEmail}>`,
+        from: `"${fromName}" <${fromEmail}>`,
         to: member.email,
+        replyTo: replyToEmail,
         subject: `New HOUSING STANDARDS Lead — Action Required`,
         html: emailHtml,
       });
