@@ -68,6 +68,14 @@ module.exports = async function handler(req, res) {
     const { activity_id } = req.body;
     if (!activity_id) return res.status(400).json({ error: "activity_id is required" });
 
+    let smtpConfig = {
+      host: process.env.SMTP_HOST,
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+      tls: { rejectUnauthorized: false }
+    };
+
     try {
       const { data: activity, error: actErr } = await supabase.from('solicitor_activity').select('*').eq('id', activity_id).single();
       if (actErr || !activity) return res.status(404).json({ error: "Activity record not found." });
@@ -97,15 +105,6 @@ module.exports = async function handler(req, res) {
       const emailHtml = buildEmailTemplate(leadName, solicitUrl, member, lead);
 
       // 3. Determine SMTP Configuration
-      // Default to global environment variables
-      let smtpConfig = {
-        host: process.env.SMTP_HOST,
-        port: parseInt(process.env.SMTP_PORT || '587'),
-        secure: process.env.SMTP_SECURE === 'true',
-        auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-        tls: { rejectUnauthorized: false }
-      };
-
       // Intelligent Secure Flag: Port 587 or 25 should almost always be secure:false (STARTTLS)
       if (smtpConfig.port === 587 || smtpConfig.port === 25) {
         smtpConfig.secure = false;
@@ -177,12 +176,12 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ success: true, activity: updated[0] });
     } catch (err) {
       console.error("SMTP Error Details:", {
-        host: smtpConfig.host,
-        port: smtpConfig.port,
-        secure: smtpConfig.secure,
-        user: smtpConfig.auth.user ? (smtpConfig.auth.user.substring(0, 3) + '***') : 'none'
+        host: smtpConfig?.host || 'unknown',
+        port: smtpConfig?.port || 'unknown',
+        secure: smtpConfig?.secure || 'unknown',
+        user: smtpConfig?.auth?.user ? (smtpConfig.auth.user.substring(0, 3) + '***') : 'none'
       }, err.message);
-      return res.status(500).json({ error: `Failed to send email via ${smtpConfig.host}: ` + err.message });
+      return res.status(500).json({ error: `Failed to send email via ${smtpConfig?.host || 'SMTP'}: ` + err.message });
     }
   }
 
