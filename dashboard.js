@@ -1585,7 +1585,8 @@ window.openAllocateModal = function (preSelectedLeadId = null) {
         }
         return !allocatedLeadIds.includes(String(s.id)) &&
                s.leadStatus !== 'Archived' &&
-               s.leadStatus !== 'Agent Saved';
+               s.leadStatus !== 'Agent Saved' &&
+               s.leadStatus !== 'Closed';
     });
 
     const modalTitle = preSelectedLeadId ? 'Reallocate Lead' : 'Allocate Lead to Solicitor';
