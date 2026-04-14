@@ -638,6 +638,9 @@
             </div>
         </div>
 
+        <!-- Photo Evidence -->
+        <div id="photoEvidenceContainer"></div>
+
         <!-- Action Buttons -->
         <div id="actionButtons" class="sol-actions">
             <button class="sol-btn accept" id="acceptBtn" onclick="handleAccept()">
@@ -721,8 +724,9 @@
             renderFieldGrid('clientInfoGrid', clientFields);
 
             // Photos Section
+            const photoContainer = document.getElementById('photoEvidenceContainer');
             if (leadData.attachments && leadData.attachments.length > 0) {
-                const photoCard = `
+                photoContainer.innerHTML = `
                     <div class="sol-card" style="margin-top:20px;">
                         <div class="sol-card-header">
                             <div class="sol-card-header-icon blue">
@@ -744,7 +748,8 @@
                         </div>
                     </div>
                 `;
-                document.getElementById('reportingGrid').parentElement.parentElement.insertAdjacentHTML('afterend', photoCard);
+            } else {
+                photoContainer.innerHTML = '';
             }
 
             // Disrepair Details
