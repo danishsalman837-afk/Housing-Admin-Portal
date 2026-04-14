@@ -5,6 +5,9 @@ let activityData = [];
 let notifications = JSON.parse(localStorage.getItem('hdr_notifications') || '[]');
 let charts = {};
 let selectedCompanyId = null;
+let activeChatLeadId = null;
+let whatsappMessages = [];
+let whatsappRealtimeSub = null;
 
 // ═══════════════════════════════════════
 // THEME MANAGEMENT
@@ -107,27 +110,30 @@ const leadFieldLabels = {
 window.switchView = function (view) {
     document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    const navItems = document.querySelectorAll('.nav-item');
 
     if (view === 'dashboard') {
         document.getElementById('dashboardView').classList.add('active');
-        navItems[0].classList.add('active');
+        document.getElementById('nav-dashboard').classList.add('active');
         calculateDashboardStats();
     } else if (view === 'companies') {
         document.getElementById('companiesView').classList.add('active');
-        navItems[1].classList.add('active');
+        document.getElementById('nav-companies').classList.add('active');
         renderCompanies();
     } else if (view === 'activity') {
         document.getElementById('activityView').classList.add('active');
-        navItems[2].classList.add('active');
+        document.getElementById('nav-activity').classList.add('active');
         renderFilteredActivity();
+    } else if (view === 'whatsapp') {
+        document.getElementById('whatsappView').classList.add('active');
+        document.getElementById('nav-whatsapp').classList.add('active');
+        window.initWhatsAppView();
     } else if (view === 'settings') {
         document.getElementById('settingsView').classList.add('active');
-        navItems[4].classList.add('active');
+        document.getElementById('nav-settings').classList.add('active');
         populateSettings();
     } else {
         document.getElementById('leadsView').classList.add('active');
-        navItems[3].classList.add('active');
+        document.getElementById('nav-leads').classList.add('active');
         renderFilteredLeads();
     }
 };
@@ -422,6 +428,9 @@ function renderTable(data) {
                         </button>
                         <button class="dropdown-item" onclick="window.exportDocx('${item.id}')">
                             <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg> Download Word
+                        </button>
+                        <button class="dropdown-item" onclick="window.openWhatsAppChat('${item.id}', '${(item.name || item.first_name || 'Lead').replace(/'/g, "\\'")}', '${item.phone || item.mobile_number}')">
+                            <svg viewBox="0 0 24 24" style="fill:#25D366;"><path d="M17.472 14.382c-.301-.15-1.781-.88-2.057-.981-.277-.101-.478-.15-.678.15s-.573.981-.703 1.129c-.13.15-.261.171-.562.021-.301-.15-1.274-.469-2.426-1.496-.897-.799-1.503-1.785-1.28-2.164.223-.379.223-.553.301-.703.15-.301.075-.478-.038-.703-.113-.225-.678-1.781-.929-2.383-.245-.59-.494-.51-.678-.519h-.573c-.201 0-.527.075-.803.379-.277.301-1.055 1.03-1.055 2.515s1.08 2.912 1.23 3.111c.15.201 2.126 3.245 5.15 4.554.719.311 1.28.497 1.716.637.722.229 1.38.197 1.9.12.58-.085 1.781-.728 2.031-1.431.25-.703.25-1.306.175-1.432-.075-.125-.276-.201-.577-.352zm-5.441 5.313h-.005c-1.63 0-3.226-.439-4.615-1.268l-.331-.197-3.434.901.917-3.347-.216-.344c-.909-1.447-1.387-3.125-1.387-4.853 0-5.064 4.119-9.183 9.186-9.183 2.454 0 4.761.956 6.495 2.691s2.69 4.041 2.69 6.493c0 5.067-4.12 9.184-9.188 9.184zm8.435-16.147C18.274 1.325 15.264 0 12.031 0 5.462 0 .113 5.35.11 11.919c0 2.099.549 4.148 1.594 5.961L0 24l6.233-1.636c1.745.952 3.712 1.455 5.717 1.456h.006c6.567 0 11.917-5.351 11.92-11.921 0-3.184-1.24-6.179-3.468-8.43z"/></svg> WhatsApp Chat
                         </button>
                         <div style="border-top:1px solid var(--border); margin:4px 0;"></div>
                         <button class="dropdown-item danger" onclick="window.archiveLead('${item.id}')">
@@ -2454,4 +2463,202 @@ window.scrollIntoView = function(id) {
 };
 
 // Initialize user on load
-initUser();
+initUser();
+
+// ═══════════════════════════════════════
+// WHATSAPP CRM LOGIC
+// ═══════════════════════════════════════
+
+window.initWhatsAppView = async function() {
+    console.log("Initializing WhatsApp View...");
+    await fetchActiveChatContacts();
+    setupWhatsAppRealtime();
+};
+
+async function fetchActiveChatContacts() {
+    const listEl = document.getElementById('chatContactList');
+    if (!listEl) return;
+
+    // Get unique leads who have messages
+    const { data: messages, error } = await supabase
+        .from('whatsapp_messages')
+        .select(`
+            lead_id,
+            submissions!inner(id, first_name, last_name, phone, mobile_number),
+            message_body,
+            created_at
+        `)
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error("Error fetching chat contacts:", error);
+        return;
+    }
+
+    // Deduplicate by lead_id to get contact list
+    const contacts = [];
+    const seenLeads = new Set();
+
+    messages.forEach(m => {
+        if (!m.lead_id || seenLeads.has(m.lead_id)) return;
+        seenLeads.add(m.lead_id);
+        contacts.push({
+            id: m.lead_id,
+            name: `${m.submissions.first_name || ''} ${m.submissions.last_name || ''}`.trim() || 'Unknown Lead',
+            phone: m.submissions.phone || m.submissions.mobile_number,
+            lastMsg: m.message_body,
+            time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
+    });
+
+    if (contacts.length === 0) {
+        listEl.innerHTML = '<div class="empty-state" style="padding:20px; text-align:center; color:var(--label-4);">No active conversations yet. Start one from the Lead Management table.</div>';
+        return;
+    }
+
+    listEl.innerHTML = contacts.map(c => `
+        <div class="contact-item ${activeChatLeadId === c.id ? 'active' : ''}" onclick="window.selectChatContact('${c.id}', '${c.name.replace(/'/g, "\\'")}', '${c.phone}')">
+            <div class="contact-avatar">${c.name.charAt(0)}</div>
+            <div class="contact-info">
+                <div class="contact-name">${c.name}</div>
+                <div class="last-msg">${c.lastMsg}</div>
+            </div>
+            <div class="msg-time">${c.time}</div>
+        </div>
+    `).join('');
+}
+
+window.selectChatContact = async function(leadId, name, phone) {
+    activeChatLeadId = leadId;
+    
+    // Update UI active states
+    document.querySelectorAll('.contact-item').forEach(el => el.classList.remove('active'));
+    // Find the element by leadId or Name
+    const items = document.querySelectorAll('.contact-item');
+    items.forEach(item => {
+        if (item.getAttribute('onclick').includes(`'${leadId}'`)) {
+            item.classList.add('active');
+        }
+    });
+
+    document.getElementById('activeChatName').innerText = name;
+    document.getElementById('activeChatStatus').innerText = 'online';
+    document.getElementById('activeChatAvatar').innerText = name.charAt(0);
+    document.getElementById('chatInputArea').style.display = 'flex';
+    
+    await fetchChatMessages(leadId);
+};
+
+async function fetchChatMessages(leadId) {
+    const chatContainer = document.getElementById('chatMessages');
+    chatContainer.innerHTML = '<div class="loading-spinner"></div>';
+
+    const { data: messages, error } = await supabase
+        .from('whatsapp_messages')
+        .select('*')
+        .eq('lead_id', leadId)
+        .order('created_at', { ascending: true });
+
+    if (error) {
+        console.error("Error fetching messages:", error);
+        return;
+    }
+
+    whatsappMessages = messages;
+    renderMessages();
+}
+
+function renderMessages() {
+    const chatContainer = document.getElementById('chatMessages');
+    if (!chatContainer) return;
+
+    if (whatsappMessages.length === 0) {
+        chatContainer.innerHTML = '<div class="chat-welcome"><h3>No messages yet</h3><p>Send your first message to this lead.</p></div>';
+        return;
+    }
+
+    chatContainer.innerHTML = whatsappMessages.map(m => `
+        <div class="msg-bubble ${m.direction}">
+            <div class="msg-text">${m.message_body}</div>
+            <div class="msg-time">${new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+        </div>
+    `).join('');
+    
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+window.sendWhatsAppMessage = async function() {
+    const input = document.getElementById('chatInputMessage');
+    const message = input.value.trim();
+    if (!message || !activeChatLeadId) return;
+
+    const lead = submissionsData.find(s => s.id === activeChatLeadId);
+    if (!lead || (!lead.phone && !lead.mobile_number)) {
+        showToast("Error: Lead phone number not found", "error");
+        return;
+    }
+
+    const phone = lead.phone || lead.mobile_number;
+    input.value = '';
+    
+    try {
+        const response = await fetch('/api/whatsapp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'send_message',
+                leadId: activeChatLeadId,
+                phone: phone,
+                message: message
+            })
+        });
+
+        const result = await response.json();
+        if (!result.success) {
+            showToast("Failed to send: " + result.error, "error");
+        }
+    } catch (err) {
+        console.error("Error sending message:", err);
+        showToast("Server error sending message", "error");
+    }
+};
+
+window.handleChatKeydown = function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        window.sendWhatsAppMessage();
+    }
+};
+
+function setupWhatsAppRealtime() {
+    if (whatsappRealtimeSub) return;
+
+    whatsappRealtimeSub = supabase
+        .channel('whatsapp-changes')
+        .on('postgres_changes', { event: 'INSERT', table: 'whatsapp_messages', schema: 'public' }, payload => {
+            const newMsg = payload.new;
+            if (activeChatLeadId === newMsg.lead_id) {
+                whatsappMessages.push(newMsg);
+                renderMessages();
+            }
+            fetchActiveChatContacts();
+            if (newMsg.direction === 'inbound') {
+                showToast("New WhatsApp message received", "info");
+            }
+        })
+        .subscribe();
+}
+
+window.filterChatContacts = function() {
+    const query = document.getElementById('chatSearchInput').value.toLowerCase();
+    const items = document.querySelectorAll('.contact-item');
+    items.forEach(item => {
+        const name = item.querySelector('.contact-name').innerText.toLowerCase();
+        item.style.display = name.includes(query) ? 'flex' : 'none';
+    });
+};
+
+window.openWhatsAppChat = function(leadId, name, phone) {
+    window.switchView('whatsapp');
+    window.selectChatContact(leadId, name, phone);
+};
