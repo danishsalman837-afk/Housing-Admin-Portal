@@ -102,7 +102,8 @@ module.exports = async function handler(req, res) {
         host: process.env.SMTP_HOST,
         port: parseInt(process.env.SMTP_PORT || '587'),
         secure: process.env.SMTP_SECURE === 'true',
-        auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+        auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+        tls: { rejectUnauthorized: false }
       };
 
       // Intelligent Secure Flag: Port 587 or 25 should almost always be secure:false (STARTTLS)
@@ -112,25 +113,34 @@ module.exports = async function handler(req, res) {
 
       // Check for firm-specific SMTP (e.g. Felix Legal)
       if (company && company.smtp_host && company.smtp_user && company.smtp_pass) {
+        const port = parseInt(company.smtp_port || '587');
         smtpConfig = {
           host: company.smtp_host,
-          port: parseInt(company.smtp_port || '587'),
-          secure: company.smtp_port === 465, // Force false for 587
-          auth: { user: company.smtp_user, pass: company.smtp_pass }
+          port: port,
+          secure: port === 465, // Force false for 587 (STARTTLS)
+          auth: { user: company.smtp_user, pass: company.smtp_pass },
+          tls: { rejectUnauthorized: false }
         };
-        // Allow DB override but respect port defaults
+        // Allow DB override but respect protocol standards
         if (company.smtp_secure === false) smtpConfig.secure = false;
-        if (company.smtp_secure === true) smtpConfig.secure = true;
+        if (company.smtp_secure === true && port !== 587) smtpConfig.secure = true;
+        
+        // Safety: If it's port 587, it MUST be false for STARTTLS in nodemailer
+        if (port === 587) smtpConfig.secure = false;
       } 
-      // Special case for Felix Legal
+      // Special case for Felix Legal (if no DB settings provided)
       else if (company && (company.name || '').toLowerCase().includes('felix')) {
         smtpConfig = {
           host: 'smtp.office365.com',
           port: 587,
-          secure: false, // Office 365 on 587 MUST be false
+          secure: false, 
           auth: { 
             user: 'claims@felixlegal.co.uk', 
             pass: 'bjwtflrfvgbsrrt' 
+          },
+          tls: {
+            rejectUnauthorized: false,
+            minVersion: 'TLSv1.2'
           }
         };
       }
@@ -166,7 +176,13 @@ module.exports = async function handler(req, res) {
       
       return res.status(200).json({ success: true, activity: updated[0] });
     } catch (err) {
-      return res.status(500).json({ error: "Failed to send email: " + err.message });
+      console.error("SMTP Error Details:", {
+        host: smtpConfig.host,
+        port: smtpConfig.port,
+        secure: smtpConfig.secure,
+        user: smtpConfig.auth.user ? (smtpConfig.auth.user.substring(0, 3) + '***') : 'none'
+      }, err.message);
+      return res.status(500).json({ error: `Failed to send email via ${smtpConfig.host}: ` + err.message });
     }
   }
 
