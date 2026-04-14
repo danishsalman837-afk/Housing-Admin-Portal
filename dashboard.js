@@ -606,6 +606,23 @@ window.openAddCompanyModal = function (existingCompany = null) {
                     <span style="color:#64748b; font-size:13px;">Mark company as active</span>
                 </div>
             </div>
+            
+            <!-- 📧 SMTP SETTINGS -->
+            <div style="grid-column: span 2; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
+                <h3 style="font-size:14px; font-weight:700; color:var(--blue); margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                    <svg style="width:16px; height:16px; fill:currentColor;" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                    Direct SMTP Configuration
+                </h3>
+                <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:16px;">
+                    <div class="form-group"><label>SMTP Host</label><input type="text" id="cSmtpHost" class="modern-input" value="${c.smtp_host || ''}" placeholder="e.g. smtp.gmail.com"></div>
+                    <div class="form-group"><label>SMTP Port</label><input type="text" id="cSmtpPort" class="modern-input" value="${c.smtp_port || '587'}" placeholder="587"></div>
+                    <div class="form-group"><label>SMTP User / Email</label><input type="text" id="cSmtpUser" class="modern-input" value="${c.smtp_user || ''}" placeholder="email@address.com"></div>
+                    <div class="form-group"><label>SMTP Password / App Pass</label><input type="password" id="cSmtpPass" class="modern-input" value="${c.smtp_pass || ''}" placeholder="••••••••••••"></div>
+                </div>
+                <p style="font-size:11px; color:var(--label-3); margin-top:10px; line-height:1.4;">
+                    <strong>Note:</strong> If provided, emails to this firm will be sent via this direct connection instead of the default gateway.
+                </p>
+            </div>
         </div>
         <button class="btn-action" style="margin-top:20px; width:100%; justify-content:center;" onclick="window.saveNewCompany('${c.id || ''}')">Save Company</button>
     `;
@@ -838,14 +855,18 @@ window.openEditLeadModal = function (id) {
 
 window.saveNewCompany = async function (id) {
     const payload = {
-        name: document.getElementById('cName').value,
+        name: document.getElementById('cName').value.trim(),
         type: document.getElementById('cType').value,
-        main_contact: document.getElementById('cMainContact').value,
-        address: document.getElementById('cAddress').value,
-        town: document.getElementById('cTown').value,
-        county: document.getElementById('cCounty').value,
-        postcode: document.getElementById('cPostcode').value,
-        website: document.getElementById('cWebsite').value
+        main_contact: document.getElementById('cMainContact').value.trim(),
+        website: document.getElementById('cWebsite').value.trim(),
+        address: document.getElementById('cAddress').value.trim(),
+        town: document.getElementById('cTown').value.trim(),
+        county: document.getElementById('cCounty').value.trim(),
+        postcode: document.getElementById('cPostcode').value.trim(),
+        smtp_host: document.getElementById('cSmtpHost').value.trim(),
+        smtp_port: document.getElementById('cSmtpPort').value.trim(),
+        smtp_user: document.getElementById('cSmtpUser').value.trim(),
+        smtp_pass: document.getElementById('cSmtpPass').value.trim()
     };
     // include active flag (default true if checkbox not present)
     try {

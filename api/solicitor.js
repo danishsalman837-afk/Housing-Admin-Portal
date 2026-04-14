@@ -82,25 +82,59 @@ module.exports = async function handler(req, res) {
         if (tokenErr) return res.status(500).json({ error: "Failed to generate token: " + tokenErr.message });
       }
 
+      // 1. Fetch the solicitor member
       const { data: member, error: memErr } = await supabase.from('company_members').select('*').eq('id', activity.solicitor_id).single();
       if (memErr || !member) return res.status(404).json({ error: "Solicitor member not found." });
       if (!member.email) return res.status(400).json({ error: "Solicitor has no email address on file." });
       if (member.can_receive_emails === false) return res.status(403).json({ error: "This solicitor member is not authorized to receive emails." });
+
+      // 2. Fetch the company to check for firm-level SMTP settings
+      const { data: company } = await supabase.from('companies').select('*').eq('id', member.company_id).single();
 
       const baseUrl = process.env.BASE_URL || `https://${req.headers.host}`;
       const solicitUrl = `${baseUrl}/solicitor.html?token=${token}`;
       const leadName = lead.name || lead.first_name || 'a client';
       const emailHtml = buildEmailTemplate(leadName, solicitUrl, member, lead);
 
-      const transporter = nodemailer.createTransport({
+      // 3. Determine SMTP Configuration
+      // Default to global environment variables
+      let smtpConfig = {
         host: process.env.SMTP_HOST,
         port: parseInt(process.env.SMTP_PORT || '587'),
         secure: process.env.SMTP_SECURE === 'true',
-        auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-      });
+        auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+      };
+
+      // Check for firm-specific SMTP (e.g. Felix Legal)
+      // These fields can be stored in the 'companies' table
+      if (company && company.smtp_host && company.smtp_user && company.smtp_pass) {
+        smtpConfig = {
+          host: company.smtp_host,
+          port: parseInt(company.smtp_port || '587'),
+          secure: company.smtp_secure !== false,
+          auth: { user: company.smtp_user, pass: company.smtp_pass }
+        };
+      } 
+      // Special case for Felix Legal if credentials are in Env Vars
+      else if (company && (company.name || '').toLowerCase().includes('felix')) {
+        if (process.env.FELIX_SMTP_USER && process.env.FELIX_SMTP_PASS) {
+          smtpConfig.auth.user = process.env.FELIX_SMTP_USER;
+          smtpConfig.auth.pass = process.env.FELIX_SMTP_PASS;
+          smtpConfig.host = process.env.FELIX_SMTP_HOST || smtpConfig.host;
+          smtpConfig.port = parseInt(process.env.FELIX_SMTP_PORT || smtpConfig.port);
+        }
+      }
+
+      const transporter = nodemailer.createTransport(smtpConfig);
+
+      // 4. Send the email
+      // Use company or member email as the 'from' if we are using their specific SMTP
+      const fromEmail = (smtpConfig.auth.user && smtpConfig.auth.user.includes('@')) 
+        ? smtpConfig.auth.user 
+        : (process.env.SMTP_FROM || process.env.SMTP_USER);
 
       await transporter.sendMail({
-        from: process.env.SMTP_FROM || process.env.SMTP_USER,
+        from: `"HOUSING STANDARDS" <${fromEmail}>`,
         to: member.email,
         subject: `New HOUSING STANDARDS Lead — Action Required`,
         html: emailHtml,
