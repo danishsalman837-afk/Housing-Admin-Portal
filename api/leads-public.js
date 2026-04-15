@@ -41,16 +41,14 @@ module.exports = async function handler(req, res) {
     }
 
     data.timestamp = new Date().toISOString();
-    if (rawAgentName) data.agent_name = rawAgentName;
-
     if (!rawPhone) return res.status(400).json({ error: "Phone number is required." });
 
-    // 2. Find existing lead by phone (using both possible columns to be safe)
-    // We try to find by mobile_number (the primary DB key)
+    // 2. Find existing lead by phone (checking both potential DB columns)
+    const phoneToSearch = rawPhone;
     const { data: existing, error: findError } = await supabase
         .from('submissions')
-        .select('id, leadStatus, agent_data')
-        .eq('mobile_number', rawPhone)
+        .select('id, leadStatus, agent_data, agent_name')
+        .or(`mobile_number.eq."${phoneToSearch}",phone.eq."${phoneToSearch}"`)
         .order('created_at', { ascending: false })
         .limit(1);
 
@@ -61,9 +59,19 @@ module.exports = async function handler(req, res) {
         // Update
         const safeUpdate = {};
         for (const [key, val] of Object.entries(data)) {
-            if (val !== null && val !== undefined && val !== '') {
+            if (val !== null && val !== undefined) {
+                // We allow empty string '' to update if explicitly provided, 
+                // but usually agents want to fill it.
                 safeUpdate[key] = val;
             }
+        }
+        
+        // Ensure agent_name is included in the update if we have it
+        if (rawAgentName) {
+            safeUpdate.agent_name = rawAgentName;
+        } else if (existingLead.agent_name && !safeUpdate.agent_name) {
+            // Keep existing agent name if not provided in this update
+            safeUpdate.agent_name = existingLead.agent_name;
         }
         
         // Backup original data if not already backed up
