@@ -31,7 +31,7 @@ module.exports = async function handler(req, res) {
       const { data, error } = await supabase
         .from('submissions')
         .select('*')
-        .eq('phone', phone)
+        .eq('mobile_number', phone)
         .order('timestamp', { ascending: false })
         .limit(1);
 

@@ -1,7 +1,11 @@
+-- Enable the UUID extension if not already enabled
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 -- Create the whatsapp_messages table to store chat history
+-- Fixed lead_id type to match submissions(id) which is INTEGER
 CREATE TABLE IF NOT EXISTS whatsapp_messages (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    lead_id UUID REFERENCES submissions(id) ON DELETE CASCADE,
+    lead_id INTEGER REFERENCES submissions(id) ON DELETE CASCADE,
     sender_phone TEXT NOT NULL,
     receiver_phone TEXT NOT NULL,
     message_body TEXT NOT NULL,

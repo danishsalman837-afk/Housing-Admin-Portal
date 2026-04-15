@@ -28,6 +28,11 @@ module.exports = async function handler(req, res) {
         reportStatus: 'reportStatus', arrearsAmount: 'arrearsAmount', alreadySubmitted: 'alreadySubmitted', additionalNotes: 'additionalNotes',
         agentName: 'agent_name', name: 'first_name', phone: 'mobile_number'
     };
+    
+    // Save original keys for lookup before renaming
+    const rawPhone = data.phone || data.mobile_number;
+    const rawAgentName = data.agentName || data.agent_name;
+
     for (const [formKey, dbKey] of Object.entries(mapping)) {
         if (data[formKey] !== undefined) {
             data[dbKey] = data[formKey];
@@ -36,11 +41,19 @@ module.exports = async function handler(req, res) {
     }
 
     data.timestamp = new Date().toISOString();
+    if (rawAgentName) data.agent_name = rawAgentName;
 
-    if (!data.phone && !data.mobile_number) return res.status(400).json({ error: "Phone number is required." });
+    if (!rawPhone) return res.status(400).json({ error: "Phone number is required." });
 
-    // 2. Find existing
-    const { data: existing, error: findError } = await supabase.from('submissions').select('id, leadStatus').eq('phone', data.phone).order('timestamp', { ascending: false }).limit(1);
+    // 2. Find existing lead by phone (using both possible columns to be safe)
+    // We try to find by mobile_number (the primary DB key)
+    const { data: existing, error: findError } = await supabase
+        .from('submissions')
+        .select('id, leadStatus, agent_data')
+        .eq('mobile_number', rawPhone)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
     if (findError) return res.status(500).json({ error: findError.message });
     const existingLead = (existing && existing.length > 0) ? existing[0] : null;
 
@@ -51,6 +64,11 @@ module.exports = async function handler(req, res) {
             if (val !== null && val !== undefined && val !== '') {
                 safeUpdate[key] = val;
             }
+        }
+        
+        // Backup original data if not already backed up
+        if (!existingLead.agent_data) {
+            safeUpdate.agent_data = JSON.parse(JSON.stringify(data));
         }
         
         if (isDraft) {
@@ -67,6 +85,9 @@ module.exports = async function handler(req, res) {
         data.leadStatus = isDraft ? 'Agent Saved' : 'New Lead';
         if (!data.unique_token) data.unique_token = crypto.randomUUID();
         if (!data.actual_status) data.actual_status = 'New';
+        
+        // Save initial submission as agent_data backup
+        data.agent_data = JSON.parse(JSON.stringify(data));
 
         const { data: inserted, error: insErr } = await supabase.from('submissions').insert([data]).select();
         if (insErr) throw insErr;
