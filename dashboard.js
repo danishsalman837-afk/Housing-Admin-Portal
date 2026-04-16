@@ -2569,10 +2569,17 @@ window.selectChatContact = async function (leadId, name, phone) {
         }
     });
 
-    document.getElementById('activeChatName').innerText = name;
-    document.getElementById('activeChatStatus').innerText = 'online';
-    document.getElementById('activeChatAvatar').innerText = name.charAt(0);
-    document.getElementById('chatInputArea').style.display = 'flex';
+    const activeCommNameEl = document.getElementById('activeCommName');
+    if (activeCommNameEl) activeCommNameEl.innerText = name;
+    
+    const activeCommStatusEl = document.getElementById('activeCommStatus');
+    if (activeCommStatusEl) activeCommStatusEl.innerText = phone || 'online';
+    
+    const activeCommAvatarEl = document.getElementById('activeCommAvatar');
+    if (activeCommAvatarEl) activeCommAvatarEl.innerText = name.charAt(0);
+    
+    const commInputAreaEl = document.getElementById('commInputArea');
+    if (commInputAreaEl) commInputAreaEl.style.display = 'flex';
 
     await fetchChatMessages(leadId);
 };
@@ -3088,7 +3095,18 @@ window._parseLiquidTags = function(template) {
     var fullName = firstName + (lastName ? ' ' + lastName : '');
     if (rawName && rawName.length > fullName.length) fullName = rawName;
 
-    var solicitor = (lead.companies && lead.companies.company_name) ? lead.companies.company_name : 'your solicitor';
+    var solicitorFirm = 'your solicitor';
+    if (lead.assigned_company_id && companiesData.length > 0) {
+        var comp = companiesData.find(function(c) { return String(c.id) === String(lead.assigned_company_id); });
+        if (comp) solicitorFirm = comp.company_name || comp.name || 'your solicitor';
+    }
+
+    var solicitorName = solicitorFirm;
+    if (lead.assigned_solicitor_id && membersData.length > 0) {
+        var member = membersData.find(function(m) { return String(m.id) === String(lead.assigned_solicitor_id); });
+        if (member) solicitorName = member.name || solicitorFirm;
+    }
+
     var phone = lead.phone || lead.mobile_number || 'N/A';
     var email = lead.email || 'N/A';
 
@@ -3097,8 +3115,8 @@ window._parseLiquidTags = function(template) {
         .replace(/\{\{last_name\}\}/g, lastName)
         .replace(/\{\{full_name\}\}/g, fullName)
         .replace(/\{\{client_name\}\}/g, fullName)
-        .replace(/\{\{solicitor\}\}/g, solicitor)
-        .replace(/\{\{solicitor_name\}\}/g, solicitor)
+        .replace(/\{\{solicitor\}\}/g, solicitorFirm)
+        .replace(/\{\{solicitor_name\}\}/g, solicitorName)
         .replace(/\{\{phone\}\}/g, phone)
         .replace(/\{\{email\}\}/g, email)
         .replace(/\{\{case_id\}\}/g, lead.id ? ('CASE-' + String(lead.id).substring(0, 6).toUpperCase()) : 'CASE-000');
