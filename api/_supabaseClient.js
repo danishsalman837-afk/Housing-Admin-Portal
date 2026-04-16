@@ -61,14 +61,7 @@ function normalizeLead(lead) {
   n('arrears', 'rentalArrears');
   n('attachments', 'attachments');
   
-  // Snake case to camelCase for dashboard/form consistency
-  // Resilient mappings for Name and Phone
-  if (lead.first_name && !lead.name) lead.name = lead.first_name;
-  if (lead.name && !lead.first_name) lead.first_name = lead.name;
-  
-  if (lead.mobile_number && !lead.phone) lead.phone = lead.mobile_number;
-  if (lead.phone && !lead.mobile_number) lead.mobile_number = lead.phone;
-  // Fields that are already camelCase in DB or fixed lowercase/snake_case
+  // Basic mappings
   n('dampLocation', 'dampLocation'); 
   n('leakLocation', 'leakLocation');
   n('leakSource', 'leakSource');
@@ -83,18 +76,16 @@ function normalizeLead(lead) {
   n('arrearsAmount', 'arrearsAmount');
   n('alreadySubmitted', 'alreadySubmitted');
   n('additionalNotes', 'additionalNotes');
+
   n('agent_name', 'agentName');
   
-  // Cross-reference fallbacks for Agent Name
+  // Robust fallback for Agent Name
   if (!lead.agentName || lead.agentName === '--') {
     const backup = lead.agent_data;
     if (backup) {
       lead.agentName = backup.agentName || backup.agent_name || backup.dialler || backup.Dialler || lead.agentName;
     }
   }
-
-  // Ensure 'name' is populated from 'first_name' if missing
-  if (!lead.name && lead.first_name) lead.name = lead.first_name;
 
   return lead;
 }

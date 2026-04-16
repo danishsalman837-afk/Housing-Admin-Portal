@@ -731,18 +731,13 @@ window.openViewModal = function (id, showOriginal = false) {
         // Handle potential snake_case vs camelCase if leadData is raw
         let val = leadData[key];
         if (val === undefined || val === null) {
-            // Try common snake_case mappings
-            if (key === 'dateOfBirth') val = leadData['dob'];
-            else if (key === 'tenancyDuration') val = leadData['livingDuration'];
-            else if (key === 'name') val = leadData['first_name'];
-            else if (key === 'phone') val = leadData['mobile_number'];
+            if (key === 'tenancyDuration') val = leadData['livingDuration'];
             else if (key === 'agentName') {
                 val = leadData['agent_name'] || leadData['agentName'];
                 if (!val && leadData.agent_data) {
                     val = leadData.agent_data.agent_name || leadData.agent_data.agentName || leadData.agent_data.dialler || leadData.agent_data.Dialler;
                 }
             }
-            // ... and so on. Better yet, just check if val is still undefined.
         }
 
         if (key !== 'agentName' && (val === undefined || val === null)) return;

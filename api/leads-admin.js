@@ -76,7 +76,7 @@ module.exports = async function handler(req, res) {
         leakStart: 'leakStart', leakDamage: 'leakDamage', leakBelongings: 'leakBelongings', reportCount: 'reportCount',
         reportFirst: 'reportFirst', reportLast: 'reportLast', reportResponse: 'reportResponse', reportAttempt: 'reportAttempt', reportStatus: 'reportStatus',
         arrearsAmount: 'arrearsAmount', alreadySubmitted: 'alreadySubmitted', additionalNotes: 'additionalNotes', 
-        agentName: 'agent_name', name: 'name', phone: 'mobile_number'
+        agentName: 'agent_name', name: 'name', phone: 'phone'
     };
       for (const [formKey, dbKey] of Object.entries(mapping)) {
           if (updates[formKey] !== undefined) {
