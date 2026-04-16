@@ -2092,19 +2092,7 @@ select.status-pill {
         radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
 }
 
-.comm-details-pane {
-    width: 320px;
-    border-left: 1px solid rgba(0, 0, 0, 0.05);
-    background: #ffffff;
-    display: flex;
-    flex-direction: column;
-    z-index: 10;
-}
 
-[data-theme="dark"] .comm-details-pane {
-    background: #111827;
-    border-left-color: rgba(255, 255, 255, 0.05);
-}
 
 /* Message Bubbles */
 .msg-bubble {
@@ -2201,11 +2189,7 @@ select.status-pill {
 [data-theme="dark"] .emoji-picker { background: #1f2937; border-color: rgba(255,255,255,0.1); }
 [data-theme="dark"] .emoji-picker span:hover { background: rgba(255,255,255,0.05); }
 
-.mini-solicitor-dropdown { background: transparent; border: none; font-size: 13px; font-weight: 600; color: #111827; cursor: pointer; padding: 2px 4px; border-radius: 4px; transition: background 0.2s; outline: none; }
-.mini-solicitor-dropdown:hover { background: rgba(0,0,0,0.05); }
-.mini-solicitor-dropdown:focus { border: 1px solid rgba(0, 122, 255, 0.5); }
-[data-theme="dark"] .mini-solicitor-dropdown { color: #f9fafb; background: transparent; }
-[data-theme="dark"] .mini-solicitor-dropdown option { background: #111827; }
+
 
 .icon-button:active { transform: scale(0.9); }
 

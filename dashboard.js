@@ -2959,7 +2959,6 @@ window.selectCommContact = function(leadId) {
     const avatarEl = document.getElementById('activeCommAvatar');
     const nameEl = document.getElementById('activeCommName');
     const statusEl = document.getElementById('activeCommStatus');
-    const miniProfile = document.getElementById('activeCommMiniProfile');
     
     const leadName = lead.name || ((lead.first_name || '') + ' ' + (lead.last_name || '')).trim() || 'Unnamed Lead';
     const leadPhone = lead.phone || lead.mobile_number || 'No Phone';
@@ -2968,45 +2967,6 @@ window.selectCommContact = function(leadId) {
     if (nameEl) nameEl.innerText = leadName;
     if (statusEl) statusEl.innerText = leadPhone;
     
-    // Populate solicitor dropdown
-    if (miniProfile) {
-        miniProfile.style.display = 'flex';
-        const dropdown = document.getElementById('miniSolicitorDropdown');
-        if (dropdown) {
-            const currentSolId = lead.companies?.id || '';
-            const currentSolName = lead.companies?.company_name || '';
-            dropdown.innerHTML = '<option value="">Unassigned</option>';
-            if (currentSolName) {
-                dropdown.innerHTML += '<option value="' + currentSolId + '">' + currentSolName + '</option>';
-                dropdown.value = String(currentSolId);
-            }
-        }
-    }
-
-    // Populate Right Pane (3rd Pane)
-    const detailsPane = document.getElementById('commDetailsPane');
-    if (detailsPane) {
-        detailsPane.style.display = 'flex';
-        const sideSol = document.getElementById('sideSolicitorName');
-        const sideStatus = document.getElementById('sideClaimStatus');
-        const sideValue = document.getElementById('sideClaimValue');
-
-        if (sideSol) sideSol.innerText = lead.companies?.company_name || 'Unassigned';
-        if (sideStatus) {
-            if (lead.status && lead.status.toLowerCase() === 'accepted') {
-                sideStatus.innerHTML = '<svg style="width:14px;height:14px;margin-right:4px;vertical-align:middle;fill:currentColor;" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>' + 'ACCEPTED';
-                sideStatus.className = 'info-field status-chip paid'; 
-            } else {
-                sideStatus.innerText = lead.status?.toUpperCase() || 'NEW LEAD';
-                sideStatus.className = 'info-field status-chip ' + ((lead.status && lead.status.toLowerCase() === 'paid') ? 'paid' : '');
-            }
-        }
-        if (sideValue) {
-            const mockValue = (Math.floor(Math.random() * 5000) + 1500).toLocaleString();
-            sideValue.innerText = '£' + mockValue;
-        }
-    }
-
     // Show Input Area
     const inputArea = document.getElementById('commInputArea');
     if (inputArea) inputArea.style.display = 'flex';

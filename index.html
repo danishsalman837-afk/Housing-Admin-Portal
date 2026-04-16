@@ -3486,14 +3486,6 @@
                             <div class="comm-header-info">
                                 <div class="comm-header-row">
                                     <div class="comm-thread-name" id="activeCommName">Select a conversation</div>
-                                    <div class="comm-mini-profile" id="activeCommMiniProfile" style="display:none;">
-                                        <div class="premium-solicitor-select">
-                                            <svg class="sol-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
-                                            <select class="mini-solicitor-dropdown" id="miniSolicitorDropdown" onchange="window.assignSolicitorFromComm(this.value)">
-                                                <option value="">Unassigned</option>
-                                            </select>
-                                        </div>
-                                    </div>
                                 </div>
                                 <div id="activeCommStatus" class="comm-header-sub">Pick a lead to view history</div>
                             </div>
@@ -3543,38 +3535,7 @@
                     </div>
                 </div>
 
-                <!-- Right Sidebar: Lead Details (3rd Pane) -->
-                <div class="comm-details-pane" id="commDetailsPane" style="display:none;">
-                    <div class="details-pane-header">Lead Information</div>
-                    <div class="details-pane-body">
-                        <div class="info-section">
-                            <label>Assigned Solicitor</label>
-                            <div id="sideSolicitorName" class="info-field">Unassigned</div>
-                        </div>
-                        <div class="info-section">
-                            <label>Claim Status</label>
-                            <div id="sideClaimStatus" class="info-field status-chip">New Lead</div>
-                        </div>
-                        <div class="info-section">
-                            <label>Estimated Value</label>
-                            <div id="sideClaimValue" class="info-field value-text">£0.00</div>
-                        </div>
-                        <div class="details-divider"></div>
-                        <div class="info-section">
-                            <label>Quick Actions</label>
-                            <div class="action-grid">
-                                <button class="action-tile" onclick="showNotification('Call scheduled', 'info')">
-                                    <svg viewBox="0 0 24 24"><path d="M17 12h-5V7h2v3h3v2zM12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.4 0-8-3.6-8-8s3.6-8 8-8 8 3.6 8 8-3.6 8-8 8z"/></svg>
-                                    <span>Remind</span>
-                                </button>
-                                <button class="action-tile" onclick="showNotification('Opening lead editor...', 'info')">
-                                    <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
-                                    <span>Edit</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+
             </div>
         </div>
 
