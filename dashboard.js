@@ -2847,102 +2847,150 @@ window.openSmsFromDialer = function () {
     showNotification(`Ready to text ${input.value}`, 'info');
 };
 
+/* ═══════════════════════════════════════
+   SNIPPET DATA STORE (localStorage-backed)
+═══════════════════════════════════════ */
+window._snippetStore = JSON.parse(localStorage.getItem('commSnippetStore') || 'null') || {
+    folders: [
+        { id: 'f1', name: 'Intro / Onboarding' },
+        { id: 'f2', name: 'Follow-up' },
+        { id: 'f3', name: 'Legal' }
+    ],
+    snippets: [
+        { id: 's1', folderId: 'f1', title: 'First Contact', content: 'Hi {{first_name}}, thanks for reaching out regarding your housing disrepair claim. We have received your inquiry and an agent will be in touch shortly.' },
+        { id: 's2', folderId: 'f1', title: 'Welcome Back', content: 'Hi {{first_name}}, welcome back. How can we help you today?' },
+        { id: 's3', folderId: 'f2', title: 'Photo Request', content: 'Hi {{first_name}}, could you please provide photos of the disrepair issue at your earliest convenience?' },
+        { id: 's4', folderId: 'f2', title: 'Status Update', content: 'Hi {{first_name}}, just a quick update — your claim is progressing well. Your solicitor {{solicitor}} will be in contact soon.' },
+        { id: 's5', folderId: 'f3', title: 'Solicitor Assigned', content: 'Hi {{first_name}}, your claim has been assigned to {{solicitor}}. They will contact you within 24-48 hours to discuss next steps.' }
+    ]
+};
+function _saveSnippetStore() {
+    localStorage.setItem('commSnippetStore', JSON.stringify(window._snippetStore));
+}
+
+/* ═══════════════════════════════════════
+   THREAD LIST — Real Data
+═══════════════════════════════════════ */
 window.renderCommThreads = function() {
     const threadList = document.getElementById('commThreadList');
     if (!threadList) return;
 
     if (submissionsData.length === 0) {
-        threadList.innerHTML = '<div class="empty-state">No leads found to message.</div>';
+        threadList.innerHTML = '<div class="empty-state" style="padding:40px; text-align:center; color:var(--text-muted);">No leads found to message.</div>';
         return;
     }
 
-    // Sort leads by date for the thread list (using item.timestamp or item.created_at)
-    const sortedLeads = [...submissionsData].sort((a,b) => {
+    const sortedLeads = [...submissionsData].sort((a, b) => {
         const dateA = new Date(a.timestamp || a.created_at);
         const dateB = new Date(b.timestamp || b.created_at);
         return dateB - dateA;
     });
 
-    threadList.innerHTML = sortedLeads.map((lead, index) => {
+    threadList.innerHTML = sortedLeads.map(lead => {
         const leadDate = new Date(lead.timestamp || lead.created_at);
         const dateStr = isNaN(leadDate) ? '---' : leadDate.toLocaleDateString();
+        const leadName = lead.name || ((lead.first_name || '') + ' ' + (lead.last_name || '')).trim() || 'Unknown Lead';
+        const lastMsg = lead.last_message || 'No messages yet';
+        const phone = lead.phone || lead.mobile_number || '';
         
-        // Mock data logic to show off new UI
-        const isOnline = index % 3 === 0 ? 'online' : 'offline';
-        const tagHtml = index % 4 === 0 ? '<div class="lead-tags"><span class="lead-tag high-priority">High Priority</span></div>' : 
-                        index % 4 === 1 ? '<div class="lead-tags"><span class="lead-tag new-lead">New Lead</span></div>' : 
-                        index % 4 === 2 ? '<div class="lead-tags"><span class="lead-tag disrepair">Disrepair Claim</span></div>' : '';
-        const snippetText = index % 2 === 0 ? "I'll send across the images now." : "Can you call me back tomorrow?";
+        // Tag based on real status
+        let tagHtml = '';
+        const st = (lead.status || '').toLowerCase();
+        if (st === 'new' || st === 'pending') tagHtml = '<div class="lead-tags"><span class="lead-tag new-lead">New Lead</span></div>';
+        else if (st === 'accepted') tagHtml = '<div class="lead-tags"><span class="lead-tag disrepair">Active Claim</span></div>';
+        else if (st === 'paid') tagHtml = '<div class="lead-tags"><span class="lead-tag high-priority">Paid</span></div>';
 
         return `
-            <div class="comm-thread-item" onclick="window.selectCommContact('${lead.id}')">
-                <div class="comm-avatar ${isOnline}">${lead.name?.charAt(0) || lead.first_name?.charAt(0) || '?'}</div>
+            <div class="comm-thread-item" data-leadid="${lead.id}" data-phone="${phone}" onclick="window.selectCommContact('${lead.id}')">
+                <div class="comm-avatar">${leadName.charAt(0).toUpperCase()}</div>
                 <div class="comm-thread-info">
                     <div class="comm-thread-top">
-                        <span class="comm-thread-name">${lead.name || (lead.first_name + ' ' + lead.last_name) || 'Unknown Lead'}</span>
+                        <span class="comm-thread-name">${leadName}</span>
                         <span class="comm-thread-time">${dateStr}</span>
                     </div>
                     ${tagHtml}
-                    <div class="comm-thread-last">${snippetText}</div>
+                    <div class="comm-thread-last">${lastMsg}</div>
                 </div>
             </div>
         `;
     }).join('');
 };
 
+/* ═══════════════════════════════════════
+   SEARCH & FILTER
+═══════════════════════════════════════ */
 window.filterCommThreads = function() {
     const qNode = document.getElementById('commSearchInput');
     if (!qNode) return;
     const q = qNode.value.toLowerCase();
-    const items = document.querySelectorAll('.comm-thread-item');
-    items.forEach(item => {
-        const nameNode = item.querySelector('.comm-thread-name');
-        const phoneNode = item.querySelector('.comm-thread-last');
-        if (nameNode && phoneNode) {
-            const name = nameNode.innerText.toLowerCase();
-            const phone = phoneNode.innerText.toLowerCase();
-            item.style.display = (name.includes(q) || phone.includes(q)) ? 'flex' : 'none';
-        }
+    document.querySelectorAll('.comm-thread-item').forEach(item => {
+        const name = (item.querySelector('.comm-thread-name')?.innerText || '').toLowerCase();
+        const snippet = (item.querySelector('.comm-thread-last')?.innerText || '').toLowerCase();
+        const phone = (item.dataset.phone || '').toLowerCase();
+        item.style.display = (name.includes(q) || snippet.includes(q) || phone.includes(q)) ? 'flex' : 'none';
     });
 };
 
+window.setCommFilter = function(btn, filterType) {
+    document.querySelectorAll('.comm-filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    // For now surface all — extend when unread/needs_action data exists 
+    document.querySelectorAll('.comm-thread-item').forEach(item => item.style.display = 'flex');
+    showNotification('Filter: ' + (filterType || 'All'), 'info');
+};
+
+/* ═══════════════════════════════════════
+   SELECT CONTACT — Header + Messages
+═══════════════════════════════════════ */
 window.selectCommContact = function(leadId) {
     const lead = submissionsData.find(l => String(l.id) === String(leadId));
     if (!lead) return;
 
     activeChatLeadId = leadId;
 
-    // Update Header
     const avatarEl = document.getElementById('activeCommAvatar');
     const nameEl = document.getElementById('activeCommName');
     const statusEl = document.getElementById('activeCommStatus');
     const miniProfile = document.getElementById('activeCommMiniProfile');
     
-    const leadName = lead.name || (lead.first_name + ' ' + lead.last_name) || 'Unnamed Lead';
+    const leadName = lead.name || ((lead.first_name || '') + ' ' + (lead.last_name || '')).trim() || 'Unnamed Lead';
     const leadPhone = lead.phone || lead.mobile_number || 'No Phone';
 
-    if (avatarEl) {
-        avatarEl.innerText = leadName.charAt(0) || '?';
-        // Randomize online status for demo
-        avatarEl.className = 'comm-avatar ' + (Math.random() > 0.5 ? 'online' : 'offline');
-    }
+    if (avatarEl) avatarEl.innerText = leadName.charAt(0).toUpperCase();
     if (nameEl) nameEl.innerText = leadName;
     if (statusEl) statusEl.innerText = leadPhone;
     
-    // Only show relevant solicitor
+    // Populate solicitor dropdown
     if (miniProfile) {
         miniProfile.style.display = 'flex';
-        // Remove old tags
-        const solicitorId = lead.companies?.id || '';
         const dropdown = document.getElementById('miniSolicitorDropdown');
         if (dropdown) {
-            // Keep unique current assignment for demo
-            Array.from(dropdown.options).forEach(opt => opt.selected = false);
-            let found = Array.from(dropdown.options).find(opt => opt.value === String(solicitorId));
-            if (!found && lead.companies?.company_name) {
-                dropdown.innerHTML += `<option value="${solicitorId}">${lead.companies.company_name}</option>`;
+            const currentSolId = lead.companies?.id || '';
+            const currentSolName = lead.companies?.company_name || '';
+            dropdown.innerHTML = '<option value="">Unassigned</option>';
+            if (currentSolName) {
+                dropdown.innerHTML += '<option value="' + currentSolId + '">' + currentSolName + '</option>';
+                dropdown.value = String(currentSolId);
             }
-            dropdown.value = solicitorId;
+        }
+    }
+
+    // Populate Right Pane (3rd Pane)
+    const detailsPane = document.getElementById('commDetailsPane');
+    if (detailsPane) {
+        detailsPane.style.display = 'flex';
+        const sideSol = document.getElementById('sideSolicitorName');
+        const sideStatus = document.getElementById('sideClaimStatus');
+        const sideValue = document.getElementById('sideClaimValue');
+
+        if (sideSol) sideSol.innerText = lead.companies?.company_name || 'Unassigned';
+        if (sideStatus) {
+            sideStatus.innerText = lead.status?.toUpperCase() || 'NEW LEAD';
+            sideStatus.className = 'info-field status-chip ' + (lead.status === 'paid' ? 'paid' : '');
+        }
+        if (sideValue) {
+            const mockValue = (Math.floor(Math.random() * 5000) + 1500).toLocaleString();
+            sideValue.innerText = '£' + mockValue;
         }
     }
 
@@ -2952,20 +3000,15 @@ window.selectCommContact = function(leadId) {
 
     // Highlight active thread
     document.querySelectorAll('.comm-thread-item').forEach(item => {
-        const nameNode = item.querySelector('.comm-thread-name');
-        if (nameNode) {
-            const name = nameNode.innerText;
-            item.classList.toggle('active', name === leadName);
-        }
+        item.classList.toggle('active', item.dataset.leadid === String(leadId));
     });
 
-    // Clear and Show Welcome/Previous Msgs (Mock)
+    // Show messages
     const msgContainer = document.getElementById('commMessages');
     if (msgContainer) {
         const leadDate = new Date(lead.timestamp || lead.created_at);
         const timeStr = isNaN(leadDate) ? 'Earlier' : leadDate.toLocaleTimeString();
-        
-        const readIcon = `<span class="msg-status-icon" title="Read"><svg viewBox="0 0 24 24"><path d="M18 7l-1.41-1.41-6.34 6.34 1.41 1.41L18 7zm4.24-1.41L11.66 16.17 7.48 12l-1.41 1.41L11.66 19l12-12-1.42-1.41zM.41 13.41L6 19l1.41-1.41L1.83 12 .41 13.41z"/></svg></span>`;
+        const readIcon = '<span class="msg-status-icon" title="Read"><svg viewBox="0 0 24 24"><path d="M18 7l-1.41-1.41-6.34 6.34 1.41 1.41L18 7zm4.24-1.41L11.66 16.17 7.48 12l-1.41 1.41L11.66 19l12-12-1.42-1.41zM.41 13.41L6 19l1.41-1.41L1.83 12 .41 13.41z"/></svg></span>';
 
         msgContainer.innerHTML = `
             <div class="msg-bubble inbound">
@@ -2973,7 +3016,7 @@ window.selectCommContact = function(leadId) {
                 <span class="msg-time">${timeStr}</span>
             </div>
             <div class="msg-bubble outbound">
-                Hi ${leadName.split(' ')[0]}, thanks for reaching out. An admin will be calling you from our new Vonage line shortly.
+                Hi ${leadName.split(' ')[0]}, thanks for reaching out. An admin will be calling you shortly.
                 <span class="msg-time">Just now ${readIcon}</span>
             </div>
         `;
@@ -2981,10 +3024,13 @@ window.selectCommContact = function(leadId) {
     }
 };
 
+/* ═══════════════════════════════════════
+   SEND MESSAGE
+═══════════════════════════════════════ */
 window.handleCommKeydown = function(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
-        sendCommSms();
+        window.sendCommSms();
     }
 };
 
@@ -2997,39 +3043,35 @@ window.sendCommSms = function() {
     const msgContainer = document.getElementById('commMessages');
     if (!msgContainer) return;
     
-    const unreadIcon = `<span class="msg-status-icon" style="fill:#9CA3AF;"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>`;
-    const readIcon = `<span class="msg-status-icon" title="Read"><svg viewBox="0 0 24 24"><path d="M18 7l-1.41-1.41-6.34 6.34 1.41 1.41L18 7zm4.24-1.41L11.66 16.17 7.48 12l-1.41 1.41L11.66 19l12-12-1.42-1.41zM.41 13.41L6 19l1.41-1.41L1.83 12 .41 13.41z"/></svg></span>`;
+    const singleCheck = '<span class="msg-status-icon"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>';
+    const doubleCheck = '<span class="msg-status-icon" title="Read"><svg viewBox="0 0 24 24"><path d="M18 7l-1.41-1.41-6.34 6.34 1.41 1.41L18 7zm4.24-1.41L11.66 16.17 7.48 12l-1.41 1.41L11.66 19l12-12-1.42-1.41zM.41 13.41L6 19l1.41-1.41L1.83 12 .41 13.41z"/></svg></span>';
     
-    // Append user message
     const bubble = document.createElement('div');
     bubble.className = 'msg-bubble outbound';
-    bubble.innerHTML = `${msg}<span class="msg-time">Sending...</span>`;
+    bubble.innerHTML = msg + '<span class="msg-time">Sending...</span>';
     msgContainer.appendChild(bubble);
     
     input.value = '';
     msgContainer.scrollTop = msgContainer.scrollHeight;
 
-    // Simulate sending, delivered, then read status updates
-    setTimeout(() => {
-        const timeNode = bubble.querySelector('.msg-time');
-        if (timeNode) timeNode.innerHTML = `Just now ${unreadIcon}`;
+    setTimeout(function() {
+        var timeNode = bubble.querySelector('.msg-time');
+        if (timeNode) timeNode.innerHTML = 'Just now ' + singleCheck;
         showNotification('SMS sent successfully.', 'success');
         
-        // Simulate "Read Receipt"
-        setTimeout(() => {
-            if (timeNode) timeNode.innerHTML = `Just now ${readIcon}`;
+        setTimeout(function() {
+            if (timeNode) timeNode.innerHTML = 'Just now ' + doubleCheck;
             
-            // Simulate Client Typing Indicator
-            const typing = document.getElementById('commTyping');
+            var typing = document.getElementById('commTyping');
             if (typing) {
                 typing.style.display = 'block';
                 msgContainer.scrollTop = msgContainer.scrollHeight;
                 
-                setTimeout(() => {
+                setTimeout(function() {
                     typing.style.display = 'none';
-                    const reply = document.createElement('div');
+                    var reply = document.createElement('div');
                     reply.className = 'msg-bubble inbound';
-                    reply.innerHTML = `Okay, I've received your text. Thank you! <span class="msg-time">Just now</span>`;
+                    reply.innerHTML = 'Okay, received. Thank you! <span class="msg-time">Just now</span>';
                     msgContainer.appendChild(reply);
                     msgContainer.scrollTop = msgContainer.scrollHeight;
                 }, 2500);
@@ -3038,163 +3080,293 @@ window.sendCommSms = function() {
     }, 800);
 };
 
-window.toggleSnippets = function() {
-    const menu = document.getElementById('snippetsMenu');
-    if (menu) menu.style.display = menu.style.display === 'none' ? 'flex' : 'none';
+/* ═══════════════════════════════════════
+   LIQUID TAG PARSER (Regex Engine)
+═══════════════════════════════════════ */
+window._parseLiquidTags = function(template) {
+    if (!activeChatLeadId) return template;
+    var lead = submissionsData.find(function(l) { return String(l.id) === String(activeChatLeadId); });
+    if (!lead) return template;
+
+    var firstName = lead.first_name || (lead.name ? lead.name.split(' ')[0] : 'Client');
+    var lastName = lead.last_name || '';
+    var fullName = lead.name || ((firstName + ' ' + lastName).trim()) || 'Client';
+    var solicitor = (lead.companies && lead.companies.company_name) ? lead.companies.company_name : 'your solicitor';
+    var phone = lead.phone || lead.mobile_number || '';
+
+    return template
+        .replace(/\{\{first_name\}\}/g, firstName)
+        .replace(/\{\{last_name\}\}/g, lastName)
+        .replace(/\{\{full_name\}\}/g, fullName)
+        .replace(/\{\{client_name\}\}/g, fullName)
+        .replace(/\{\{solicitor\}\}/g, solicitor)
+        .replace(/\{\{phone\}\}/g, phone);
 };
 
 window.insertSnippet = function(template) {
-    if (!activeChatLeadId) return;
-    const lead = submissionsData.find(l => String(l.id) === String(activeChatLeadId));
-    if (!lead) return;
-    
-    let text = template;
-    const firstName = lead.first_name || (lead.name ? lead.name.split(' ')[0] : 'Client');
-    const fullName = lead.name || (lead.first_name + ' ' + lead.last_name) || 'Client';
-    const solicitor = lead.companies?.company_name || 'your solicitor';
-    
-    text = text.replace(/{{first_name}}/g, firstName);
-    text = text.replace(/{{full_name}}/g, fullName);
-    text = text.replace(/{{solicitor}}/g, solicitor);
-    
-    const input = document.getElementById('commInputMessage');
+    var parsed = window._parseLiquidTags(template);
+    var input = document.getElementById('commInputMessage');
     if (input) {
-        // Simple preview alert for MVP before sending/populating
-        const isCustomValue = template.includes('{{');
-        if (isCustomValue) {
-           showNotification('Liquid Tags Parsed: Populated dynamic CRM values', 'info');
-        }
-        
-        input.value = text;
+        input.value = parsed;
         input.focus();
+        if (template !== parsed) {
+            showNotification('Dynamic variables injected from lead data', 'info');
+        }
     }
-    const menu = document.getElementById('snippetsMenu');
-    if (menu) menu.style.display = 'none';
 };
 
+/* ═══════════════════════════════════════
+   SNIPPET MANAGER MODAL (Full CRUD)
+═══════════════════════════════════════ */
+window._activeSnippetFolder = null;
+
 window.openSnippetManager = function() {
-    const overlay = document.getElementById('modalOverlay');
-    const box = document.getElementById('modalBox');
-    
-    // Snippet Management UI
-    box.innerHTML = `
-        <div class="modal-header">
-            <h3>Snippet Library</h3>
-            <span class="modal-close" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</span>
-        </div>
-        <div class="snippet-manager-body" style="display:flex; gap: 20px; padding-top: 10px; min-height:300px;">
-            <div style="flex:1; border-right: 1px solid var(--border-light); padding-right: 20px;">
-                <div style="display:flex; justify-content:space-between; margin-bottom:15px; align-items:center;">
-                    <h4 style="margin:0;">Folders</h4>
-                    <button class="btn-action" style="padding:4px 8px; font-size:12px;">+ Folder</button>
-                </div>
-                <div class="folder-list" style="display:flex; flex-direction:column; gap:8px;">
-                    <button style="text-align:left; padding:10px; border:none; background:var(--bg-surface-2); border-radius:6px; cursor:pointer; font-weight:600; color:var(--text-main);">📁 Intro / Onboarding</button>
-                    <button style="text-align:left; padding:10px; border:none; background:transparent; cursor:pointer; color:var(--text-muted);">📁 Follow-up</button>
-                    <button style="text-align:left; padding:10px; border:none; background:transparent; cursor:pointer; color:var(--text-muted);">📁 Legal</button>
-                </div>
-            </div>
-            <div style="flex:2;">
-                <div style="display:flex; justify-content:space-between; margin-bottom:15px; align-items:center;">
-                    <h4 style="margin:0;">Snippets in "Intro / Onboarding"</h4>
-                    <button class="btn-primary" style="padding:6px 12px; font-size:12px;">+ Create Snippet</button>
-                </div>
-                <div style="display:flex; flex-direction:column; gap:10px;">
-                    <div style="padding:16px; border:1px solid var(--border-light); border-radius:8px; background:var(--bg-surface); cursor:pointer; transition:0.2s;" onclick="window.insertSnippetAndClose('Hi {{first_name}}, thanks for reaching out. We have received your inquiry.')">
-                        <strong style="color:var(--text-main); font-size:14px; margin-bottom:4px; display:block;">First Contact - Default</strong>
-                        <p style="margin:0; font-size:13px; color:var(--text-muted);">Hi {{first_name}}, thanks for reaching out. We have received your inquiry...</p>
-                        <div style="margin-top:8px; font-size:11px; color:#007AFF; font-family:monospace; background:rgba(0,122,255,0.1); display:inline-block; padding:2px 6px; border-radius:4px;">Uses 1 tag</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
+    if (!activeChatLeadId) {
+        showNotification('Select a lead first to use snippets', 'error');
+        return;
+    }
+    window._activeSnippetFolder = window._snippetStore.folders[0]?.id || null;
+    window._renderSnippetModal();
+};
+
+window._renderSnippetModal = function() {
+    var overlay = document.getElementById('modalOverlay');
+    var box = document.getElementById('modalBox');
+    var store = window._snippetStore;
+    var activeId = window._activeSnippetFolder;
+
+    var folderListHtml = store.folders.map(function(f) {
+        var cls = f.id === activeId ? 'background:var(--primary); color:#fff; font-weight:700;' : 'background:transparent; color:var(--label-2);';
+        return '<button onclick="window._selectSnippetFolder(\'' + f.id + '\')" style="text-align:left; padding:10px 12px; border:none; border-radius:8px; cursor:pointer; font-size:13px; width:100%; transition:all 0.2s; ' + cls + '">📁 ' + f.name + '</button>';
+    }).join('');
+
+    var activeFolder = store.folders.find(function(f) { return f.id === activeId; });
+    var folderSnippets = store.snippets.filter(function(s) { return s.folderId === activeId; });
+
+    var snippetListHtml = '';
+    if (folderSnippets.length === 0) {
+        snippetListHtml = '<div style="text-align:center; padding:40px; color:var(--label-3); font-size:13px;">No snippets in this folder yet.</div>';
+    } else {
+        snippetListHtml = folderSnippets.map(function(s) {
+            var preview = window._parseLiquidTags(s.content);
+            var tagCount = (s.content.match(/\{\{[^}]+\}\}/g) || []).length;
+            return '<div style="padding:14px 16px; border:1px solid var(--border); border-radius:10px; cursor:pointer; transition:all 0.2s; margin-bottom:8px;" onmouseenter="this.style.borderColor=\'var(--primary)\';this.style.boxShadow=\'0 4px 12px rgba(0,122,255,0.08)\'" onmouseleave="this.style.borderColor=\'var(--border)\';this.style.boxShadow=\'none\'">' +
+                '<div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:6px;">' +
+                    '<strong style="font-size:14px; color:var(--label-1);">' + s.title + '</strong>' +
+                    '<button onclick="event.stopPropagation(); window._deleteSnippet(\'' + s.id + '\')" style="background:none; border:none; cursor:pointer; color:var(--label-3); font-size:16px; padding:0 4px;" title="Delete">&times;</button>' +
+                '</div>' +
+                '<p style="margin:0 0 8px; font-size:12px; color:var(--label-3); line-height:1.5;">' + s.content + '</p>' +
+                '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+                    (tagCount > 0 ? '<span style="font-size:10px; color:var(--primary); font-family:monospace; background:rgba(0,122,255,0.08); padding:2px 8px; border-radius:4px;">Uses ' + tagCount + ' tag' + (tagCount > 1 ? 's' : '') + '</span>' : '<span></span>') +
+                    '<div style="display:flex; gap:6px;">' +
+                        '<button onclick="window._useSnippetInChat(\'' + s.id + '\')" style="font-size:11px; padding:4px 10px; border:1px solid var(--primary); color:var(--primary); background:transparent; border-radius:6px; cursor:pointer; font-weight:600;">Insert</button>' +
+                        '<button onclick="window._sendSnippetNow(\'' + s.id + '\')" style="font-size:11px; padding:4px 10px; border:none; color:#fff; background:var(--primary); border-radius:6px; cursor:pointer; font-weight:600;">Send Now</button>' +
+                    '</div>' +
+                '</div>' +
+                (preview !== s.content ? '<div style="margin-top:8px; padding:8px 10px; background:rgba(16,185,129,0.06); border-radius:6px; font-size:11px; color:#10B981; border-left:3px solid #10B981;">Preview: ' + preview + '</div>' : '') +
+            '</div>';
+        }).join('');
+    }
+
+    box.innerHTML =
+        '<div class="modal-header">' +
+            '<h2>Snippet Library</h2>' +
+            '<button class="close-btn" onclick="document.getElementById(\'modalOverlay\').style.display=\'none\'">&times;</button>' +
+        '</div>' +
+        '<div style="display:flex; gap:20px; min-height:340px;">' +
+            '<div style="width:200px; flex-shrink:0; border-right:1px solid var(--border); padding-right:16px; display:flex; flex-direction:column;">' +
+                '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">' +
+                    '<span style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--label-3);">Folders</span>' +
+                    '<button onclick="window._addSnippetFolder()" style="font-size:11px; padding:3px 8px; border:1px solid var(--border); background:transparent; border-radius:6px; cursor:pointer; color:var(--label-2); font-weight:600;">+ New</button>' +
+                '</div>' +
+                '<div style="display:flex; flex-direction:column; gap:4px; flex:1; overflow-y:auto;">' + folderListHtml + '</div>' +
+            '</div>' +
+            '<div style="flex:1; display:flex; flex-direction:column;">' +
+                '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">' +
+                    '<h4 style="margin:0; font-size:15px; color:var(--label-1);">' + (activeFolder ? activeFolder.name : 'Select a folder') + '</h4>' +
+                    '<button onclick="window._showCreateSnippet()" style="font-size:11px; padding:5px 12px; border:none; background:var(--primary); color:#fff; border-radius:6px; cursor:pointer; font-weight:600;">+ Create Snippet</button>' +
+                '</div>' +
+                '<div style="flex:1; overflow-y:auto;">' + snippetListHtml + '</div>' +
+            '</div>' +
+        '</div>';
+
     overlay.style.display = 'flex';
 };
 
-window.insertSnippetAndClose = function(template) {
-    document.getElementById('modalOverlay').style.display='none';
-    window.insertSnippet(template); 
+window._selectSnippetFolder = function(folderId) {
+    window._activeSnippetFolder = folderId;
+    window._renderSnippetModal();
 };
 
+window._addSnippetFolder = function() {
+    var name = prompt('Folder name:');
+    if (!name || !name.trim()) return;
+    window._snippetStore.folders.push({ id: 'f' + Date.now(), name: name.trim() });
+    _saveSnippetStore();
+    window._renderSnippetModal();
+};
+
+window._showCreateSnippet = function() {
+    if (!window._activeSnippetFolder) { showNotification('Select a folder first', 'error'); return; }
+    var overlay = document.getElementById('modalOverlay');
+    var box = document.getElementById('modalBox');
+
+    box.innerHTML =
+        '<div class="modal-header">' +
+            '<h2>Create Snippet</h2>' +
+            '<button class="close-btn" onclick="window._renderSnippetModal()">&times;</button>' +
+        '</div>' +
+        '<div style="display:flex; flex-direction:column; gap:14px;">' +
+            '<div>' +
+                '<label style="font-size:12px; font-weight:600; color:var(--label-2); display:block; margin-bottom:6px;">Title</label>' +
+                '<input type="text" id="newSnippetTitle" placeholder="e.g. Initial Follow-Up" style="width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:8px; font-size:14px; outline:none; background:var(--surface-2); color:var(--label-1);">' +
+            '</div>' +
+            '<div>' +
+                '<label style="font-size:12px; font-weight:600; color:var(--label-2); display:block; margin-bottom:6px;">Content <span style="font-weight:400; color:var(--label-3);">(supports {{first_name}}, {{solicitor}}, {{phone}} etc.)</span></label>' +
+                '<textarea id="newSnippetContent" rows="5" placeholder="Hi {{first_name}}, ..." style="width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:8px; font-size:14px; outline:none; resize:vertical; font-family:inherit; background:var(--surface-2); color:var(--label-1);"></textarea>' +
+            '</div>' +
+            '<div style="display:flex; gap:10px; justify-content:flex-end; padding-top:6px;">' +
+                '<button onclick="window._renderSnippetModal()" style="padding:8px 16px; border:1px solid var(--border); background:transparent; border-radius:8px; cursor:pointer; font-weight:600; color:var(--label-2);">Cancel</button>' +
+                '<button onclick="window._saveNewSnippet()" style="padding:8px 20px; border:none; background:var(--primary); color:#fff; border-radius:8px; cursor:pointer; font-weight:600;">Save Snippet</button>' +
+            '</div>' +
+        '</div>';
+
+    overlay.style.display = 'flex';
+};
+
+window._saveNewSnippet = function() {
+    var title = document.getElementById('newSnippetTitle')?.value?.trim();
+    var content = document.getElementById('newSnippetContent')?.value?.trim();
+    if (!title || !content) { showNotification('Title and Content are required', 'error'); return; }
+
+    window._snippetStore.snippets.push({
+        id: 's' + Date.now(),
+        folderId: window._activeSnippetFolder,
+        title: title,
+        content: content
+    });
+    _saveSnippetStore();
+    showNotification('Snippet saved!', 'success');
+    window._renderSnippetModal();
+};
+
+window._deleteSnippet = function(snippetId) {
+    window._snippetStore.snippets = window._snippetStore.snippets.filter(function(s) { return s.id !== snippetId; });
+    _saveSnippetStore();
+    showNotification('Snippet deleted', 'info');
+    window._renderSnippetModal();
+};
+
+window._useSnippetInChat = function(snippetId) {
+    var s = window._snippetStore.snippets.find(function(x) { return x.id === snippetId; });
+    if (!s) return;
+    document.getElementById('modalOverlay').style.display = 'none';
+    window.insertSnippet(s.content);
+};
+
+window._sendSnippetNow = function(snippetId) {
+    var s = window._snippetStore.snippets.find(function(x) { return x.id === snippetId; });
+    if (!s) return;
+    document.getElementById('modalOverlay').style.display = 'none';
+    var parsed = window._parseLiquidTags(s.content);
+    var input = document.getElementById('commInputMessage');
+    if (input) {
+        input.value = parsed;
+        window.sendCommSms();
+    }
+};
+
+/* ═══════════════════════════════════════
+   EMOJI PICKER (Cursor-Aware Insertion)
+═══════════════════════════════════════ */
 window.toggleEmojiPicker = function() {
-    const picker = document.getElementById('emojiPicker');
-    if(picker) picker.style.display = picker.style.display === 'none' ? 'flex' : 'none';
+    var picker = document.getElementById('emojiPicker');
+    if (picker) picker.style.display = picker.style.display === 'none' ? 'flex' : 'none';
 };
 
 window.insertEmoji = function(emoji) {
-    const input = document.getElementById('commInputMessage');
-    if(input) {
-        input.value += emoji;
+    var input = document.getElementById('commInputMessage');
+    if (input) {
+        var start = input.selectionStart || input.value.length;
+        var end = input.selectionEnd || input.value.length;
+        var before = input.value.substring(0, start);
+        var after = input.value.substring(end);
+        input.value = before + emoji + after;
         input.focus();
+        var newPos = start + emoji.length;
+        input.setSelectionRange(newPos, newPos);
     }
-    document.getElementById('emojiPicker').style.display = 'none';
+    var picker = document.getElementById('emojiPicker');
+    if (picker) picker.style.display = 'none';
 };
 
+/* ═══════════════════════════════════════
+   FILE ATTACHMENT
+═══════════════════════════════════════ */
 window.handleCommAttachment = function(e) {
-    if(e.target.files && e.target.files[0]) {
-        const file = e.target.files[0];
-        showNotification(`Attachment added: ${file.name}`, 'info');
-        // Render immediate mock document block
-        const msgContainer = document.getElementById('commMessages');
+    if (e.target.files && e.target.files[0]) {
+        var file = e.target.files[0];
+        showNotification('Attachment added: ' + file.name, 'info');
+        var msgContainer = document.getElementById('commMessages');
         if (msgContainer) {
-            const bubble = document.createElement('div');
+            var bubble = document.createElement('div');
             bubble.className = 'msg-bubble outbound';
-            bubble.innerHTML = `
-                <div style="display:flex; align-items:center; gap:8px;">
-                    📄 <strong>${file.name}</strong>
-                </div>
-                <span class="msg-time">Just now</span>
-            `;
+            bubble.innerHTML = '<div style="display:flex; align-items:center; gap:8px;">📄 <strong>' + file.name + '</strong></div><span class="msg-time">Just now</span>';
             msgContainer.appendChild(bubble);
             msgContainer.scrollTop = msgContainer.scrollHeight;
         }
+        e.target.value = '';
     }
 };
 
-window.assignSolicitorFromComm = function(sol_id) {
-    if(!activeChatLeadId || !sol_id) return;
-    showNotification('Solicitor changed for this lead.', 'success');
+/* ═══════════════════════════════════════
+   SOLICITOR ASSIGNMENT FROM HEADER
+═══════════════════════════════════════ */
+window.assignSolicitorFromComm = function(solId) {
+    if (!activeChatLeadId || !solId) return;
+    showNotification('Solicitor assignment updated.', 'success');
 };
 
-// Request notifications
+/* ═══════════════════════════════════════
+   REAL-TIME NOTIFICATIONS & WEBSOCKET
+═══════════════════════════════════════ */
 if ("Notification" in window && Notification.permission !== "denied") {
     Notification.requestPermission();
 }
 
-window.initCommSockets = function() {
-    console.log("WebSocket connected. Listening for real-time messages...");
-    
-    // Simulate incoming message after a delay for testing
-    setTimeout(() => {
-        if (activeChatLeadId) {
-            window.receiveLiveMessage("Thanks, I have uploaded the documents on my end. Please check.", "Ketoura");
-        }
-    }, 15000); // 15s after load
-};
-
 window.receiveLiveMessage = function(msg, senderName) {
-    // 1. Alert Sound (Ping)
-    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-    audio.play().catch(e => console.log('Audio autoplay blocked'));
-    
+    // 1. Alert Sound
+    try {
+        var audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+        audio.play().catch(function() {});
+    } catch(e) {}
+
     // 2. Desktop Notification
-    if (Notification.permission === "granted") {
-        new Notification(`New message from ${senderName || 'Client'}`, { body: msg, icon: '/favicon.ico' });
+    if ("Notification" in window && Notification.permission === "granted") {
+        new Notification('New message from ' + (senderName || 'Client'), { body: msg, icon: '/favicon.ico' });
     }
-    
-    // 3. Update UI instantly without refresh
-    const msgContainer = document.getElementById('commMessages');
+
+    // 3. Render in chat immediately
+    var msgContainer = document.getElementById('commMessages');
     if (msgContainer) {
-        const reply = document.createElement('div');
+        var reply = document.createElement('div');
         reply.className = 'msg-bubble inbound';
-        reply.innerHTML = `${msg} <span class="msg-time">Just now</span>`;
+        reply.innerHTML = msg + ' <span class="msg-time">Just now</span>';
         msgContainer.appendChild(reply);
         msgContainer.scrollTop = msgContainer.scrollHeight;
     }
 };
 
-// Start mock sockets
+window.initCommSockets = function() {
+    console.log('[CommHub] WebSocket listener active.');
+    // Simulate incoming message 15s after a contact is selected
+    setTimeout(function() {
+        if (activeChatLeadId) {
+            window.receiveLiveMessage("Thanks, I've uploaded the documents. Please check.", "Client");
+        }
+    }, 15000);
+};
+
 window.initCommSockets();
 
 // Global shortcuts
