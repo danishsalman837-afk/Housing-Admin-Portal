@@ -3228,58 +3228,106 @@ window._addSnippetFolder = function() {
 
 window._showCreateSnippet = function() {
     if (!window._activeSnippetFolder) { showNotification('Select a folder first', 'error'); return; }
+    var folderName = window._activeSnippetFolder;
     var box = document.getElementById('modalBox');
     box.className = 'modal-box';
     box.style.display = 'block';
-    box.style.width = '550px';
+    box.style.width = '600px';
+    box.style.borderRadius = '24px';
+    box.style.overflow = 'hidden';
+    box.style.boxShadow = '0 25px 50px -12px rgba(0, 0, 0, 0.25)';
 
     box.innerHTML = `
-        <div class="modal-header">
-            <h2>Create New Snippet</h2>
-            <button class="close-btn" onclick="window._renderSnippetModal()">&times;</button>
-        </div>
-        <div style="display:flex; flex-direction:column; gap:20px; padding:20px;">
-            <div>
-                <label style="font-size:12px; font-weight:800; color:var(--text-muted); text-transform:uppercase; display:block; margin-bottom:8px;">Snippet Title</label>
-                <input type="text" id="newSnippetTitle" placeholder="e.g. Follow-up regarding photos" class="modern-input" style="width:100%; height:44px;">
+        <div class="modal-header" style="background:var(--bg-main); padding: 24px 30px; border-bottom: 1px solid var(--border-light); display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:14px;">
+                <div style="background:rgba(79, 70, 229, 0.1); width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; color:var(--primary);">
+                    <svg viewBox="0 0 24 24" style="width:24px; height:24px; fill:currentColor;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                </div>
+                <div>
+                    <h2 style="font-size:18px; font-weight:800; margin:0; letter-spacing:-0.5px;">Create New Snippet</h2>
+                    <div style="font-size:12px; color:var(--text-muted); font-weight:600;">Adding to: <span style="color:var(--primary);">${folderName}</span></div>
+                </div>
             </div>
-            <div>
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                    <label style="font-size:12px; font-weight:800; color:var(--text-muted); text-transform:uppercase;">Message Template</label>
-                    <div style="position:relative;">
-                        <button type="button" class="btn-outline" style="padding:4px 10px; font-size:11px; gap:4px;" onclick="var d=document.getElementById('snippetVarDrop'); d.style.display=d.style.display==='none'?'block':'none';">
-                            <span>{ }</span> Insert Variable
-                        </button>
-                        <div id="snippetVarDrop" style="display:none; position:absolute; right:0; top:100%; margin-top:6px; width:200px; background:var(--bg-main); border:1px solid var(--border-light); box-shadow:0 10px 30px rgba(0,0,0,0.15); border-radius:12px; z-index:1000; overflow:hidden;">
-                            <div onclick="window._insertVarIntoSnippet('{{first_name}}')" style="padding:10px 14px; font-size:13px; color:var(--text-main); cursor:pointer; border-bottom:1px solid var(--border-light); transition:0.2s;" onmouseover="this.style.background='rgba(79, 70, 229, 0.05)'" onmouseout="this.style.background='transparent'">First Name</div>
-                            <div onclick="window._insertVarIntoSnippet('{{full_name}}')" style="padding:10px 14px; font-size:13px; color:var(--text-main); cursor:pointer; border-bottom:1px solid var(--border-light); transition:0.2s;" onmouseover="this.style.background='rgba(79, 70, 229, 0.05)'" onmouseout="this.style.background='transparent'">Full Name</div>
-                            <div onclick="window._insertVarIntoSnippet('{{solicitor_name}}')" style="padding:10px 14px; font-size:13px; color:var(--text-main); cursor:pointer; border-bottom:1px solid var(--border-light); transition:0.2s;" onmouseover="this.style.background='rgba(79, 70, 229, 0.05)'" onmouseout="this.style.background='transparent'">Solicitor Name</div>
-                            <div onclick="window._insertVarIntoSnippet('{{case_id}}')" style="padding:10px 14px; font-size:13px; color:var(--text-main); cursor:pointer; transition:0.2s;" onmouseover="this.style.background='rgba(79, 70, 229, 0.05)'" onmouseout="this.style.background='transparent'">Case ID</div>
+            <button class="close-btn" style="background:var(--bg-soft); width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center;" onclick="window._renderSnippetModal()">&times;</button>
+        </div>
+        
+        <div style="padding:30px; background:var(--bg-main);">
+            <div style="margin-bottom:24px;">
+                <label style="font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase; display:block; margin-bottom:10px; letter-spacing:0.5px;">Snippet Title</label>
+                <input type="text" id="newSnippetTitle" placeholder="e.g. Follow-up regarding photos" class="modern-input" style="width:100%; height:48px; font-size:15px; border-radius:12px;">
+            </div>
+            
+            <div style="margin-bottom:20px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <label style="font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Message Template</label>
+                    <div style="display:flex; gap:8px;">
+                        <span onclick="window._insertVarIntoSnippet('{{first_name}}')" style="cursor:pointer; background:var(--bg-soft); color:var(--primary); font-size:10px; font-weight:800; padding:4px 10px; border-radius:10px; border:1px solid var(--border-light);">+ Name</span>
+                        <span onclick="window._insertVarIntoSnippet('{{case_id}}')" style="cursor:pointer; background:var(--bg-soft); color:var(--primary); font-size:10px; font-weight:800; padding:4px 10px; border-radius:10px; border:1px solid var(--border-light);">+ ID</span>
+                        <div style="position:relative;">
+                            <button type="button" class="btn-outline" style="padding:6px 14px; font-size:12px; height:28px; border-radius:10px; gap:6px; font-weight:700;" onclick="var d=document.getElementById('snippetVarDrop'); d.style.display=d.style.display==='none'?'block':'none';">
+                                More...
+                            </button>
+                            <div id="snippetVarDrop" style="display:none; position:absolute; right:0; top:100%; margin-top:8px; width:220px; background:var(--bg-main); border:1px solid var(--border-light); box-shadow:0 15px 35px rgba(0,0,0,0.2); border-radius:14px; z-index:1000; overflow:hidden; animation: slideUp 0.2s ease;">
+                                <div onclick="window._insertVarIntoSnippet('{{full_name}}')" style="padding:12px 16px; font-size:13px; color:var(--text-main); cursor:pointer; border-bottom:1px solid var(--border-light); font-weight:600;" onmouseover="this.style.background='rgba(79, 70, 229, 0.05)'" onmouseout="this.style.background='transparent'">Full Name</div>
+                                <div onclick="window._insertVarIntoSnippet('{{solicitor_name}}')" style="padding:12px 16px; font-size:13px; color:var(--text-main); cursor:pointer; border-bottom:1px solid var(--border-light); font-weight:600;" onmouseover="this.style.background='rgba(79, 70, 229, 0.05)'" onmouseout="this.style.background='transparent'">Solicitor Name</div>
+                                <div onclick="window._insertVarIntoSnippet('{{phone}}')" style="padding:12px 16px; font-size:13px; color:var(--text-main); cursor:pointer; font-weight:600;" onmouseover="this.style.background='rgba(79, 70, 229, 0.1)'" onmouseout="this.style.background='transparent'">Phone Number</div>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <textarea id="newSnippetContent" class="modern-input" rows="5" placeholder="Use tags like {{first_name}} to personalize..." style="width:100%; height:auto; padding:12px;"></textarea>
+                <textarea id="newSnippetContent" class="modern-input" rows="6" placeholder="Type your message here..." style="width:100%; min-height:120px; padding:16px; font-size:15px; border-radius:14px; line-height:1.6; resize:none;"></textarea>
+                <div style="display:flex; justify-content:flex-end; margin-top:6px; font-size:11px; font-weight:700; color:var(--text-muted);" id="snippetCharCount">0 characters</div>
             </div>
-            <div id="snippetPreviewArea" class="snippet-preview-box" style="display:none;"></div>
-            <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:10px;">
-                <button class="btn-outline" onclick="window._renderSnippetModal()">Cancel</button>
-                <button class="btn-action" onclick="window._saveNewSnippet()">Save Snippet</button>
+            
+            <div id="snippetPreviewBox" style="background:rgba(241, 245, 249, 0.5); border:1px solid var(--border-light); border-radius:16px; padding:20px; margin-bottom:24px; min-height:80px;">
+                <div style="font-size:10px; font-weight:900; color:var(--primary); text-transform:uppercase; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                    <span style="background:var(--primary); width:6px; height:6px; border-radius:50%; box-shadow: 0 0 10px var(--primary);"></span>
+                    Real-time Preview
+                </div>
+                <div id="snippetPreviewContent" style="font-size:14px; color:var(--text-main); line-height:1.7; font-style:italic; opacity:0.7;">Start typing to see the final message with variable data...</div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:16px; margin-top:10px;">
+                <button class="btn-premium ghost" style="padding:12px 24px; font-size:14px; font-weight:700;" onclick="window._renderSnippetModal()">Discard</button>
+                <button class="btn-premium primary" style="padding:12px 30px; font-size:14px; font-weight:700; background:var(--primary); box-shadow: 0 6px 20px rgba(79, 70, 229, 0.25); border:none;" onclick="window._saveNewSnippet()">Create Snippet</button>
             </div>
         </div>
     `;
 
-    document.getElementById('newSnippetContent').addEventListener('input', function() {
-        var preview = window._parseLiquidTags(this.value);
-        var previewArea = document.getElementById('snippetPreviewArea');
-        if (this.value) {
-            previewArea.style.display = 'block';
-            previewArea.innerHTML = '<strong>Live Preview:</strong> ' + preview;
+    var ta = document.getElementById('newSnippetContent');
+    var charCount = document.getElementById('snippetCharCount');
+    var previewContent = document.getElementById('snippetPreviewContent');
+
+    ta.addEventListener('input', function() {
+        var val = this.value;
+        charCount.innerText = val.length + ' characters';
+        var parsed = window._parseLiquidTags(val);
+        if (val) {
+            previewContent.innerHTML = parsed;
+            previewContent.style.fontStyle = 'normal';
+            previewContent.style.opacity = '1';
         } else {
-            previewArea.style.display = 'none';
+            previewContent.innerHTML = 'Start typing to see the final message with variable data...';
+            previewContent.style.fontStyle = 'italic';
+            previewContent.style.opacity = '0.7';
         }
     });
 
     document.getElementById('modalOverlay').style.display = 'flex';
+};
+
+window._insertVarIntoSnippet = function(variable) {
+    var ta = document.getElementById('newSnippetContent');
+    if (!ta) return;
+    var start = ta.selectionStart;
+    var end = ta.selectionEnd;
+    var text = ta.value;
+    ta.value = text.substring(0, start) + variable + text.substring(end);
+    ta.selectionStart = ta.selectionEnd = start + variable.length;
+    ta.focus();
+    // Manually trigger input event for preview
+    ta.dispatchEvent(new Event('input'));
+    if (document.getElementById('snippetVarDrop')) document.getElementById('snippetVarDrop').style.display = 'none';
 };
 
 window._insertVarIntoSnippet = function(variable) {

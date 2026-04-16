@@ -2418,6 +2418,44 @@ select.status-pill {
     font-size: 13px;
     color: #059669;
     font-style: italic;
+    transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .snippet-preview-box {
+    background: rgba(16, 185, 129, 0.08);
+    border-color: rgba(16, 185, 129, 0.4);
+    color: #10B981;
+}
+
+#snippetPreviewBox {
+    position: relative;
+    overflow: hidden;
+}
+
+#snippetPreviewBox::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+    background: #10B981;
+    opacity: 0.6;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.modern-input:focus {
+    background: #fff;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+}
+
+[data-theme="dark"] .modern-input:focus {
+    background: rgba(255,255,255,0.03);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.2);
 }
 
 .emoji-full-picker {
