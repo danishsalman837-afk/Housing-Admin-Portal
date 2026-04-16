@@ -3134,18 +3134,18 @@ window.insertEmoji = function(emoji) {
 window.handleCommAttachment = function(e) {
     if(e.target.files && e.target.files[0]) {
         const file = e.target.files[0];
-        showNotification(\`Attachment added: \${file.name}\`, 'info');
+        showNotification(`Attachment added: ${file.name}`, 'info');
         // Render immediate mock document block
         const msgContainer = document.getElementById('commMessages');
         if (msgContainer) {
             const bubble = document.createElement('div');
             bubble.className = 'msg-bubble outbound';
-            bubble.innerHTML = \`
+            bubble.innerHTML = `
                 <div style="display:flex; align-items:center; gap:8px;">
-                    📄 <strong>\${file.name}</strong>
+                    📄 <strong>${file.name}</strong>
                 </div>
                 <span class="msg-time">Just now</span>
-            \`;
+            `;
             msgContainer.appendChild(bubble);
             msgContainer.scrollTop = msgContainer.scrollHeight;
         }
@@ -3180,7 +3180,7 @@ window.receiveLiveMessage = function(msg, senderName) {
     
     // 2. Desktop Notification
     if (Notification.permission === "granted") {
-        new Notification(\`New message from \${senderName || 'Client'}\`, { body: msg, icon: '/favicon.ico' });
+        new Notification(`New message from ${senderName || 'Client'}`, { body: msg, icon: '/favicon.ico' });
     }
     
     // 3. Update UI instantly without refresh
@@ -3188,7 +3188,7 @@ window.receiveLiveMessage = function(msg, senderName) {
     if (msgContainer) {
         const reply = document.createElement('div');
         reply.className = 'msg-bubble inbound';
-        reply.innerHTML = \`\${msg} <span class="msg-time">Just now</span>\`;
+        reply.innerHTML = `${msg} <span class="msg-time">Just now</span>`;
         msgContainer.appendChild(reply);
         msgContainer.scrollTop = msgContainer.scrollHeight;
     }
