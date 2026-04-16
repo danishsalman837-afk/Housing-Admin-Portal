@@ -62,8 +62,12 @@ function normalizeLead(lead) {
   n('attachments', 'attachments');
   
   // Snake case to camelCase for dashboard/form consistency
-  n('first_name', 'name');
-  n('mobile_number', 'phone');
+  // Resilient mappings for Name and Phone
+  if (lead.first_name && !lead.name) lead.name = lead.first_name;
+  if (lead.name && !lead.first_name) lead.first_name = lead.name;
+  
+  if (lead.mobile_number && !lead.phone) lead.phone = lead.mobile_number;
+  if (lead.phone && !lead.mobile_number) lead.mobile_number = lead.phone;
   // Fields that are already camelCase in DB or fixed lowercase/snake_case
   n('dampLocation', 'dampLocation'); 
   n('leakLocation', 'leakLocation');
