@@ -3452,19 +3452,34 @@ window._insertVarIntoSnippet = function(variable) {
     ta.setSelectionRange(start + variable.length, start + variable.length);
 };
 
-window._saveNewSnippet = function() {
+window._saveNewSnippet = function(editId) {
     var title = document.getElementById('newSnippetTitle')?.value?.trim();
     var content = document.getElementById('newSnippetContent')?.value?.trim();
     if (!title || !content) { showNotification('Title and Content are required', 'error'); return; }
 
-    window._snippetStore.snippets.push({
-        id: 's' + Date.now(),
-        folderId: window._activeSnippetFolder,
-        title: title,
-        content: content
-    });
+    if (editId && editId !== 'undefined' && editId !== '') {
+        // Update existing
+        var snippet = window._snippetStore.snippets.find(function(s) { return s.id === editId; });
+        if (snippet) {
+            snippet.title = title;
+            snippet.content = content;
+            showNotification('Snippet updated!', 'success');
+        } else {
+            showNotification('Error: Could not find snippet to update', 'error');
+            return;
+        }
+    } else {
+        // Create new
+        window._snippetStore.snippets.push({
+            id: 's' + Date.now(),
+            folderId: window._activeSnippetFolder,
+            title: title,
+            content: content
+        });
+        showNotification('Snippet created!', 'success');
+    }
+    
     _saveSnippetStore();
-    showNotification('Snippet saved!', 'success');
     window._renderSnippetModal();
 };
 
