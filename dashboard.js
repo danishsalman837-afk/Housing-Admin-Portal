@@ -3470,8 +3470,9 @@ if ("Notification" in window && Notification.permission !== "denied") {
 window.receiveLiveMessage = function(msg, senderName) {
     // 1. Alert Sound
     try {
-        var audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-        audio.play().catch(function() {});
+        var audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
+        audio.volume = 0.5; // Set volume to 50% for comfort
+        audio.play().catch(function(e) { console.log("Audio play blocked", e); });
     } catch(e) {}
 
     // 2. Desktop Notification
