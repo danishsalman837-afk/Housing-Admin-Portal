@@ -12,7 +12,7 @@ let whatsappRealtimeSub = null;
 // ═══════════════════════════════════════
 // THEME MANAGEMENT
 // ═══════════════════════════════════════
-window.toggleTheme = function(e) {
+window.toggleTheme = function (e) {
     if (e.target.checked) {
         document.documentElement.setAttribute('data-theme', 'dark');
         localStorage.setItem('theme', 'dark');
@@ -145,7 +145,7 @@ function populateSettings() {
     const user = session.user;
 
     const fullName = user.user_metadata?.full_name || user.user_metadata?.username || user.email.split('@')[0];
-    
+
     document.getElementById('settingsFullName').value = fullName;
     document.getElementById('settingsEmail').value = user.email;
 
@@ -153,7 +153,7 @@ function populateSettings() {
     const avatarUrl = user.user_metadata?.avatar_url;
     const initialsEl = document.getElementById('settingsAvatarInitials');
     const imgEl = document.getElementById('settingsAvatarImg');
-    
+
     if (avatarUrl) {
         initialsEl.style.display = 'none';
         imgEl.src = avatarUrl;
@@ -221,11 +221,11 @@ function initCharts(data, paidCount, totalCount) {
             type: 'bar',
             data: { labels: months, datasets: [{ label: 'Leads Received', data: monthlyCounts, backgroundColor: '#0A84FF', borderRadius: 4 }] },
             options: {
-                responsive: true, maintainAspectRatio: false, 
+                responsive: true, maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
-                scales: { 
-                    x: { grid: { display: false }, ticks: { color: textColor } }, 
-                    y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor } } 
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: textColor } },
+                    y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor } }
                 }
             }
         });
@@ -250,13 +250,13 @@ function initCharts(data, paidCount, totalCount) {
 
         charts.status = new Chart(ctxStatus, {
             type: 'doughnut',
-            data: { 
-                labels: leadStatuses, 
-                datasets: [{ 
-                    data: leadStatuses.map(s => data.filter(x => x.leadStatus === s).length), 
-                    backgroundColor: statusColors, 
-                    borderWidth: 0 
-                }] 
+            data: {
+                labels: leadStatuses,
+                datasets: [{
+                    data: leadStatuses.map(s => data.filter(x => x.leadStatus === s).length),
+                    backgroundColor: statusColors,
+                    borderWidth: 0
+                }]
             },
             options: { responsive: true, maintainAspectRatio: false, cutout: '80%', plugins: { legend: { display: false } } }
         });
@@ -264,7 +264,7 @@ function initCharts(data, paidCount, totalCount) {
 
     if (ctxConv) {
         let remainder = totalCount - paidCount;
-        if (totalCount === 0) remainder = 1; 
+        if (totalCount === 0) remainder = 1;
         charts.conv = new Chart(ctxConv, {
             type: 'doughnut',
             data: { datasets: [{ data: [paidCount, remainder], backgroundColor: ['#30D158', '#E5E6EB'], borderWidth: 0 }] },
@@ -370,13 +370,13 @@ function renderTable(data) {
         if (item.assigned_company_id) {
             // Find all authorized members for this specific firm
             const firmMembers = membersData.filter(m => String(m.company_id) === String(item.assigned_company_id) && m.can_receive_emails !== false);
-            
+
             if (firmMembers.length > 0) {
                 const solOptions = firmMembers.map(m => {
                     const mName = ((m.first_name || '') + ' ' + (m.last_name || '')).trim() || 'Unnamed';
                     return `<option value="${m.id}" ${String(item.assigned_solicitor_id) === String(m.id) ? 'selected' : ''}>${mName}</option>`;
                 }).join('');
-                
+
                 solicitorDisplay = `
                     <div style="display:flex; align-items:center; gap:5px; margin-top:6px; padding-left:2px;">
                         <span style="font-size:11px; opacity:0.8;">👤</span>
@@ -444,15 +444,15 @@ function renderTable(data) {
 }
 
 // DROPDOWN LOGIC
-window.toggleDropdown = function(e, id) {
+window.toggleDropdown = function (e, id) {
     if (e) e.stopPropagation();
     const dropdown = document.getElementById(id);
     if (!dropdown) return;
     const isOpen = dropdown.classList.contains('active');
-    
+
     // Close all others
     document.querySelectorAll('.dropdown-menu').forEach(d => d.classList.remove('active'));
-    
+
     if (!isOpen) dropdown.classList.add('active');
 };
 
@@ -464,7 +464,7 @@ document.addEventListener('click', () => {
 window.handleFieldUpdate = async function (id, fieldName, value) {
     try {
         const updateParams = { id };
-        
+
         // Convert empty strings to null for database compatibility (UUID/Int fields)
         let sanitizedValue = (value === "" || value === "null" || value === undefined) ? null : value;
         updateParams[fieldName] = sanitizedValue;
@@ -478,7 +478,7 @@ window.handleFieldUpdate = async function (id, fieldName, value) {
         if (fieldName === 'leadStatus' && value === 'New Lead') {
             updateParams['assigned_company_id'] = null;
             updateParams['assigned_solicitor_id'] = null;
-            
+
             // Delete activities in background
             fetch('/api/solicitor?route=activity', {
                 method: 'POST',
@@ -490,15 +490,15 @@ window.handleFieldUpdate = async function (id, fieldName, value) {
             }).catch(err => console.error("Activity deletion failed", err));
         }
 
-        const res = await fetch('/api/update', { 
-            method: 'POST', 
-            headers: { 'Content-Type': 'application/json' }, 
-            body: JSON.stringify(updateParams) 
+        const res = await fetch('/api/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updateParams)
         });
-        
+
         const result = await res.json();
         if (!res.ok) throw new Error(result.error || "Update failed");
-        
+
         const lead = submissionsData.find(s => String(s.id) === String(id));
         if (lead) {
             lead[fieldName] = sanitizedValue;
@@ -510,19 +510,19 @@ window.handleFieldUpdate = async function (id, fieldName, value) {
                 lead['assigned_solicitor_id'] = null;
             }
         }
-        
+
         if (fieldName === 'leadStatus') calculateDashboardStats();
-        
+
         // If we updated assignments or status, refresh the table to reflect changes (especially solicitor names)
         if (fieldName === 'assigned_company_id' || fieldName === 'assigned_solicitor_id' || fieldName === 'leadStatus') {
             if (document.getElementById('leadsView').classList.contains('active')) renderFilteredLeads();
             // Also refresh activity if we are on that view, as status changes might hide/show items
             if (document.getElementById('activityView')?.classList.contains('active')) renderFilteredActivity();
         }
-        
+
         showToast('Update Successful', `The ${fieldName.replace(/_/g, ' ')} has been updated.`, 'success');
-    } catch (e) { 
-        console.error(e); 
+    } catch (e) {
+        console.error(e);
         showToast('Update Error', e.message, 'danger');
     }
 };
@@ -677,11 +677,11 @@ window.openViewModal = function (id, showOriginal = false) {
         // Apply normalizeLead logic if it's not already normalized (it likely isn't if stored raw)
         // But since normalizeLead overwrites, we should clone it
         leadData = JSON.parse(JSON.stringify(s.agent_data));
-        
+
         // Ensure some fields from the main record are available if missing in backup
         if (!leadData.attachments && s.attachments) leadData.attachments = s.attachments;
         if (!leadData.id) leadData.id = s.id;
-        
+
         // We need to normalize it since it's raw DB row
         // In this environment normalizeLead is not global, but we can replicate it or just use it if possible
         // Wait, normalizeLead is available in the API, but here in dashboard.js it's not.
@@ -695,7 +695,7 @@ window.openViewModal = function (id, showOriginal = false) {
 
     const ignoreKeys = ['id', 'created_at', 'notes', 'assigned_company_id', 'assigned_solicitor_id', 'call_notes', 'agent_data', 'is_edited'];
     // Agent name should always be visible if present
-    
+
     let dataHtml = '';
 
     // Put agentName at top for Agent Submission view
@@ -707,7 +707,7 @@ window.openViewModal = function (id, showOriginal = false) {
     // 1. Show fields in the predefined order
     displayOrder.forEach(key => {
         if (ignoreKeys.includes(key)) return;
-        
+
         // Handle potential snake_case vs camelCase if leadData is raw
         let val = leadData[key];
         if (val === undefined || val === null) {
@@ -888,7 +888,7 @@ window.saveNewCompany = async function (id) {
         const res = await fetch('/api/companies', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         const saved = await res.json();
 
-        if (!res.ok || saved.error) { 
+        if (!res.ok || saved.error) {
             throw new Error(saved.error || "Failed to save to database");
         }
 
@@ -904,8 +904,8 @@ window.saveNewCompany = async function (id) {
         document.getElementById('modalOverlay').style.display = 'none';
         renderCompanies();
         calculateDashboardStats();
-    } catch (e) { 
-        console.error(e); 
+    } catch (e) {
+        console.error(e);
         showToast('Error', e.message, 'danger');
     }
 };
@@ -917,12 +917,12 @@ window.toggleCompanyActive = async function (id, isActive) {
         if (!res.ok || updated.error) { throw new Error(updated.error || 'Unknown error'); }
         const idx = companiesData.findIndex(c => String(c.id) === String(id));
         if (idx > -1) companiesData[idx] = updated;
-        
+
         showToast('Status Updated', `Company is now ${isActive ? 'Active' : 'Inactive'}.`, 'info');
         renderCompanies();
         calculateDashboardStats();
-    } catch (e) { 
-        console.error(e); 
+    } catch (e) {
+        console.error(e);
         showToast('Update Failed', e.message, 'danger');
     }
 };
@@ -976,9 +976,9 @@ window.viewCompanyMembers = function (companyId) {
             <td>${m.job_title || '--'}</td>
             <td>${m.email || '--'}</td>
             <td style="text-align:center;">
-                ${m.can_receive_emails !== false ? 
-                    '<span class="badge badge-success">Authorized</span>' : 
-                    '<span class="badge badge-gray">No Email</span>'}
+                ${m.can_receive_emails !== false ?
+                '<span class="badge badge-success">Authorized</span>' :
+                '<span class="badge badge-gray">No Email</span>'}
             </td>
             <td>${m.mobile || '--'}</td>
             <td>${m.landline || '--'}</td>
@@ -1082,8 +1082,8 @@ window.deleteMember = async function (id) {
         viewCompanyMembers(selectedCompanyId);
         if (document.getElementById('leadsView').classList.contains('active')) renderFilteredLeads();
         showToast('Member Removed', 'Solicitor has been deleted.', 'success');
-    } catch (e) { 
-        console.error(e); 
+    } catch (e) {
+        console.error(e);
         showToast('Error', 'Failed to delete member.', 'danger');
     }
 };
@@ -1435,7 +1435,7 @@ window.initDashboard = async function () {
 
 function updateActivityStats() {
     const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
-    
+
     // Filter out activity linked to Closed leads for accurate stats
     const activeActivity = activityData.filter(a => {
         const lead = submissionsData.find(s => String(s.id) === String(a.lead_id));
@@ -1456,7 +1456,7 @@ window.renderFilteredActivity = function () {
 
     const filtered = activityData.filter(a => {
         const lead = submissionsData.find(s => String(s.id) === String(a.lead_id));
-        
+
         // Hide leads that are closed or archived in Lead Management (case-insensitive)
         if (!lead || !lead.leadStatus) return false;
         const ls = lead.leadStatus.trim().toLowerCase();
@@ -1558,7 +1558,7 @@ function renderActivityTable(data) {
 // SOLICITOR ACTIVITY — ALLOCATE MODAL
 // ═══════════════════════════════════════
 
-window.updateAllocMemberOptions = function(companyId) {
+window.updateAllocMemberOptions = function (companyId) {
     const memberSelect = document.getElementById('allocMemberSelect');
     const memberGroup = document.getElementById('allocMemberGroup');
     if (!memberSelect || !memberGroup) return;
@@ -1569,7 +1569,7 @@ window.updateAllocMemberOptions = function(companyId) {
     }
 
     const members = membersData.filter(m => String(m.company_id) === String(companyId) && m.can_receive_emails !== false);
-    
+
     if (members.length === 0) {
         memberSelect.innerHTML = '<option value="" disabled selected>No authorized members found for this firm</option>';
     } else {
@@ -1593,9 +1593,9 @@ window.openAllocateModal = function (preSelectedLeadId = null) {
             return String(s.id) === String(preSelectedLeadId);
         }
         return !allocatedLeadIds.includes(String(s.id)) &&
-               s.leadStatus !== 'Archived' &&
-               s.leadStatus !== 'Agent Saved' &&
-               s.leadStatus !== 'Closed';
+            s.leadStatus !== 'Archived' &&
+            s.leadStatus !== 'Agent Saved' &&
+            s.leadStatus !== 'Closed';
     });
 
     const modalTitle = preSelectedLeadId ? 'Reallocate Lead' : 'Allocate Lead to Solicitor';
@@ -1665,8 +1665,8 @@ window.submitAllocate = async function () {
         await fetch('/api/update', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                id: leadId, 
+            body: JSON.stringify({
+                id: leadId,
                 leadStatus: 'Allocated',
                 assigned_company_id: companyId,
                 assigned_solicitor_id: solId
@@ -1771,17 +1771,17 @@ window.viewActivityDetail = function (activityId) {
     const leadName = lead?.name || lead?.first_name || '---';
     const memberName = member ? ((member.first_name || '') + ' ' + (member.last_name || '')).trim() : '---';
     const companyName = company?.name || company?.company_name || '---';
-    
+
     // Professional date/time formatting
-    const dtOptions = { 
-        day: '2-digit', 
-        month: 'short', 
+    const dtOptions = {
+        day: '2-digit',
+        month: 'short',
         year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
         hour12: true
     };
-    
+
     const sentAt = a.sent_at ? new Date(a.sent_at).toLocaleString('en-GB', dtOptions) : 'Pending / Not Sent';
     const acceptedAt = a.accepted_at ? new Date(a.accepted_at).toLocaleString('en-GB', dtOptions) : (a.status === 'Accepted' ? 'Timestamp Unavailable' : 'Awaiting Solicitor Response');
     const rejectedAt = a.rejected_at ? new Date(a.rejected_at).toLocaleString('en-GB', dtOptions) : (a.status === 'Rejected' ? 'Timestamp Unavailable' : 'N/A');
@@ -1909,7 +1909,7 @@ function renderNotifications() {
     }).join('');
 }
 
-window.markAsRead = function(index, e) {
+window.markAsRead = function (index, e) {
     if (e) e.stopPropagation();
     if (notifications[index]) {
         notifications[index].read = true;
@@ -1918,7 +1918,7 @@ window.markAsRead = function(index, e) {
     }
 };
 
-window.markAllAsRead = function(e) {
+window.markAllAsRead = function (e) {
     if (e) e.stopPropagation();
     notifications.forEach(n => n.read = true);
     localStorage.setItem('hdr_notifications', JSON.stringify(notifications));
@@ -1957,7 +1957,7 @@ function initRealtimeSubscription() {
             const resSub = await fetch('/api/submissions');
             if (resSub.ok) {
                 const freshSubmissions = await resSub.json();
-                
+
                 // Identify completely new leads
                 freshSubmissions.forEach(fresh => {
                     const exists = submissionsData.some(s => String(s.id) === String(fresh.id));
@@ -1965,13 +1965,13 @@ function initRealtimeSubscription() {
                         // NEW LEAD RECEIVED
                         submissionsData.unshift(fresh);
                         const leadName = fresh.name || fresh.first_name || 'New Client';
-                        
+
                         // Show visual pop/toast
                         showToast('New Lead Received', `<strong>${leadName}</strong> has just submitted a form.`, 'success');
-                        
+
                         // Add to persistent notifications
                         addNotification(`New lead received from <strong>${leadName}</strong>.`, 'blue');
-                        
+
                         // Refresh active view if needed
                         if (document.getElementById('leadsView')?.classList.contains('active')) renderFilteredLeads();
                         calculateDashboardStats();
@@ -1986,7 +1986,7 @@ function initRealtimeSubscription() {
 
             freshActivity.forEach(async (fresh) => {
                 const existing = activityData.find(a => String(a.id) === String(fresh.id));
-                
+
                 if (existing) {
                     // Check for status changes (Accepted/Rejected)
                     if (existing.status !== fresh.status) {
@@ -2030,12 +2030,12 @@ function initRealtimeSubscription() {
                 } else {
                     // New activity record created (lead was newly allocated/sent)
                     activityData.unshift(fresh);
-                    
+
                     // If it's already Accepted/Rejected (e.g. if solicitor acted instantly before next poll)
                     if (fresh.status === 'Accepted' || fresh.status === 'Rejected') {
                         const lead = submissionsData.find(s => String(s.id) === String(fresh.lead_id));
                         const leadName = lead?.name || lead?.first_name || 'A lead';
-                        
+
                         // Sync lead status
                         if (lead) lead.leadStatus = fresh.status;
 
@@ -2046,7 +2046,7 @@ function initRealtimeSubscription() {
                             addNotification(`<strong>${leadName}</strong> has been <strong style="color:#CC3328">rejected</strong>.`, 'red');
                             showToast('Lead Rejected', `<strong>${leadName}</strong> was rejected.`, 'danger');
                         }
-                        
+
                         calculateDashboardStats();
                     }
                 }
@@ -2061,7 +2061,7 @@ function initRealtimeSubscription() {
     }, 10000); // Poll every 10 seconds
 }
 
-window.showToast = function(title, message, type = 'info') {
+window.showToast = function (title, message, type = 'info') {
     let container = document.getElementById('app-toast-container');
     if (!container) {
         container = document.createElement('div');
@@ -2071,7 +2071,7 @@ window.showToast = function(title, message, type = 'info') {
 
     const toast = document.createElement('div');
     toast.className = `app-toast app-toast-${type}`;
-    
+
     const icons = {
         success: '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>',
         info: '<svg viewBox="0 0 24 24"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>',
@@ -2104,18 +2104,18 @@ async function initUser() {
     if (!sessionStr) {
         // Redirection logic
         if (!window.location.pathname.includes('login.html') && !window.location.pathname.includes('signup.html')) {
-             window.location.href = '/login.html';
+            window.location.href = '/login.html';
         }
         return;
     }
-    
+
     try {
         const session = JSON.parse(sessionStr);
         const user = session.user;
-        
+
         // Get full name from metadata (stored as full_name during our new signup)
         let fullName = user.user_metadata?.full_name || user.user_metadata?.username || user.email.split('@')[0];
-        
+
         // Update UI displays
         const nameEl = document.getElementById('usernameDisplay');
         const emailEl = document.getElementById('userEmailDisplay');
@@ -2123,10 +2123,10 @@ async function initUser() {
         const avatarEl = document.getElementById('userAvatar');
         const initialsEl = document.getElementById('userInitials');
         const imgEl = document.getElementById('userAvatarImg');
-        
+
         if (nameEl) nameEl.innerText = fullName;
         if (emailEl) emailEl.innerText = user.email;
-        
+
         // Avatar logic
         const avatarUrl = user.user_metadata?.avatar_url;
         if (avatarUrl && imgEl && initialsEl) {
@@ -2136,8 +2136,8 @@ async function initUser() {
         } else if (avatarEl) {
             if (imgEl) imgEl.style.display = 'none';
             if (initialsEl) initialsEl.style.display = 'inline';
-            
-            let initials = 'AD'; 
+
+            let initials = 'AD';
             const parts = fullName.trim().split(/[\s_\.-]+/);
             if (parts.length >= 2) {
                 initials = (parts[0][0] + parts[1][0]).toUpperCase();
@@ -2155,26 +2155,26 @@ async function initUser() {
     }
 }
 
-window.toggleUserDropdown = function(e) {
+window.toggleUserDropdown = function (e) {
     if (e) e.stopPropagation();
     const dropdown = document.getElementById('userDropdown');
     if (!dropdown) return;
     const isOpen = dropdown.classList.contains('active');
-    
+
     // Close other notification dropdowns if open
     const notifDropdown = document.getElementById('notifDropdown');
     if (notifDropdown) notifDropdown.classList.remove('active');
     // Close table dropdowns
     document.querySelectorAll('.dropdown-menu').forEach(d => d.classList.remove('active'));
-    
+
     if (!isOpen) dropdown.classList.add('active');
     else dropdown.classList.remove('active');
 };
 
-window.switchThemeFromDropdown = function() {
+window.switchThemeFromDropdown = function () {
     const theme = localStorage.getItem('theme') || 'light';
     const newTheme = theme === 'dark' ? 'light' : 'dark';
-    
+
     if (newTheme === 'dark') {
         document.documentElement.setAttribute('data-theme', 'dark');
         localStorage.setItem('theme', 'dark');
@@ -2182,12 +2182,12 @@ window.switchThemeFromDropdown = function() {
         document.documentElement.removeAttribute('data-theme');
         localStorage.setItem('theme', 'light');
     }
-    
+
     syncThemeToggle();
     calculateDashboardStats();
 };
 
-window.logout = function() {
+window.logout = function () {
     localStorage.removeItem('admin_session');
     document.body.classList.add('page-exit');
     setTimeout(() => {
@@ -2199,7 +2199,7 @@ window.logout = function() {
 // SETTINGS ACTIONS
 // ═══════════════════════════════════════
 
-window.handleProfilePicUpload = function(input) {
+window.handleProfilePicUpload = function (input) {
     const file = input.files[0];
     if (!file) return;
 
@@ -2216,10 +2216,10 @@ window.handleProfilePicUpload = function(input) {
     input.value = ''; // Reset for next selection
 };
 
-window.openAdjustAvatarModal = function(imgSrc, fileName, fileType) {
+window.openAdjustAvatarModal = function (imgSrc, fileName, fileType) {
     const modal = document.getElementById('modalBox');
     const overlay = document.getElementById('modalOverlay');
-    
+
     modal.innerHTML = `
         <div class="modal-header">
             <h2 style="font-size:18px; font-weight:700;">Adjust Profile Picture</h2>
@@ -2242,14 +2242,14 @@ window.openAdjustAvatarModal = function(imgSrc, fileName, fileType) {
             <button class="btn-outline" style="flex:0.5; justify-content:center;" onclick="document.getElementById('modalOverlay').style.display='none'">Cancel</button>
         </div>
     `;
-    
+
     overlay.style.display = 'flex';
-    
+
     // Drag/Zoom Logic
     const img = document.getElementById('cropImage');
     const container = document.getElementById('cropContainer');
     const slider = document.getElementById('zoomSlider');
-    
+
     let isDragging = false;
     let startX, startY;
     let currentX = 0, currentY = 0;
@@ -2294,37 +2294,37 @@ window.openAdjustAvatarModal = function(imgSrc, fileName, fileType) {
     };
 };
 
-window.finalizeAvatarAdjustment = async function(fileName, fileType) {
+window.finalizeAvatarAdjustment = async function (fileName, fileType) {
     const img = document.getElementById('cropImage');
     const container = document.getElementById('cropContainer');
     const slider = document.getElementById('zoomSlider');
-    
+
     // Create a canvas to extract the circular area
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     canvas.width = 400; // Final size
     canvas.height = 400;
-    
+
     // Calculate relative positioning
     const rect = img.getBoundingClientRect();
     const contRect = container.getBoundingClientRect();
-    
+
     const scaleX = img.naturalWidth / rect.width;
     const scaleY = img.naturalHeight / rect.height;
-    
+
     const sourceX = (contRect.left - rect.left) * scaleX;
     const sourceY = (contRect.top - rect.top) * scaleY;
     const sourceW = contRect.width * scaleX;
     const sourceH = contRect.height * scaleY;
-    
+
     ctx.beginPath();
     ctx.arc(200, 200, 200, 0, Math.PI * 2);
     ctx.clip();
-    
+
     ctx.drawImage(img, sourceX, sourceY, sourceW, sourceH, 0, 0, 400, 400);
-    
+
     const base64Content = canvas.toDataURL(fileType, 0.9);
-    
+
     try {
         const session = JSON.parse(localStorage.getItem('admin_session'));
         const res = await fetch('/api/profile?route=upload-avatar', {
@@ -2345,7 +2345,7 @@ window.finalizeAvatarAdjustment = async function(fileName, fileType) {
         document.getElementById('settingsAvatarImg').src = imgUrl;
         document.getElementById('settingsAvatarImg').style.display = 'block';
         document.getElementById('settingsAvatarInitials').style.display = 'none';
-        
+
         // Instant top-bar update (preview only until Save Profile)
         const topImg = document.getElementById('userAvatarImg');
         const topInitials = document.getElementById('userInitials');
@@ -2354,7 +2354,7 @@ window.finalizeAvatarAdjustment = async function(fileName, fileType) {
             topImg.style.display = 'block';
             topInitials.style.display = 'none';
         }
-        
+
         window._pendingAvatarUrl = imgUrl;
         document.getElementById('modalOverlay').style.display = 'none';
         showToast('Avatar Adjusted', 'Profile photo updated successfully. Click "Save Profile" to finalize.', 'success');
@@ -2364,7 +2364,7 @@ window.finalizeAvatarAdjustment = async function(fileName, fileType) {
     }
 };
 
-window.removeProfilePic = function() {
+window.removeProfilePic = function () {
     const previewImg = document.getElementById('settingsAvatarImg');
     const previewInitials = document.getElementById('settingsAvatarInitials');
     previewImg.src = '';
@@ -2374,7 +2374,7 @@ window.removeProfilePic = function() {
     window._profilePicRemoved = true;
 };
 
-window.saveProfileSettings = async function() {
+window.saveProfileSettings = async function () {
     const fullName = document.getElementById('settingsFullName').value.trim();
     const email = document.getElementById('settingsEmail').value.trim();
     const session = JSON.parse(localStorage.getItem('admin_session'));
@@ -2414,7 +2414,7 @@ window.saveProfileSettings = async function() {
     }
 };
 
-window.savePasswordSettings = async function() {
+window.savePasswordSettings = async function () {
     const currPass = document.getElementById('settingsCurrentPassword').value;
     const newPass = document.getElementById('settingsNewPassword').value;
     const confPass = document.getElementById('settingsConfirmPassword').value;
@@ -2447,11 +2447,11 @@ window.savePasswordSettings = async function() {
     }
 };
 
-window.scrollIntoView = function(id) {
+window.scrollIntoView = function (id) {
     const el = document.getElementById(id);
     if (!el) return;
     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    
+
     // Update active state in settings nav
     document.querySelectorAll('.settings-nav-item').forEach(btn => {
         if (btn.getAttribute('onclick')?.includes(`'${id}'`)) {
@@ -2469,7 +2469,7 @@ initUser();
 // WHATSAPP CRM LOGIC
 // ═══════════════════════════════════════
 
-window.initWhatsAppView = async function() {
+window.initWhatsAppView = async function () {
     console.log("Initializing WhatsApp View...");
     await fetchActiveChatContacts();
     setupWhatsAppRealtime();
@@ -2528,9 +2528,9 @@ async function fetchActiveChatContacts() {
     `).join('');
 }
 
-window.selectChatContact = async function(leadId, name, phone) {
+window.selectChatContact = async function (leadId, name, phone) {
     activeChatLeadId = leadId;
-    
+
     // Update UI active states
     document.querySelectorAll('.contact-item').forEach(el => el.classList.remove('active'));
     // Find the element by leadId or Name
@@ -2545,7 +2545,7 @@ window.selectChatContact = async function(leadId, name, phone) {
     document.getElementById('activeChatStatus').innerText = 'online';
     document.getElementById('activeChatAvatar').innerText = name.charAt(0);
     document.getElementById('chatInputArea').style.display = 'flex';
-    
+
     await fetchChatMessages(leadId);
 };
 
@@ -2583,11 +2583,11 @@ function renderMessages() {
             <div class="msg-time">${new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
         </div>
     `).join('');
-    
+
     chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
-window.sendWhatsAppMessage = async function() {
+window.sendWhatsAppMessage = async function () {
     const input = document.getElementById('chatInputMessage');
     const message = input.value.trim();
     if (!message || !activeChatLeadId) return;
@@ -2600,7 +2600,7 @@ window.sendWhatsAppMessage = async function() {
 
     const phone = lead.phone || lead.mobile_number;
     input.value = '';
-    
+
     try {
         const response = await fetch('/api/whatsapp', {
             method: 'POST',
@@ -2623,7 +2623,7 @@ window.sendWhatsAppMessage = async function() {
     }
 };
 
-window.handleChatKeydown = function(e) {
+window.handleChatKeydown = function (e) {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         window.sendWhatsAppMessage();
@@ -2649,16 +2649,307 @@ function setupWhatsAppRealtime() {
         .subscribe();
 }
 
-window.filterChatContacts = function() {
+window.filterChatContacts = function () {
     const query = document.getElementById('chatSearchInput').value.toLowerCase();
     const items = document.querySelectorAll('.contact-item');
     items.forEach(item => {
-        const name = item.querySelector('.contact-name').innerText.toLowerCase();
-        item.style.display = name.includes(query) ? 'flex' : 'none';
+        const nameNode = item.querySelector('.contact-name');
+        if (nameNode) {
+            const name = nameNode.innerText.toLowerCase();
+            item.style.display = name.includes(query) ? 'flex' : 'none';
+        }
     });
 };
 
-window.openWhatsAppChat = function(leadId, name, phone) {
-    window.switchView('whatsapp');
+window.openWhatsAppChat = function (leadId, name, phone) {
+    window.switchView('comm');
     window.selectChatContact(leadId, name, phone);
 };
+
+// ═══════════════════════════════════════
+// SMART DIALER & COMMUNICATION HUB
+// ═══════════════════════════════════════
+
+window.toggleDialer = function () {
+    const dialer = document.getElementById('globalDialer');
+    if (!dialer) return;
+    const isVisible = dialer.classList.contains('active');
+
+    if (isVisible) {
+        dialer.classList.remove('active');
+        dialer.style.display = 'none';
+    } else {
+        dialer.style.display = 'flex';
+        // Force reflow for animation
+        dialer.offsetHeight;
+        dialer.classList.add('active');
+        const input = document.getElementById('dialerInput');
+        if (input) input.focus();
+    }
+};
+
+window.appendDialer = function (val) {
+    const input = document.getElementById('dialerInput');
+    if (input) {
+        input.value += val;
+        onDialerInputChange();
+    }
+};
+
+window.backspaceDialer = function () {
+    const input = document.getElementById('dialerInput');
+    if (input) {
+        input.value = input.value.slice(0, -1);
+        onDialerInputChange();
+    }
+};
+
+window.onDialerInputChange = function () {
+    const input = document.getElementById('dialerInput');
+    if (!input) return;
+    const number = input.value.trim();
+    const nameDisplay = document.getElementById('dialerLeadName');
+    const statusDisplay = document.getElementById('dialerLeadStatus');
+
+    if (!number) {
+        if (nameDisplay) nameDisplay.innerText = "Unknown Number";
+        if (statusDisplay) statusDisplay.innerText = "Not in CRM";
+        return;
+    }
+
+    // Lead recognition logic
+    const cleanNumber = number.replace(/\D/g, '');
+
+    const matchedLead = submissionsData.find(lead => {
+        if (!lead.phone) return false;
+        const cleanLeadPhone = lead.phone.replace(/\D/g, '');
+        return cleanLeadPhone === cleanNumber ||
+            (cleanLeadPhone.length >= 10 && cleanNumber.length >= 10 && cleanLeadPhone.slice(-10) === cleanNumber.slice(-10));
+    });
+
+    if (matchedLead) {
+        if (nameDisplay) {
+            nameDisplay.innerText = matchedLead.name || "Unnamed Lead";
+            nameDisplay.style.color = "var(--primary)";
+        }
+        if (statusDisplay) statusDisplay.innerText = `Matched Lead (${getStatusColor(matchedLead.status)})`;
+    } else {
+        if (nameDisplay) {
+            nameDisplay.innerText = "Unknown Number";
+            nameDisplay.style.color = "var(--text-main)";
+        }
+        if (statusDisplay) statusDisplay.innerText = "Not in CRM";
+    }
+};
+
+window.startCall = function () {
+    const dInput = document.getElementById('dialerInput');
+    const dName = document.getElementById('dialerLeadName');
+    if (!dInput || !dName) return;
+    
+    const number = dInput.value;
+    const name = dName.innerText;
+
+    if (!number) return showNotification('Please enter a number', 'warning');
+
+    showNotification(`Initiating call to ${name || number}...`, 'info');
+
+    const callBtn = document.querySelector('.dial-btn.call');
+    if (!callBtn) return;
+    const originalContent = callBtn.innerHTML;
+
+    callBtn.classList.add('calling');
+    callBtn.innerHTML = '<span style="color:white; font-size:10px; font-weight:bold;">HANGUP</span>';
+    callBtn.onclick = function () {
+        showNotification('Call ended.', 'info');
+        resetCallBtn();
+    };
+
+    function resetCallBtn() {
+        callBtn.classList.remove('calling');
+        callBtn.innerHTML = originalContent;
+        callBtn.onclick = startCall;
+    }
+
+    setTimeout(() => {
+        if (callBtn.classList.contains('calling')) {
+            showNotification(`Call to ${name} failed: Vonage API credentials required for live calls.`, 'error');
+            resetCallBtn();
+        }
+    }, 4000);
+};
+
+window.openSmsFromDialer = function () {
+    const input = document.getElementById('dialerInput');
+    if (!input || !input.value) return;
+
+    toggleDialer();
+    switchView('comm');
+    showNotification(`Ready to text ${input.value}`, 'info');
+};
+
+window.switchView = function (viewId) {
+    console.log("Switching to", viewId);
+
+    // Toggle sidebar
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) sidebar.classList.remove('mobile-active');
+
+    // UI mapping for naming
+    const titleMap = {
+        'dashboard': 'Dashboard',
+        'companies': 'Solicitor Firms',
+        'activity': 'Lead Activity',
+        'leads': 'Lead Management',
+        'comm': 'Communication Hub',
+        'settings': 'Settings'
+    };
+
+    // Remove active class from all views and nav items
+    document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+    // Handle view mapping (if target exists)
+    const targetView = document.getElementById(viewId + 'View');
+    const targetNav = document.getElementById('nav-' + viewId);
+
+    if (targetView) targetView.classList.add('active');
+    if (targetNav) targetNav.classList.add('active');
+
+    // Update Topbar Title
+    const titleEl = document.getElementById('topbarTitle');
+    if (titleEl && titleMap[viewId]) {
+        titleEl.innerText = titleMap[viewId];
+    }
+
+    if (viewId === 'comm') {
+        if (typeof renderCommThreads === 'function') renderCommThreads();
+    }
+};
+
+window.renderCommThreads = function() {
+    const threadList = document.getElementById('commThreadList');
+    if (!threadList) return;
+
+    if (submissionsData.length === 0) {
+        threadList.innerHTML = '<div class="empty-state">No leads found to message.</div>';
+        return;
+    }
+
+    // Sort leads by date for the thread list
+    const sortedLeads = [...submissionsData].sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+
+    threadList.innerHTML = sortedLeads.map(lead => `
+        <div class="comm-thread-item" onclick="window.selectCommContact('${lead.id}')">
+            <div class="comm-avatar">${lead.name?.charAt(0) || '?'}</div>
+            <div class="comm-thread-info">
+                <div class="comm-thread-top">
+                    <span class="comm-thread-name">${lead.name || 'Unknown Lead'}</span>
+                    <span class="comm-thread-time">${new Date(lead.created_at).toLocaleDateString()}</span>
+                </div>
+                <div class="comm-thread-last">${lead.phone || 'No phone number'}</div>
+            </div>
+        </div>
+    `).join('');
+};
+
+window.filterCommThreads = function() {
+    const qNode = document.getElementById('commSearchInput');
+    if (!qNode) return;
+    const q = qNode.value.toLowerCase();
+    const items = document.querySelectorAll('.comm-thread-item');
+    items.forEach(item => {
+        const nameNode = item.querySelector('.comm-thread-name');
+        const phoneNode = item.querySelector('.comm-thread-last');
+        if (nameNode && phoneNode) {
+            const name = nameNode.innerText.toLowerCase();
+            const phone = phoneNode.innerText.toLowerCase();
+            item.style.display = (name.includes(q) || phone.includes(q)) ? 'flex' : 'none';
+        }
+    });
+};
+
+window.selectCommContact = function(leadId) {
+    const lead = submissionsData.find(l => l.id === leadId);
+    if (!lead) return;
+
+    activeChatLeadId = leadId;
+
+    // Update Header
+    const avatarEl = document.getElementById('activeCommAvatar');
+    const nameEl = document.getElementById('activeCommName');
+    const statusEl = document.getElementById('activeCommStatus');
+    
+    if (avatarEl) avatarEl.innerText = lead.name?.charAt(0) || '?';
+    if (nameEl) nameEl.innerText = lead.name || 'Unnamed Lead';
+    if (statusEl) statusEl.innerText = lead.phone || 'No Phone';
+
+    // Show Input Area
+    const inputArea = document.getElementById('commInputArea');
+    if (inputArea) inputArea.style.display = 'flex';
+
+    // Highlight active thread
+    document.querySelectorAll('.comm-thread-item').forEach(item => {
+        const nameNode = item.querySelector('.comm-thread-name');
+        if (nameNode) {
+            const name = nameNode.innerText;
+            item.classList.toggle('active', name === lead.name);
+        }
+    });
+
+    // Clear and Show Welcome/Previous Msgs (Mock)
+    const msgContainer = document.getElementById('commMessages');
+    if (msgContainer) {
+        msgContainer.innerHTML = `
+            <div class="msg-bubble inbound">
+                Hello, I have an inquiry about a housing disrepair claim.
+                <span class="msg-time">${new Date(lead.created_at).toLocaleTimeString()}</span>
+            </div>
+            <div class="msg-bubble outbound">
+                Hi ${lead.name.split(' ')[0]}, thanks for reaching out. An admin will be calling you from our new Vonage line shortly.
+                <span class="msg-time">Just now</span>
+            </div>
+        `;
+        msgContainer.scrollTop = msgContainer.scrollHeight;
+    }
+};
+
+window.handleCommKeydown = function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendCommSms();
+    }
+};
+
+window.sendCommSms = function() {
+    const input = document.getElementById('commInputMessage');
+    if (!input) return;
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    const msgContainer = document.getElementById('commMessages');
+    if (!msgContainer) return;
+    
+    const bubble = document.createElement('div');
+    bubble.className = 'msg-bubble outbound';
+    bubble.innerHTML = `${msg}<span class="msg-time">Sending...</span>`;
+    msgContainer.appendChild(bubble);
+    
+    input.value = '';
+    msgContainer.scrollTop = msgContainer.scrollHeight;
+
+    setTimeout(() => {
+        const timeNode = bubble.querySelector('.msg-time');
+        if (timeNode) timeNode.innerText = 'Sent';
+        showNotification('SMS sent successfully.', 'success');
+    }, 1000);
+};
+
+// Global shortcuts
+document.addEventListener('keydown', (e) => {
+    if (e.key.toLowerCase() === 'p' && e.ctrlKey) {
+        e.preventDefault();
+        toggleDialer();
+    }
+});
+

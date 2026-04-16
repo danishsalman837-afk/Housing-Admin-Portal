@@ -2844,13 +2844,13 @@
                 </div>
                 <span>Lead Management</span>
             </div>
-            <div class="nav-item" id="nav-whatsapp" onclick="switchView('whatsapp')">
-                <div class="nav-icon" style="background:var(--green); color:white;">
+            <div class="nav-item" id="nav-comm" onclick="switchView('comm')">
+                <div class="nav-icon" style="background:var(--primary); color:white;">
                     <svg viewBox="0 0 24 24" style="fill:white;">
-                        <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01C17.18 3.03 14.69 2 12.04 2zm5.8 14.21c-.24.67-1.17 1.27-1.62 1.35-.46.07-.9.12-2.58-.54-2.03-.79-3.34-2.85-3.44-2.98-.1-.14-.85-1.13-.85-2.16s.54-1.59.73-1.78c.19-.19.41-.24.55-.24.14 0 .28.01.4.01.13 0 .31-.05.48.35.17.41.6.1.6 1.48s-.1.67-.32.91c-.22.24-.46.54-.66.73-.21.21-.43.41-.19.82.23.41.9.1 .9 1.48 1.63 1.45 1.54 1.83 1.75 2.05.21.21.46.23.63.1.17-.13.73-.85.93-1.14.19-.29.41-.24.67-.14s1.65.78 1.93.92c.28.14.46.21.53.33.07.12.07.78-.17 1.45z"/>
+                        <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
                     </svg>
                 </div>
-                <span>WhatsApp CRM</span>
+                <span>Communication Hub</span>
             </div>
             <div class="nav-item" id="nav-settings" onclick="switchView('settings')">
                 <div class="nav-icon">
@@ -2881,6 +2881,13 @@
             </button>
             <span class="topbar-title" id="topbarTitle">Dashboard</span>
             <div class="topbar-actions">
+                <!-- Phone Dialer Toggle -->
+                <button class="icon-button" id="phoneToggle" onclick="toggleDialer()" title="Open Dialer (P)">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+                    </svg>
+                </button>
+
                 <!-- Notification Bell -->
                 <div class="notif-bell" id="notifBell" onclick="toggleNotifDropdown()">
                     <svg viewBox="0 0 24 24">
@@ -2948,6 +2955,45 @@
                 <div class="topbar-badge">
                     <span class="dot"></span>
                     Live
+                </div>
+            </div>
+
+            <!-- ══════════════ GLOBAL SMART DIALER ══════════════ -->
+            <div id="globalDialer" class="dialer-container">
+                <div class="dialer-header">
+                    <div class="dialer-lead-info">
+                        <span id="dialerLeadName">Unknown Number</span>
+                        <span id="dialerLeadStatus">Not in CRM</span>
+                    </div>
+                    <button class="close-dialer" onclick="toggleDialer()">×</button>
+                </div>
+                <div class="dialer-screen">
+                    <input type="text" id="dialerInput" placeholder="Enter number..." oninput="onDialerInputChange()">
+                </div>
+                <div class="dialer-keypad">
+                    <button onclick="appendDialer('1')">1<span>&nbsp;</span></button>
+                    <button onclick="appendDialer('2')">2<span>ABC</span></button>
+                    <button onclick="appendDialer('3')">3<span>DEF</span></button>
+                    <button onclick="appendDialer('4')">4<span>GHI</span></button>
+                    <button onclick="appendDialer('5')">5<span>JKL</span></button>
+                    <button onclick="appendDialer('6')">6<span>MNO</span></button>
+                    <button onclick="appendDialer('7')">7<span>PQRS</span></button>
+                    <button onclick="appendDialer('8')">8<span>TUV</span></button>
+                    <button onclick="appendDialer('9')">9<span>WXYZ</span></button>
+                    <button onclick="appendDialer('*')">*</button>
+                    <button onclick="appendDialer('0')">0<span>+</span></button>
+                    <button onclick="appendDialer('#')">#</button>
+                </div>
+                <div class="dialer-actions">
+                    <button class="dial-btn call" onclick="startCall()">
+                        <svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+                    </button>
+                    <button class="dial-btn sms" onclick="openSmsFromDialer()">
+                        <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
+                    </button>
+                    <button class="dial-btn backspace" onclick="backspaceDialer()">
+                        <svg viewBox="0 0 24 24"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"/></svg>
+                    </button>
                 </div>
             </div>
         </div>
@@ -3275,54 +3321,62 @@
             </div>
         </div>
 
-        <!-- ─── WHATSAPP CRM VIEW ─── -->
-        <div id="whatsappView" class="view-container">
+        <!-- ─── COMMUNICATION HUB VIEW ─── -->
+        <div id="commView" class="view-container">
             <div class="page-header">
                 <div class="page-header-left">
-                    <h1>WhatsApp CRM</h1>
-                    <p>Communicate with your leads directly via official WhatsApp</p>
+                    <h1>Communication Hub</h1>
+                    <p>Manage SMS templates, view call logs, and chat with your leads in one place.</p>
                 </div>
-                <div class="topbar-badge" style="background:var(--blue-light); color:var(--blue);">
-                    <span class="dot" style="background:var(--blue);"></span>
-                    WhatsApp Cloud API Connected
+                <div class="topbar-badge" style="background:var(--primary-light); color:var(--primary);">
+                    <span class="dot" style="background:var(--primary);"></span>
+                    Unified Comms Ready
                 </div>
             </div>
 
-            <div class="whatsapp-layout">
-                <!-- Sidebar / Contact List -->
-                <div class="chat-sidebar">
-                    <div class="chat-search">
-                        <input type="text" placeholder="Search conversations..." id="chatSearchInput" onkeyup="window.filterChatContacts()">
+            <div class="comm-hub-layout">
+                <!-- Sidebar / Thread List -->
+                <div class="comm-sidebar">
+                    <div class="comm-sidebar-header">
+                        <div class="comm-search">
+                            <input type="text" placeholder="Search threads..." id="commSearchInput" onkeyup="window.filterCommThreads()">
+                        </div>
                     </div>
-                    <div class="contact-list" id="chatContactList">
-                        <!-- Contacts will be rendered here -->
-                        <div class="empty-state">No active chats</div>
+                    <div class="comm-list" id="commThreadList">
+                        <div class="empty-state" style="padding:40px; text-align:center; color:var(--text-muted);">
+                            No active communication threads.
+                        </div>
                     </div>
                 </div>
 
-                <!-- Chat Area -->
-                <div class="chat-area">
-                    <div id="activeChatHeader" class="chat-header">
-                        <div class="header-info">
-                            <div class="header-avatar" id="activeChatAvatar">?</div>
+                <!-- Chat / Main Area -->
+                <div class="comm-main">
+                    <div id="activeCommHeader" class="comm-main-header">
+                        <div class="comm-header-user">
+                            <div class="comm-avatar" id="activeCommAvatar">?</div>
                             <div>
-                                <div class="header-name" id="activeChatName">Select a contact</div>
-                                <div class="header-status" id="activeChatStatus">to start messaging</div>
+                                <div class="comm-thread-name" id="activeCommName">Select a conversation</div>
+                                <div id="activeCommStatus" style="font-size:12px; color:var(--text-muted);">Pick a lead to view history</div>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="chat-messages" id="chatMessages">
-                        <div class="chat-welcome">
-                            <div class="welcome-icon">💬</div>
-                            <h3>Private & Secure Messaging</h3>
-                            <p>Select a lead from the list or the main lead table to begin a conversation.</p>
+                        <div class="comm-header-actions">
+                            <button class="icon-button" onclick="toggleDialer()" title="Call Lead">
+                                <svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+                            </button>
                         </div>
                     </div>
 
-                    <div class="chat-input-area" id="chatInputArea" style="display:none;">
-                        <textarea id="chatInputMessage" placeholder="Type a message..." rows="1" onkeydown="window.handleChatKeydown(event)"></textarea>
-                        <button class="btn-action" onclick="window.sendWhatsAppMessage()">
+                    <div class="comm-messages" id="commMessages">
+                        <div class="chat-welcome" style="margin:auto;">
+                            <div class="welcome-icon">💬</div>
+                            <h3>Unified Messaging & Calling</h3>
+                            <p>Select a lead from the sidebar or click the phone icon to start a new communication.</p>
+                        </div>
+                    </div>
+
+                    <div class="comm-input-area" id="commInputArea" style="display:none;">
+                        <textarea id="commInputMessage" placeholder="Type an SMS message..." rows="1" onkeydown="window.handleCommKeydown(event)"></textarea>
+                        <button class="btn-action" onclick="window.sendCommSms()" style="background:var(--primary); border:none; padding:10px 18px; border-radius:10px; cursor:pointer;">
                             <svg viewBox="0 0 24 24" width="18" height="18" fill="white"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
                         </button>
                     </div>
