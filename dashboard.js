@@ -3195,12 +3195,17 @@ window._renderSnippetModal = function() {
     box.style.overflow = 'hidden';
 
     var folderListHtml = store.folders.map(function(f) {
-        var activeCls = f.id === activeId ? 'active' : '';
+        var isSelected = f.id === activeId;
+        var activeCls = isSelected ? 'active' : '';
+        var icon = isSelected ? 
+            '<svg viewBox="0 0 24 24" style="width:18px; height:18px; fill:currentColor;"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-6 10H7v-2h7v2zm3-4H7v-2h10v2z"/></svg>' :
+            '<svg viewBox="0 0 24 24" style="width:18px; height:18px; fill:currentColor;"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>';
+            
         return '<div class="snippet-folder-item ' + activeCls + '" onclick="window._selectSnippetFolder(\'' + f.id + '\')">' +
             '<div style="display:flex; align-items:center; gap:12px;">' +
-                '<span style="font-size:18px;">' + (f.id === activeId ? '📂' : '📁') + '</span> ' + f.name + 
+                icon + ' ' + f.name + 
             '</div>' +
-            '<button onclick="event.stopPropagation(); window._deleteSnippetFolder(\'' + f.id + '\')" style="background:none; border:none; color:inherit; opacity:0.5; font-size:14px; cursor:pointer;" title="Delete Folder">✕</button>' +
+            '<button onclick="event.stopPropagation(); window._deleteSnippetFolder(\'' + f.id + '\')" style="background:none; border:none; color:inherit; opacity:0.4; font-size:14px; cursor:pointer;" title="Delete Folder">✕</button>' +
             '</div>';
     }).join('');
 

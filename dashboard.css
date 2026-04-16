@@ -2423,7 +2423,23 @@ select.status-pill {
 .snippet-folder-item.active {
     background: var(--primary);
     color: #fff;
-    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    font-weight: 700;
+    box-shadow: 0 10px 20px -5px rgba(79, 70, 229, 0.4);
+    transform: translateX(4px);
+    position: relative;
+    border-radius: 14px;
+}
+
+.snippet-folder-item.active::after {
+    content: '';
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 6px;
+    height: 6px;
+    background: rgba(255,255,255,0.4);
+    border-radius: 50%;
 }
 
 .snippet-item-compact {
