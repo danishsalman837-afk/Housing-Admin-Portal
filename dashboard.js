@@ -2081,6 +2081,14 @@ function initRealtimeSubscription() {
     }, 10000); // Poll every 10 seconds
 }
 
+window.showNotification = function(message, type = 'info') {
+    let title = 'Notification';
+    if (type === 'success') title = 'Success';
+    else if (type === 'error' || type === 'danger') title = 'Error';
+    else if (type === 'warning') title = 'Warning';
+    window.showToast(title, message, type === 'error' ? 'danger' : type);
+};
+
 window.showToast = function (title, message, type = 'info') {
     let container = document.getElementById('app-toast-container');
     if (!container) {
