@@ -108,32 +108,53 @@ const leadFieldLabels = {
 };
 
 window.switchView = function (view) {
+    console.log("Switching to view:", view);
+    
+    // Toggle sidebar for mobile
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) sidebar.classList.remove('mobile-active');
+
+    const titleMap = {
+        'dashboard': 'Dashboard',
+        'companies': 'Solicitor Firms',
+        'activity': 'Lead Activity',
+        'leads': 'Lead Management',
+        'whatsapp': 'Legacy WhatsApp',
+        'comm': 'Communication Hub',
+        'settings': 'Settings'
+    };
+
+    // Remove active class from all views and nav items
     document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
 
+    // Handle view mapping
+    const targetView = document.getElementById(view + 'View');
+    const targetNav = document.getElementById('nav-' + view);
+
+    if (targetView) targetView.classList.add('active');
+    if (targetNav) targetNav.classList.add('active');
+
+    // Update Topbar Title
+    const titleEl = document.getElementById('topbarTitle');
+    if (titleEl && titleMap[view]) {
+        titleEl.innerText = titleMap[view];
+    }
+
+    // View-specific initializers
     if (view === 'dashboard') {
-        document.getElementById('dashboardView').classList.add('active');
-        document.getElementById('nav-dashboard').classList.add('active');
         calculateDashboardStats();
     } else if (view === 'companies') {
-        document.getElementById('companiesView').classList.add('active');
-        document.getElementById('nav-companies').classList.add('active');
         renderCompanies();
     } else if (view === 'activity') {
-        document.getElementById('activityView').classList.add('active');
-        document.getElementById('nav-activity').classList.add('active');
         renderFilteredActivity();
     } else if (view === 'whatsapp') {
-        document.getElementById('whatsappView').classList.add('active');
-        document.getElementById('nav-whatsapp').classList.add('active');
         window.initWhatsAppView();
+    } else if (view === 'comm') {
+        if (typeof renderCommThreads === 'function') renderCommThreads();
     } else if (view === 'settings') {
-        document.getElementById('settingsView').classList.add('active');
-        document.getElementById('nav-settings').classList.add('active');
         populateSettings();
     } else {
-        document.getElementById('leadsView').classList.add('active');
-        document.getElementById('nav-leads').classList.add('active');
         renderFilteredLeads();
     }
 };
@@ -2788,45 +2809,6 @@ window.openSmsFromDialer = function () {
     showNotification(`Ready to text ${input.value}`, 'info');
 };
 
-window.switchView = function (viewId) {
-    console.log("Switching to", viewId);
-
-    // Toggle sidebar
-    const sidebar = document.getElementById('sidebar');
-    if (sidebar) sidebar.classList.remove('mobile-active');
-
-    // UI mapping for naming
-    const titleMap = {
-        'dashboard': 'Dashboard',
-        'companies': 'Solicitor Firms',
-        'activity': 'Lead Activity',
-        'leads': 'Lead Management',
-        'comm': 'Communication Hub',
-        'settings': 'Settings'
-    };
-
-    // Remove active class from all views and nav items
-    document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-
-    // Handle view mapping (if target exists)
-    const targetView = document.getElementById(viewId + 'View');
-    const targetNav = document.getElementById('nav-' + viewId);
-
-    if (targetView) targetView.classList.add('active');
-    if (targetNav) targetNav.classList.add('active');
-
-    // Update Topbar Title
-    const titleEl = document.getElementById('topbarTitle');
-    if (titleEl && titleMap[viewId]) {
-        titleEl.innerText = titleMap[viewId];
-    }
-
-    if (viewId === 'comm') {
-        if (typeof renderCommThreads === 'function') renderCommThreads();
-    }
-};
-
 window.renderCommThreads = function() {
     const threadList = document.getElementById('commThreadList');
     if (!threadList) return;
@@ -2836,21 +2818,30 @@ window.renderCommThreads = function() {
         return;
     }
 
-    // Sort leads by date for the thread list
-    const sortedLeads = [...submissionsData].sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+    // Sort leads by date for the thread list (using item.timestamp or item.created_at)
+    const sortedLeads = [...submissionsData].sort((a,b) => {
+        const dateA = new Date(a.timestamp || a.created_at);
+        const dateB = new Date(b.timestamp || b.created_at);
+        return dateB - dateA;
+    });
 
-    threadList.innerHTML = sortedLeads.map(lead => `
-        <div class="comm-thread-item" onclick="window.selectCommContact('${lead.id}')">
-            <div class="comm-avatar">${lead.name?.charAt(0) || '?'}</div>
-            <div class="comm-thread-info">
-                <div class="comm-thread-top">
-                    <span class="comm-thread-name">${lead.name || 'Unknown Lead'}</span>
-                    <span class="comm-thread-time">${new Date(lead.created_at).toLocaleDateString()}</span>
+    threadList.innerHTML = sortedLeads.map(lead => {
+        const leadDate = new Date(lead.timestamp || lead.created_at);
+        const dateStr = isNaN(leadDate) ? '---' : leadDate.toLocaleDateString();
+        
+        return `
+            <div class="comm-thread-item" onclick="window.selectCommContact('${lead.id}')">
+                <div class="comm-avatar">${lead.name?.charAt(0) || lead.first_name?.charAt(0) || '?'}</div>
+                <div class="comm-thread-info">
+                    <div class="comm-thread-top">
+                        <span class="comm-thread-name">${lead.name || (lead.first_name + ' ' + lead.last_name) || 'Unknown Lead'}</span>
+                        <span class="comm-thread-time">${dateStr}</span>
+                    </div>
+                    <div class="comm-thread-last">${lead.phone || lead.mobile_number || 'No phone number'}</div>
                 </div>
-                <div class="comm-thread-last">${lead.phone || 'No phone number'}</div>
             </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 };
 
 window.filterCommThreads = function() {
@@ -2870,7 +2861,7 @@ window.filterCommThreads = function() {
 };
 
 window.selectCommContact = function(leadId) {
-    const lead = submissionsData.find(l => l.id === leadId);
+    const lead = submissionsData.find(l => String(l.id) === String(leadId));
     if (!lead) return;
 
     activeChatLeadId = leadId;
@@ -2880,9 +2871,12 @@ window.selectCommContact = function(leadId) {
     const nameEl = document.getElementById('activeCommName');
     const statusEl = document.getElementById('activeCommStatus');
     
-    if (avatarEl) avatarEl.innerText = lead.name?.charAt(0) || '?';
-    if (nameEl) nameEl.innerText = lead.name || 'Unnamed Lead';
-    if (statusEl) statusEl.innerText = lead.phone || 'No Phone';
+    const leadName = lead.name || (lead.first_name + ' ' + lead.last_name) || 'Unnamed Lead';
+    const leadPhone = lead.phone || lead.mobile_number || 'No Phone';
+
+    if (avatarEl) avatarEl.innerText = leadName.charAt(0) || '?';
+    if (nameEl) nameEl.innerText = leadName;
+    if (statusEl) statusEl.innerText = leadPhone;
 
     // Show Input Area
     const inputArea = document.getElementById('commInputArea');
@@ -2893,20 +2887,23 @@ window.selectCommContact = function(leadId) {
         const nameNode = item.querySelector('.comm-thread-name');
         if (nameNode) {
             const name = nameNode.innerText;
-            item.classList.toggle('active', name === lead.name);
+            item.classList.toggle('active', name === leadName);
         }
     });
 
     // Clear and Show Welcome/Previous Msgs (Mock)
     const msgContainer = document.getElementById('commMessages');
     if (msgContainer) {
+        const leadDate = new Date(lead.timestamp || lead.created_at);
+        const timeStr = isNaN(leadDate) ? 'Earlier' : leadDate.toLocaleTimeString();
+
         msgContainer.innerHTML = `
             <div class="msg-bubble inbound">
                 Hello, I have an inquiry about a housing disrepair claim.
-                <span class="msg-time">${new Date(lead.created_at).toLocaleTimeString()}</span>
+                <span class="msg-time">${timeStr}</span>
             </div>
             <div class="msg-bubble outbound">
-                Hi ${lead.name.split(' ')[0]}, thanks for reaching out. An admin will be calling you from our new Vonage line shortly.
+                Hi ${leadName.split(' ')[0]}, thanks for reaching out. An admin will be calling you from our new Vonage line shortly.
                 <span class="msg-time">Just now</span>
             </div>
         `;

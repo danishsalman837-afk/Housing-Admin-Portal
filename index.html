@@ -12,6 +12,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
         rel="stylesheet">
+    <link rel="stylesheet" href="dashboard.css">
 
     <script>
         (function () {
@@ -2788,6 +2789,231 @@
         .chat-input-area textarea:focus {
             border-color: var(--blue-ring);
         }
+
+        /* ═══════════════════════════════════════
+           GLOBAL SMART DIALER (PREMIUM)
+        ═══════════════════════════════════════ */
+        .dialer-container {
+            position: fixed;
+            top: 74px;
+            right: 32px;
+            width: 320px;
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 24px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            padding: 24px;
+            animation: slideDownIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        [data-theme="dark"] .dialer-container {
+            background: rgba(28, 28, 30, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        @keyframes slideDownIn {
+            from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .dialer-container.active { display: flex; }
+
+        .dialer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .dialer-lead-info { display: flex; flex-direction: column; gap: 2px; }
+        #dialerLeadName { font-size: 16px; font-weight: 700; color: var(--label-1); }
+        #dialerLeadStatus { font-size: 11px; color: var(--blue); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .close-dialer {
+            background: var(--surface-3);
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--label-3);
+            transition: 0.2s;
+        }
+
+        .close-dialer:hover { background: var(--red-light); color: var(--red); }
+
+        .dialer-screen {
+            background: var(--surface-2);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+
+        #dialerInput {
+            width: 100%;
+            background: transparent;
+            border: none;
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--label-1);
+            text-align: center;
+            letter-spacing: 1px;
+            outline: none;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .dialer-keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .dialer-keypad button {
+            height: 56px;
+            border-radius: 16px;
+            border: 1px solid transparent;
+            background: var(--surface-2);
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--label-1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .dialer-keypad button:hover {
+            background: var(--surface-3);
+            transform: scale(1.05);
+            border-color: var(--blue-ring);
+        }
+
+        .dialer-keypad button span {
+            font-size: 9px;
+            font-weight: 500;
+            color: var(--label-4);
+            text-transform: uppercase;
+            margin-top: -2px;
+        }
+
+        .dialer-actions {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .dial-btn {
+            flex: 1;
+            height: 54px;
+            border-radius: 16px;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .dial-btn svg { width: 22px; height: 22px; fill: white; }
+        .dial-btn.call { background: var(--green); box-shadow: 0 4px 12px var(--green-light); }
+        .dial-btn.sms { background: var(--blue); box-shadow: 0 4px 12px var(--blue-light); }
+        .dial-btn.backspace { background: var(--surface-3); flex: 0 0 54px; }
+        .dial-btn.backspace svg { fill: var(--label-3); }
+
+        /* ═══════════════════════════════════════
+           COMMUNICATION HUB (PREMIUM)
+        ═══════════════════════════════════════ */
+        .comm-hub-layout {
+            display: flex;
+            height: calc(100vh - 180px);
+            background: var(--surface-1);
+            border-radius: var(--r-lg);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+        }
+
+        .comm-sidebar {
+            width: 320px;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            background: var(--surface-2);
+        }
+
+        .comm-sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .comm-search input {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--surface-1);
+            color: var(--label-1);
+            font-size: 13px;
+            outline: none;
+        }
+
+        .comm-list { flex: 1; overflow-y: auto; }
+
+        .comm-thread-item {
+            padding: 16px 20px;
+            display: flex;
+            gap: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .comm-thread-item:hover { background: rgba(10, 132, 255, 0.05); }
+        .comm-thread-item.active { background: var(--blue-light); border-left: 4px solid var(--blue); }
+
+        .comm-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--surface-3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: var(--label-2);
+            flex-shrink: 0;
+        }
+
+        .comm-thread-info { flex: 1; min-width: 0; }
+        .comm-thread-top { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .comm-thread-name { font-weight: 700; color: var(--label-1); font-size: 14px; }
+        .comm-thread-time { font-size: 11px; color: var(--label-4); }
+        .comm-thread-last { font-size: 12px; color: var(--label-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        .comm-main { flex: 1; display: flex; flex-direction: column; background: var(--bg); }
+        .comm-main-header { padding: 14px 24px; background: var(--surface-1); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        
+        .comm-messages { flex: 1; padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        
+        .comm-input-area { padding: 16px 24px; background: var(--surface-1); border-top: 1px solid var(--border); display: flex; gap: 12px; align-items: flex-end; }
+        .comm-input-area textarea { flex: 1; background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 12px; font-size: 14px; resize: none; outline: none; color: var(--label-1); }
+
+        .icon-button { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; background: transparent; transition: 0.2s; color: var(--label-3); }
+        .icon-button:hover { background: var(--surface-3); color: var(--label-1); }
+        .icon-button svg { width: 20px; height: 20px; fill: currentColor; }
     </style>
 
 </head>
