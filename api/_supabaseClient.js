@@ -81,6 +81,17 @@ function normalizeLead(lead) {
   n('additionalNotes', 'additionalNotes');
   n('agent_name', 'agentName');
   
+  // Cross-reference fallbacks for Agent Name
+  if (!lead.agentName || lead.agentName === '--') {
+    const backup = lead.agent_data;
+    if (backup) {
+      lead.agentName = backup.agentName || backup.agent_name || backup.dialler || backup.Dialler || lead.agentName;
+    }
+  }
+
+  // Ensure 'name' is populated from 'first_name' if missing
+  if (!lead.name && lead.first_name) lead.name = lead.first_name;
+
   return lead;
 }
 
