@@ -3188,78 +3188,29 @@ window._renderSnippetModal = function() {
     var store = window._snippetStore;
     var activeId = window._activeSnippetFolder;
 
-    // Apply premium class to modal box
-    box.className = 'modal-box snippet-modal-container';
+    box.className = 'modal-box snippet-hubspot-container';
     box.style.padding = '0';
     box.style.display = 'flex';
+    box.style.width = '1000px';
+    box.style.maxWidth = '95vw';
+    box.style.height = '80vh';
     box.style.overflow = 'hidden';
 
     var folderListHtml = store.folders.map(function(f) {
         var isSelected = f.id === activeId;
         var activeCls = isSelected ? 'active' : '';
-        var icon = isSelected ? 
-            '<svg viewBox="0 0 24 24" style="width:18px; height:18px; fill:currentColor;"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-6 10H7v-2h7v2zm3-4H7v-2h10v2z"/></svg>' :
-            '<svg viewBox="0 0 24 24" style="width:18px; height:18px; fill:currentColor;"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>';
-            
-        return '<div class="snippet-folder-item ' + activeCls + '" onclick="window._selectSnippetFolder(\'' + f.id + '\')">' +
-            '<div style="display:flex; align-items:center; gap:12px;">' +
-                icon + ' ' + f.name + 
+        return '<div class="hub-folder-item ' + activeCls + '" onclick="window._selectSnippetFolder(\'' + f.id + '\')">' +
+            '<svg class="f-icon" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>' +
+            '<span>' + f.name + '</span>' +
+            '<div class="f-actions">' +
+                '<button onclick="event.stopPropagation(); window._editSnippetFolder(\'' + f.id + '\')">✎</button>' +
+                '<button onclick="event.stopPropagation(); window._deleteSnippetFolder(\'' + f.id + '\')">✕</button>' +
             '</div>' +
-            '<button onclick="event.stopPropagation(); window._deleteSnippetFolder(\'' + f.id + '\')" style="background:none; border:none; color:inherit; opacity:0.4; font-size:14px; cursor:pointer;" title="Delete Folder">✕</button>' +
-            '</div>';
+        '</div>';
     }).join('');
 
     var activeFolder = store.folders.find(function(f) { return f.id === activeId; });
     var folderSnippets = store.snippets.filter(function(s) { return s.folderId === activeId; });
-
-    var snippetListHtml = '';
-    if (folderSnippets.length === 0) {
-        snippetListHtml = '<div style="text-align:center; padding:60px; color:var(--text-muted);">' +
-            '<div style="font-size:48px; margin-bottom:16px; opacity:0.3;">📭</div>' +
-            '<div style="font-size:15px; font-weight:600;">No snippets in this folder</div>' +
-            '<p style="font-size:13px; margin-top:8px;">Create your first message template to get started.</p>' +
-            '</div>';
-    } else {
-        snippetListHtml = folderSnippets.map(function(s) {
-            var isSelected = s.id === window._selectedSnippetId;
-            var tagCount = (s.content.match(/\{\{[^}]+\}\}/g) || []).length;
-            
-            if (!isSelected) {
-                return '<div class="snippet-item-compact" onclick="window._selectedSnippetId=\'' + s.id + '\'; window._renderSnippetModal();">' +
-                    '<div class="snippet-title" style="font-size:14px; flex:1;">' + s.title + '</div>' +
-                    '<div class="snippet-item-actions" style="position:relative;">' +
-                        '<button onclick="event.stopPropagation(); var d=document.getElementById(\'menu-' + s.id + '\'); d.style.display=d.style.display===\'none\'?\'block\':\'none\';" style="background:none; border:none; padding:8px; cursor:pointer; color:var(--text-muted); opacity:0.6;">' +
-                            '<svg viewBox="0 0 24 24" style="width:18px; height:18px; fill:currentColor;"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>' +
-                        '</button>' +
-                        '<div id="menu-' + s.id + '" class="snippet-dot-menu" style="display:none; position:absolute; right:0; top:36px; background:var(--bg-main); border:1px solid var(--border-light); border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.1); z-index:100; min-width:140px; overflow:hidden;">' +
-                            '<div class="dot-menu-item" onclick="event.stopPropagation(); window._selectedSnippetId=\'' + s.id + '\'; window._renderSnippetModal();">Preview</div>' +
-                            '<div class="dot-menu-item" onclick="event.stopPropagation(); window._showCreateSnippet(\'' + s.id + '\')">Edit</div>' +
-                            '<div class="dot-menu-item delete" onclick="event.stopPropagation(); window._deleteSnippet(\'' + s.id + '\')">Delete</div>' +
-                        '</div>' +
-                    '</div>' +
-                '</div>';
-            }
-
-            var preview = window._parseLiquidTags ? window._parseLiquidTags(s.content) : s.content;
-            
-            return '<div class="snippet-card-expanded" style="position:relative;">' +
-                '<div class="snippet-card-header">' +
-                    '<div class="snippet-title">' + s.title + '</div>' +
-                    '<div style="display:flex; gap:8px;">' +
-                        '<button onclick="window._selectedSnippetId=null; window._renderSnippetModal();" style="background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:18px;">&times;</button>' +
-                    '</div>' +
-                '</div>' +
-                '<div class="snippet-body-text" style="background:var(--bg-soft); padding:12px; border-radius:10px; font-size:13px; margin-bottom:12px; white-space:pre-wrap;">' + s.content + '</div>' +
-                '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">' +
-                    (tagCount > 0 ? '<span class="status-chip" style="background:rgba(79, 70, 229, 0.1); color:var(--primary); font-size:9px; padding:3px 8px;">' + tagCount + ' Variables Found</span>' : '<span></span>') +
-                    '<div style="display:flex; gap:8px;">' +
-                         '<button class="btn-text-only" style="color:var(--primary); font-size:12px; font-weight:700; padding:0 10px;" onclick="window._showCreateSnippet(\'' + s.id + '\')">Edit</button>' +
-                        '<button class="btn-outline" style="padding:6px 12px; font-size:11px;" onclick="event.stopPropagation(); window._useSnippetInChat(\'' + s.id + '\')">Insert</button>' +
-                        '<button class="btn-action" style="padding:6px 14px; font-size:11px; font-weight:700;" onclick="event.stopPropagation(); window._sendSnippetNow(\'' + s.id + '\')">Send Now</button>' +
-                    '</div>' +
-                '</div>' +
-                '<div class="snippet-preview-box" style="white-space: pre-wrap;"><strong>Preview:</strong> ' + preview + '</div>' +
-            '</div>';
         }).join('');
     }
 
@@ -3306,6 +3257,19 @@ window._addSnippetFolder = function() {
     window._activeSnippetFolder = newId; // Auto-select new folder
     _saveSnippetStore();
     window._renderSnippetModal();
+};
+
+window._editSnippetFolder = function(folderId) {
+    var folder = window._snippetStore.folders.find(function(f) { return f.id === folderId; });
+    if (!folder) return;
+    
+    var newName = prompt('Enter new name for folder:', folder.name);
+    if (newName && newName.trim()) {
+        folder.name = newName.trim();
+        _saveSnippetStore();
+        showNotification('Folder renamed', 'success');
+        window._renderSnippetModal();
+    }
 };
 
 window._deleteSnippetFolder = function(folderId) {
