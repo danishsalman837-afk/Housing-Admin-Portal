@@ -3409,7 +3409,7 @@ window.initCommSockets();
 
 // Global shortcuts
 document.addEventListener('keydown', (e) => {
-    if (e.key.toLowerCase() === 'p' && e.ctrlKey) {
+    if (e.key && e.key.toLowerCase() === 'p' && e.ctrlKey) {
         e.preventDefault();
         toggleDialer();
     }
