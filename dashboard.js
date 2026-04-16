@@ -2863,19 +2863,27 @@ window.renderCommThreads = function() {
         return dateB - dateA;
     });
 
-    threadList.innerHTML = sortedLeads.map(lead => {
+    threadList.innerHTML = sortedLeads.map((lead, index) => {
         const leadDate = new Date(lead.timestamp || lead.created_at);
         const dateStr = isNaN(leadDate) ? '---' : leadDate.toLocaleDateString();
         
+        // Mock data logic to show off new UI
+        const isOnline = index % 3 === 0 ? 'online' : 'offline';
+        const tagHtml = index % 4 === 0 ? '<div class="lead-tags"><span class="lead-tag high-priority">High Priority</span></div>' : 
+                        index % 4 === 1 ? '<div class="lead-tags"><span class="lead-tag new-lead">New Lead</span></div>' : 
+                        index % 4 === 2 ? '<div class="lead-tags"><span class="lead-tag disrepair">Disrepair Claim</span></div>' : '';
+        const snippetText = index % 2 === 0 ? "I'll send across the images now." : "Can you call me back tomorrow?";
+
         return `
             <div class="comm-thread-item" onclick="window.selectCommContact('${lead.id}')">
-                <div class="comm-avatar">${lead.name?.charAt(0) || lead.first_name?.charAt(0) || '?'}</div>
+                <div class="comm-avatar ${isOnline}">${lead.name?.charAt(0) || lead.first_name?.charAt(0) || '?'}</div>
                 <div class="comm-thread-info">
                     <div class="comm-thread-top">
                         <span class="comm-thread-name">${lead.name || (lead.first_name + ' ' + lead.last_name) || 'Unknown Lead'}</span>
                         <span class="comm-thread-time">${dateStr}</span>
                     </div>
-                    <div class="comm-thread-last">${lead.phone || lead.mobile_number || 'No phone number'}</div>
+                    ${tagHtml}
+                    <div class="comm-thread-last">${snippetText}</div>
                 </div>
             </div>
         `;
@@ -2908,13 +2916,25 @@ window.selectCommContact = function(leadId) {
     const avatarEl = document.getElementById('activeCommAvatar');
     const nameEl = document.getElementById('activeCommName');
     const statusEl = document.getElementById('activeCommStatus');
+    const miniProfile = document.getElementById('activeCommMiniProfile');
     
     const leadName = lead.name || (lead.first_name + ' ' + lead.last_name) || 'Unnamed Lead';
     const leadPhone = lead.phone || lead.mobile_number || 'No Phone';
 
-    if (avatarEl) avatarEl.innerText = leadName.charAt(0) || '?';
+    if (avatarEl) {
+        avatarEl.innerText = leadName.charAt(0) || '?';
+        // Randomize online status for demo
+        avatarEl.className = 'comm-avatar ' + (Math.random() > 0.5 ? 'online' : 'offline');
+    }
     if (nameEl) nameEl.innerText = leadName;
     if (statusEl) statusEl.innerText = leadPhone;
+    
+    if (miniProfile) {
+        miniProfile.style.display = 'flex';
+        document.getElementById('miniStatus').innerText = lead.status === 'paid' ? 'Paid Lead' : lead.status === 'accepted' ? 'Active Claim' : 'New Lead';
+        document.getElementById('miniValue').innerText = 'Est. £' + (Math.floor(Math.random() * 50) + 10) + ',000';
+        document.getElementById('miniSolicitor').innerText = lead.companies?.company_name || 'Unassigned';
+    }
 
     // Show Input Area
     const inputArea = document.getElementById('commInputArea');
@@ -2934,15 +2954,17 @@ window.selectCommContact = function(leadId) {
     if (msgContainer) {
         const leadDate = new Date(lead.timestamp || lead.created_at);
         const timeStr = isNaN(leadDate) ? 'Earlier' : leadDate.toLocaleTimeString();
+        
+        const readIcon = `<span class="msg-status-icon" title="Read"><svg viewBox="0 0 24 24"><path d="M18 7l-1.41-1.41-6.34 6.34 1.41 1.41L18 7zm4.24-1.41L11.66 16.17 7.48 12l-1.41 1.41L11.66 19l12-12-1.42-1.41zM.41 13.41L6 19l1.41-1.41L1.83 12 .41 13.41z"/></svg></span>`;
 
         msgContainer.innerHTML = `
             <div class="msg-bubble inbound">
-                Hello, I have an inquiry about a housing disrepair claim.
+                Hello, I have an inquiry about a housing disrepair claim. I have significant damp in my living room.
                 <span class="msg-time">${timeStr}</span>
             </div>
             <div class="msg-bubble outbound">
                 Hi ${leadName.split(' ')[0]}, thanks for reaching out. An admin will be calling you from our new Vonage line shortly.
-                <span class="msg-time">Just now</span>
+                <span class="msg-time">Just now ${readIcon}</span>
             </div>
         `;
         msgContainer.scrollTop = msgContainer.scrollHeight;
@@ -2965,6 +2987,10 @@ window.sendCommSms = function() {
     const msgContainer = document.getElementById('commMessages');
     if (!msgContainer) return;
     
+    const unreadIcon = `<span class="msg-status-icon" style="fill:#9CA3AF;"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>`;
+    const readIcon = `<span class="msg-status-icon" title="Read"><svg viewBox="0 0 24 24"><path d="M18 7l-1.41-1.41-6.34 6.34 1.41 1.41L18 7zm4.24-1.41L11.66 16.17 7.48 12l-1.41 1.41L11.66 19l12-12-1.42-1.41zM.41 13.41L6 19l1.41-1.41L1.83 12 .41 13.41z"/></svg></span>`;
+    
+    // Append user message
     const bubble = document.createElement('div');
     bubble.className = 'msg-bubble outbound';
     bubble.innerHTML = `${msg}<span class="msg-time">Sending...</span>`;
@@ -2973,11 +2999,61 @@ window.sendCommSms = function() {
     input.value = '';
     msgContainer.scrollTop = msgContainer.scrollHeight;
 
+    // Simulate sending, delivered, then read status updates
     setTimeout(() => {
         const timeNode = bubble.querySelector('.msg-time');
-        if (timeNode) timeNode.innerText = 'Sent';
+        if (timeNode) timeNode.innerHTML = `Just now ${unreadIcon}`;
         showNotification('SMS sent successfully.', 'success');
-    }, 1000);
+        
+        // Simulate "Read Receipt"
+        setTimeout(() => {
+            if (timeNode) timeNode.innerHTML = `Just now ${readIcon}`;
+            
+            // Simulate Client Typing Indicator
+            const typing = document.getElementById('commTyping');
+            if (typing) {
+                typing.style.display = 'block';
+                msgContainer.scrollTop = msgContainer.scrollHeight;
+                
+                setTimeout(() => {
+                    typing.style.display = 'none';
+                    const reply = document.createElement('div');
+                    reply.className = 'msg-bubble inbound';
+                    reply.innerHTML = `Okay, I've received your text. Thank you! <span class="msg-time">Just now</span>`;
+                    msgContainer.appendChild(reply);
+                    msgContainer.scrollTop = msgContainer.scrollHeight;
+                }, 2500);
+            }
+        }, 3000);
+    }, 800);
+};
+
+window.toggleSnippets = function() {
+    const menu = document.getElementById('snippetsMenu');
+    if (menu) menu.style.display = menu.style.display === 'none' ? 'flex' : 'none';
+};
+
+window.insertSnippet = function(template) {
+    if (!activeChatLeadId) return;
+    const lead = submissionsData.find(l => String(l.id) === String(activeChatLeadId));
+    if (!lead) return;
+    
+    let text = template;
+    const firstName = lead.first_name || (lead.name ? lead.name.split(' ')[0] : 'Client');
+    const fullName = lead.name || (lead.first_name + ' ' + lead.last_name) || 'Client';
+    const solicitor = lead.companies?.company_name || 'your solicitor';
+    
+    text = text.replace(/{{first_name}}/g, firstName);
+    text = text.replace(/{{full_name}}/g, fullName);
+    text = text.replace(/{{solicitor}}/g, solicitor);
+    
+    const input = document.getElementById('commInputMessage');
+    if (input) {
+        input.value = text;
+        input.focus();
+    }
+    const menu = document.getElementById('snippetsMenu');
+    if (menu) menu.style.display = 'none';
 };
 
 // Global shortcuts
