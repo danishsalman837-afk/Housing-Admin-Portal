@@ -3166,7 +3166,11 @@ window._renderSnippetModal = function() {
     var folderListHtml = store.folders.map(function(f) {
         var activeCls = f.id === activeId ? 'active' : '';
         return '<div class="snippet-folder-item ' + activeCls + '" onclick="window._selectSnippetFolder(\'' + f.id + '\')">' +
-            '<span style="font-size:18px;">' + (f.id === activeId ? '📂' : '📁') + '</span> ' + f.name + '</div>';
+            '<div style="display:flex; align-items:center; gap:12px;">' +
+                '<span style="font-size:18px;">' + (f.id === activeId ? '📂' : '📁') + '</span> ' + f.name + 
+            '</div>' +
+            '<button onclick="event.stopPropagation(); window._deleteSnippetFolder(\'' + f.id + '\')" style="background:none; border:none; color:inherit; opacity:0.5; font-size:14px; cursor:pointer;" title="Delete Folder">✕</button>' +
+            '</div>';
     }).join('');
 
     var activeFolder = store.folders.find(function(f) { return f.id === activeId; });
@@ -3239,8 +3243,36 @@ window._selectSnippetFolder = function(folderId) {
 window._addSnippetFolder = function() {
     var name = prompt('Folder name:');
     if (!name || !name.trim()) return;
-    window._snippetStore.folders.push({ id: 'f' + Date.now(), name: name.trim() });
+    var newId = 'f' + Date.now();
+    window._snippetStore.folders.push({ id: newId, name: name.trim() });
+    window._activeSnippetFolder = newId; // Auto-select new folder
     _saveSnippetStore();
+    window._renderSnippetModal();
+};
+
+window._deleteSnippetFolder = function(folderId) {
+    var folder = window._snippetStore.folders.find(function(f) { return f.id === folderId; });
+    if (!folder) return;
+    
+    if (!confirm('Are you sure you want to delete the folder "' + folder.name + '" and all snippets inside it?')) return;
+    
+    // 1. Remove snippets in this folder
+    window._snippetStore.snippets = window._snippetStore.snippets.filter(function(s) { 
+        return s.folderId !== folderId; 
+    });
+    
+    // 2. Remove folder
+    window._snippetStore.folders = window._snippetStore.folders.filter(function(f) { 
+        return f.id !== folderId; 
+    });
+    
+    // 3. Reset active folder if it was the deleted one
+    if (window._activeSnippetFolder === folderId) {
+        window._activeSnippetFolder = window._snippetStore.folders.length > 0 ? window._snippetStore.folders[0].id : null;
+    }
+    
+    _saveSnippetStore();
+    showNotification('Folder deleted', 'info');
     window._renderSnippetModal();
 };
 
@@ -3269,7 +3301,7 @@ window._showCreateSnippet = function() {
             <button class="close-btn" style="background:var(--bg-soft); width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center;" onclick="window._renderSnippetModal()">&times;</button>
         </div>
         
-        <div style="padding:30px; background:var(--bg-main);">
+        <div style="padding:30px; background:var(--bg-main); max-height: 70vh; overflow-y: auto;">
             <div style="margin-bottom:24px;">
                 <label style="font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase; display:block; margin-bottom:10px; letter-spacing:0.5px;">Snippet Title</label>
                 <input type="text" id="newSnippetTitle" placeholder="e.g. Follow-up regarding photos" class="modern-input" style="width:100%; height:48px; font-size:15px; border-radius:12px;">
@@ -3302,7 +3334,7 @@ window._showCreateSnippet = function() {
                     <span style="background:var(--primary); width:6px; height:6px; border-radius:50%; box-shadow: 0 0 10px var(--primary);"></span>
                     Real-time Preview
                 </div>
-                <div id="snippetPreviewContent" style="font-size:14px; color:var(--text-main); line-height:1.7; font-style:italic; opacity:0.7;">Start typing to see the final message with variable data...</div>
+                <div id="snippetPreviewContent" style="font-size:14px; color:var(--text-main); line-height:1.7; font-style:italic; opacity:0.7; white-space: pre-wrap;">Start typing to see the final message with variable data...</div>
             </div>
 
             <div style="display:flex; justify-content:flex-end; gap:16px; margin-top:10px;">
