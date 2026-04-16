@@ -2929,11 +2929,21 @@ window.selectCommContact = function(leadId) {
     if (nameEl) nameEl.innerText = leadName;
     if (statusEl) statusEl.innerText = leadPhone;
     
+    // Only show relevant solicitor
     if (miniProfile) {
         miniProfile.style.display = 'flex';
-        document.getElementById('miniStatus').innerText = lead.status === 'paid' ? 'Paid Lead' : lead.status === 'accepted' ? 'Active Claim' : 'New Lead';
-        document.getElementById('miniValue').innerText = 'Est. £' + (Math.floor(Math.random() * 50) + 10) + ',000';
-        document.getElementById('miniSolicitor').innerText = lead.companies?.company_name || 'Unassigned';
+        // Remove old tags
+        const solicitorId = lead.companies?.id || '';
+        const dropdown = document.getElementById('miniSolicitorDropdown');
+        if (dropdown) {
+            // Keep unique current assignment for demo
+            Array.from(dropdown.options).forEach(opt => opt.selected = false);
+            let found = Array.from(dropdown.options).find(opt => opt.value === String(solicitorId));
+            if (!found && lead.companies?.company_name) {
+                dropdown.innerHTML += `<option value="${solicitorId}">${lead.companies.company_name}</option>`;
+            }
+            dropdown.value = solicitorId;
+        }
     }
 
     // Show Input Area
@@ -3049,12 +3059,143 @@ window.insertSnippet = function(template) {
     
     const input = document.getElementById('commInputMessage');
     if (input) {
+        // Simple preview alert for MVP before sending/populating
+        const isCustomValue = template.includes('{{');
+        if (isCustomValue) {
+           showNotification('Liquid Tags Parsed: Populated dynamic CRM values', 'info');
+        }
+        
         input.value = text;
         input.focus();
     }
     const menu = document.getElementById('snippetsMenu');
     if (menu) menu.style.display = 'none';
 };
+
+window.openSnippetManager = function() {
+    const overlay = document.getElementById('modalOverlay');
+    const box = document.getElementById('modalBox');
+    
+    // Snippet Management UI
+    box.innerHTML = `
+        <div class="modal-header">
+            <h3>Snippet Library</h3>
+            <span class="modal-close" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</span>
+        </div>
+        <div class="snippet-manager-body" style="display:flex; gap: 20px; padding-top: 10px; min-height:300px;">
+            <div style="flex:1; border-right: 1px solid var(--border-light); padding-right: 20px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:15px; align-items:center;">
+                    <h4 style="margin:0;">Folders</h4>
+                    <button class="btn-action" style="padding:4px 8px; font-size:12px;">+ Folder</button>
+                </div>
+                <div class="folder-list" style="display:flex; flex-direction:column; gap:8px;">
+                    <button style="text-align:left; padding:10px; border:none; background:var(--bg-surface-2); border-radius:6px; cursor:pointer; font-weight:600; color:var(--text-main);">📁 Intro / Onboarding</button>
+                    <button style="text-align:left; padding:10px; border:none; background:transparent; cursor:pointer; color:var(--text-muted);">📁 Follow-up</button>
+                    <button style="text-align:left; padding:10px; border:none; background:transparent; cursor:pointer; color:var(--text-muted);">📁 Legal</button>
+                </div>
+            </div>
+            <div style="flex:2;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:15px; align-items:center;">
+                    <h4 style="margin:0;">Snippets in "Intro / Onboarding"</h4>
+                    <button class="btn-primary" style="padding:6px 12px; font-size:12px;">+ Create Snippet</button>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:10px;">
+                    <div style="padding:16px; border:1px solid var(--border-light); border-radius:8px; background:var(--bg-surface); cursor:pointer; transition:0.2s;" onclick="window.insertSnippetAndClose('Hi {{first_name}}, thanks for reaching out. We have received your inquiry.')">
+                        <strong style="color:var(--text-main); font-size:14px; margin-bottom:4px; display:block;">First Contact - Default</strong>
+                        <p style="margin:0; font-size:13px; color:var(--text-muted);">Hi {{first_name}}, thanks for reaching out. We have received your inquiry...</p>
+                        <div style="margin-top:8px; font-size:11px; color:#007AFF; font-family:monospace; background:rgba(0,122,255,0.1); display:inline-block; padding:2px 6px; border-radius:4px;">Uses 1 tag</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    overlay.style.display = 'flex';
+};
+
+window.insertSnippetAndClose = function(template) {
+    document.getElementById('modalOverlay').style.display='none';
+    window.insertSnippet(template); 
+};
+
+window.toggleEmojiPicker = function() {
+    const picker = document.getElementById('emojiPicker');
+    if(picker) picker.style.display = picker.style.display === 'none' ? 'flex' : 'none';
+};
+
+window.insertEmoji = function(emoji) {
+    const input = document.getElementById('commInputMessage');
+    if(input) {
+        input.value += emoji;
+        input.focus();
+    }
+    document.getElementById('emojiPicker').style.display = 'none';
+};
+
+window.handleCommAttachment = function(e) {
+    if(e.target.files && e.target.files[0]) {
+        const file = e.target.files[0];
+        showNotification(\`Attachment added: \${file.name}\`, 'info');
+        // Render immediate mock document block
+        const msgContainer = document.getElementById('commMessages');
+        if (msgContainer) {
+            const bubble = document.createElement('div');
+            bubble.className = 'msg-bubble outbound';
+            bubble.innerHTML = \`
+                <div style="display:flex; align-items:center; gap:8px;">
+                    📄 <strong>\${file.name}</strong>
+                </div>
+                <span class="msg-time">Just now</span>
+            \`;
+            msgContainer.appendChild(bubble);
+            msgContainer.scrollTop = msgContainer.scrollHeight;
+        }
+    }
+};
+
+window.assignSolicitorFromComm = function(sol_id) {
+    if(!activeChatLeadId || !sol_id) return;
+    showNotification('Solicitor changed for this lead.', 'success');
+};
+
+// Request notifications
+if ("Notification" in window && Notification.permission !== "denied") {
+    Notification.requestPermission();
+}
+
+window.initCommSockets = function() {
+    console.log("WebSocket connected. Listening for real-time messages...");
+    
+    // Simulate incoming message after a delay for testing
+    setTimeout(() => {
+        if (activeChatLeadId) {
+            window.receiveLiveMessage("Thanks, I have uploaded the documents on my end. Please check.", "Ketoura");
+        }
+    }, 15000); // 15s after load
+};
+
+window.receiveLiveMessage = function(msg, senderName) {
+    // 1. Alert Sound (Ping)
+    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+    audio.play().catch(e => console.log('Audio autoplay blocked'));
+    
+    // 2. Desktop Notification
+    if (Notification.permission === "granted") {
+        new Notification(\`New message from \${senderName || 'Client'}\`, { body: msg, icon: '/favicon.ico' });
+    }
+    
+    // 3. Update UI instantly without refresh
+    const msgContainer = document.getElementById('commMessages');
+    if (msgContainer) {
+        const reply = document.createElement('div');
+        reply.className = 'msg-bubble inbound';
+        reply.innerHTML = \`\${msg} <span class="msg-time">Just now</span>\`;
+        msgContainer.appendChild(reply);
+        msgContainer.scrollTop = msgContainer.scrollHeight;
+    }
+};
+
+// Start mock sockets
+window.initCommSockets();
 
 // Global shortcuts
 document.addEventListener('keydown', (e) => {
