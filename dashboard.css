@@ -2129,6 +2129,42 @@ select.status-pill {
     border-color: rgba(255,255,255,0.05);
 }
 
+/* ── Typing Indicator (Instagram Style) ── */
+.typing-bubble {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: #f0f2f5;
+    padding: 10px 16px;
+    border-radius: 20px;
+    width: fit-content;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+[data-theme="dark"] .typing-bubble {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.typing-bubble span {
+    width: 6px;
+    height: 6px;
+    background: #8e939d;
+    border-radius: 50%;
+    display: inline-block;
+    animation: instaTyping 1.4s infinite ease-in-out both;
+}
+
+[data-theme="dark"] .typing-bubble span { background: #9499a3; }
+
+.typing-bubble span:nth-child(1) { animation-delay: -0.32s; }
+.typing-bubble span:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes instaTyping {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+    40% { transform: scale(1); opacity: 1; }
+}
+
 .msg-time { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 11px; font-weight: 500; opacity: 0.8; }
 .msg-bubble.outbound .msg-time { justify-content: flex-end; }
 .msg-bubble.inbound .msg-time { justify-content: flex-start; }
@@ -2390,25 +2426,36 @@ select.status-pill {
     box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
 }
 
-.snippet-card {
-    background: #fff;
+.snippet-item-compact {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    background: #ffffff;
     border: 1px solid var(--border-light);
+    border-radius: 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.snippet-item-compact:hover {
+    border-color: var(--primary);
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}
+
+.snippet-card-expanded {
+    background: #fff;
+    border: 1px solid var(--primary);
     border-radius: 16px;
     padding: 20px;
     margin-bottom: 16px;
-    cursor: pointer;
-    transition: all 0.25s var(--ease-spring);
-    position: relative;
-    border-left: 4px solid transparent;
+    box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.1);
 }
 
-[data-theme="dark"] .snippet-card { background: #1f2937; border-color: rgba(255,255,255,0.05); }
-
-.snippet-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.06);
-    border-left-color: var(--primary);
-}
+[data-theme="dark"] .snippet-item-compact { background: rgba(255,255,255,0.03); }
+[data-theme="dark"] .snippet-card-expanded { background: #1f2937; border-color: rgba(255,255,255,0.1); }
 
 .snippet-card-header {
     display: flex;
@@ -2419,26 +2466,28 @@ select.status-pill {
 
 .snippet-title {
     font-size: 16px;
-    font-weight: 700;
+    font-weight: 800;
     color: var(--text-main);
+    letter-spacing: -0.3px;
 }
 
 .snippet-body-text {
-    font-size: 14px;
+    font-size: 13.5px;
     color: var(--text-muted);
     line-height: 1.6;
-    margin-bottom: 16px;
+    background: var(--bg-soft);
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 12px;
 }
 
 .snippet-preview-box {
     background: rgba(16, 185, 129, 0.04);
-    border: 1px dashed rgba(16, 185, 129, 0.3);
+    border: 1px dashed rgba(16, 185, 129, 0.25);
     border-radius: 12px;
-    padding: 14px;
+    padding: 16px;
     font-size: 13px;
     color: #059669;
-    font-style: italic;
-    transition: all 0.3s ease;
 }
 
 [data-theme="dark"] .snippet-preview-box {

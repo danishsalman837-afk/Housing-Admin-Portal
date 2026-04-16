@@ -3505,7 +3505,13 @@
                         </div>
                     </div>
                     
-                    <div class="typing-indicator" id="commTyping" style="display:none; padding: 0 24px 10px 24px; font-size: 12px; color: #6B7280;">User is typing<span>.</span><span>.</span><span>.</span></div>
+                    <div class="typing-bubble-container" id="commTyping" style="display:none; padding: 0 24px 12px 24px;">
+                        <div class="typing-bubble">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </div>
 
                     <div class="comm-input-area" id="commInputArea" style="display:none; position: relative;">
                         <input type="file" id="commAttachmentInput" style="display: none;" onchange="window.handleCommAttachment(event)">

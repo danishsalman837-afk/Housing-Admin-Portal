@@ -3216,22 +3216,35 @@ window._renderSnippetModal = function() {
             '</div>';
     } else {
         snippetListHtml = folderSnippets.map(function(s) {
-            var preview = window._parseLiquidTags(s.content);
+            var isSelected = s.id === window._selectedSnippetId;
+            
+            if (!isSelected) {
+                return '<div class="snippet-item-compact" onclick="window._selectedSnippetId=\'' + s.id + '\'; window._renderSnippetModal();">' +
+                    '<div class="snippet-title" style="font-size:14px;">' + s.title + '</div>' +
+                    '<svg viewBox="0 0 24 24" style="width:16px; height:16px; opacity:0.3;"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>' +
+                '</div>';
+            }
+
+            var preview = window._parseLiquidTags ? window._parseLiquidTags(s.content) : s.content;
             var tagCount = (s.content.match(/\{\{[^}]+\}\}/g) || []).length;
-            return '<div class="snippet-card" onclick="window._useSnippetInChat(\'' + s.id + '\')">' +
+            
+            return '<div class="snippet-card-expanded">' +
                 '<div class="snippet-card-header">' +
                     '<div class="snippet-title">' + s.title + '</div>' +
-                    '<button onclick="event.stopPropagation(); window._deleteSnippet(\'' + s.id + '\')" style="background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:18px;">&times;</button>' +
-                '</div>' +
-                '<div class="snippet-body-text">' + s.content + '</div>' +
-                '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">' +
-                    (tagCount > 0 ? '<span class="status-chip" style="font-size:9px; padding:3px 8px;">' + tagCount + ' Variables Found</span>' : '<span></span>') +
-                    '<div style="display:flex; gap:8px;">' +
-                        '<button class="btn-outline" style="padding:6px 12px; font-size:11px;" onclick="event.stopPropagation(); window._useSnippetInChat(\'' + s.id + '\')">Insert</button>' +
-                        '<button class="btn-action" style="padding:6px 14px; font-size:11px;" onclick="event.stopPropagation(); window._sendSnippetNow(\'' + s.id + '\')">Send Now</button>' +
+                    '<div style="display:flex; gap:12px; align-items:center;">' +
+                        '<button onclick="event.stopPropagation(); window._showCreateSnippet(\'' + s.id + '\')" class="btn-text-only" style="color:var(--primary); font-size:12px; font-weight:700;">Edit</button>' +
+                        '<button onclick="event.stopPropagation(); window._deleteSnippet(\'' + s.id + '\')" style="background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:18px;">&times;</button>' +
                     '</div>' +
                 '</div>' +
-                (preview !== s.content ? '<div class="snippet-preview-box"><strong>Preview:</strong> ' + preview + '</div>' : '') +
+                '<div class="snippet-body-text" style="background:var(--bg-soft); padding:12px; border-radius:10px; font-size:13px; margin-bottom:12px; white-space:pre-wrap;">' + s.content + '</div>' +
+                '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">' +
+                    (tagCount > 0 ? '<span class="status-chip" style="background:rgba(79, 70, 229, 0.1); color:var(--primary); font-size:9px; padding:3px 8px;">' + tagCount + ' Variables Found</span>' : '<span></span>') +
+                    '<div style="display:flex; gap:8px;">' +
+                        '<button class="btn-outline" style="padding:6px 12px; font-size:11px;" onclick="event.stopPropagation(); window._useSnippetInChat(\'' + s.id + '\')">Insert</button>' +
+                        '<button class="btn-action" style="padding:6px 14px; font-size:11px; font-weight:700;" onclick="event.stopPropagation(); window._sendSnippetNow(\'' + s.id + '\')">Send Now</button>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="snippet-preview-box" style="white-space: pre-wrap;"><strong>Preview:</strong> ' + preview + '</div>' +
             '</div>';
         }).join('');
     }
@@ -3307,9 +3320,11 @@ window._deleteSnippetFolder = function(folderId) {
     window._renderSnippetModal();
 };
 
-window._showCreateSnippet = function() {
+window._showCreateSnippet = function(editId) {
     if (!window._activeSnippetFolder) { showNotification('Select a folder first', 'error'); return; }
-    var folderName = window._activeSnippetFolder;
+    var folderId = window._activeSnippetFolder;
+    
+    var existing = editId ? window._snippetStore.snippets.find(function(x) { return x.id === editId; }) : null;
     var box = document.getElementById('modalBox');
     box.className = 'modal-box';
     box.style.display = 'block';
@@ -3325,8 +3340,8 @@ window._showCreateSnippet = function() {
                     <svg viewBox="0 0 24 24" style="width:24px; height:24px; fill:currentColor;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
                 </div>
                 <div>
-                    <h2 style="font-size:18px; font-weight:800; margin:0; letter-spacing:-0.5px;">Create New Snippet</h2>
-                    <div style="font-size:12px; color:var(--text-muted); font-weight:600;">Adding to: <span style="color:var(--primary);">${folderName}</span></div>
+                    <h2 style="font-size:18px; font-weight:800; margin:0; letter-spacing:-0.5px;">${existing ? 'Edit Snippet' : 'Create New Snippet'}</h2>
+                    <div style="font-size:12px; color:var(--text-muted); font-weight:600;">Folder: <span style="color:var(--primary);">${folderId}</span></div>
                 </div>
             </div>
             <button class="close-btn" style="background:var(--bg-soft); width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center;" onclick="window._renderSnippetModal()">&times;</button>
@@ -3335,7 +3350,7 @@ window._showCreateSnippet = function() {
         <div style="padding:30px; background:var(--bg-main); max-height: 70vh; overflow-y: auto;">
             <div style="margin-bottom:24px;">
                 <label style="font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase; display:block; margin-bottom:10px; letter-spacing:0.5px;">Snippet Title</label>
-                <input type="text" id="newSnippetTitle" placeholder="e.g. Follow-up regarding photos" class="modern-input" style="width:100%; height:48px; font-size:15px; border-radius:12px;">
+                <input type="text" id="newSnippetTitle" placeholder="e.g. Follow-up regarding photos" class="modern-input" style="width:100%; height:48px; font-size:15px; border-radius:12px;" value="${existing ? existing.title : ''}">
             </div>
             
             <div style="margin-bottom:20px;">
@@ -3356,7 +3371,7 @@ window._showCreateSnippet = function() {
                         </div>
                     </div>
                 </div>
-                <textarea id="newSnippetContent" class="modern-input" rows="6" placeholder="Type your message here..." style="width:100%; min-height:120px; padding:16px; font-size:15px; border-radius:14px; line-height:1.6; resize:none;"></textarea>
+                <textarea id="newSnippetContent" class="modern-input" rows="6" placeholder="Type your message here..." style="width:100%; min-height:120px; padding:16px; font-size:15px; border-radius:14px; line-height:1.6; resize:none;">${existing ? existing.content : ''}</textarea>
                 <div style="display:flex; justify-content:flex-end; margin-top:6px; font-size:11px; font-weight:700; color:var(--text-muted);" id="snippetCharCount">0 characters</div>
             </div>
             
@@ -3365,12 +3380,12 @@ window._showCreateSnippet = function() {
                     <span style="background:var(--primary); width:6px; height:6px; border-radius:50%; box-shadow: 0 0 10px var(--primary);"></span>
                     Real-time Preview
                 </div>
-                <div id="snippetPreviewContent" style="font-size:14px; color:var(--text-main); line-height:1.7; font-style:italic; opacity:0.7; white-space: pre-wrap;">Start typing to see the final message with variable data...</div>
+                <div id="snippetPreviewContent" style="font-size:14px; color:var(--text-main); line-height:1.7; font-style:italic; opacity:0.7; white-space: pre-wrap;">${existing ? window._parseLiquidTags(existing.content) : 'Start typing to see the final message with variable data...'}</div>
             </div>
 
             <div style="display:flex; justify-content:flex-end; gap:16px; margin-top:10px;">
                 <button class="btn-premium ghost" style="padding:12px 24px; font-size:14px; font-weight:700;" onclick="window._renderSnippetModal()">Discard</button>
-                <button class="btn-premium primary" style="padding:12px 30px; font-size:14px; font-weight:700; background:var(--primary); box-shadow: 0 6px 20px rgba(79, 70, 229, 0.25); border:none;" onclick="window._saveNewSnippet()">Create Snippet</button>
+                <button class="btn-premium primary" style="padding:12px 30px; font-size:14px; font-weight:700; background:var(--primary); box-shadow: 0 6px 20px rgba(79, 70, 229, 0.25); border:none;" onclick="window._saveNewSnippet('${editId || ''}')">${existing ? 'Update Snippet' : 'Create Snippet'}</button>
             </div>
         </div>
     `;
