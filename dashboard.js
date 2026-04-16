@@ -3183,7 +3183,6 @@ window.openSnippetManager = function() {
 };
 
 window._renderSnippetModal = function() {
-    var overlay = document.getElementById('modalOverlay');
     var box = document.getElementById('modalBox');
     var store = window._snippetStore;
     var activeId = window._activeSnippetFolder;
@@ -3193,55 +3192,122 @@ window._renderSnippetModal = function() {
     box.style.display = 'flex';
     box.style.width = '1000px';
     box.style.maxWidth = '95vw';
-    box.style.height = '80vh';
+    box.style.height = '85vh';
     box.style.overflow = 'hidden';
 
     var folderListHtml = store.folders.map(function(f) {
         var isSelected = f.id === activeId;
         var activeCls = isSelected ? 'active' : '';
-        return '<div class="hub-folder-item ' + activeCls + '" onclick="window._selectSnippetFolder(\'' + f.id + '\')">' +
-            '<svg class="f-icon" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>' +
-            '<span>' + f.name + '</span>' +
-            '<div class="f-actions">' +
-                '<button onclick="event.stopPropagation(); window._editSnippetFolder(\'' + f.id + '\')">✎</button>' +
-                '<button onclick="event.stopPropagation(); window._deleteSnippetFolder(\'' + f.id + '\')">✕</button>' +
-            '</div>' +
-        '</div>';
+        return `
+            <div class="hub-folder-item ${activeCls}" onclick="window._selectSnippetFolder('${f.id}')">
+                <svg class="f-icon" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+                <span>${f.name}</span>
+                <div class="f-actions">
+                    <button onclick="event.stopPropagation(); window._editSnippetFolder('${f.id}')">✎</button>
+                    <button onclick="event.stopPropagation(); window._deleteSnippetFolder('${f.id}')">✕</button>
+                </div>
+            </div>`;
     }).join('');
 
     var activeFolder = store.folders.find(function(f) { return f.id === activeId; });
     var folderSnippets = store.snippets.filter(function(s) { return s.folderId === activeId; });
-        }).join('');
+    // Search filtering
+    var searchTerm = (window._snippetSearchTerm || '').toLowerCase();
+    if (searchTerm) {
+        folderSnippets = folderSnippets.filter(function(s) { 
+            return s.title.toLowerCase().includes(searchTerm) || s.content.toLowerCase().includes(searchTerm); 
+        });
     }
 
+    var snippetRowsHtml = folderSnippets.map(function(s) {
+        var isSelected = s.id === window._selectedSnippetId;
+        return `
+            <tr class="hub-row ${isSelected ? 'selected' : ''}" onclick="window._selectedSnippetId='${s.id}'; window._renderSnippetModal();">
+                <td style="width:40px; text-align:center;"><input type="checkbox" onclick="event.stopPropagation()"></td>
+                <td class="hub-col-name"><div class="name-text">${s.title}</div></td>
+                <td class="hub-col-owner">Admin</td>
+                <td class="hub-col-date">Just now</td>
+                <td class="hub-col-actions" style="position:relative;">
+                    <button class="hub-action-btn" onclick="event.stopPropagation(); var d=document.getElementById('menu-${s.id}'); d.style.display=d.style.display==='none'?'block':'none';">Actions ▾</button>
+                    <div id="menu-${s.id}" class="hub-dropdown">
+                        <div onclick="window._selectedSnippetId='${s.id}'; window._renderSnippetModal();">Preview</div>
+                        <div onclick="window._showCreateSnippet('${s.id}')">Edit</div>
+                        <div onclick="window._useSnippetInChat('${s.id}')">Insert to Chat</div>
+                        <div onclick="window._sendSnippetNow('${s.id}')" style="font-weight:700; color:var(--primary);">Send Now</div>
+                        <hr>
+                        <div onclick="window._deleteSnippet('${s.id}')" style="color:#ef4444;">Delete</div>
+                    </div>
+                </td>
+            </tr>
+            ${isSelected ? `
+            <tr class="hub-preview-row">
+                <td colspan="5">
+                    <div class="hub-preview-panel">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                            <div class="preview-header">Template Content</div>
+                            <button class="btn-text-only" onclick="window._showCreateSnippet('${s.id}')">Edit Template</button>
+                        </div>
+                        <div class="preview-content" style="white-space:pre-wrap;">${s.content}</div>
+                        <div class="preview-live-box">
+                            <strong>Live Preview:</strong>
+                            <div style="margin-top:8px; opacity:0.8;">${window._parseLiquidTags ? window._parseLiquidTags(s.content) : s.content}</div>
+                        </div>
+                    </div>
+                </td>
+            </tr>` : ''}
+        `;
+    }).join('');
+
     box.innerHTML = `
-        <div class="snippet-sidebar">
-            <h2 style="font-size:18px; font-weight:900; color:var(--text-main); margin-bottom:24px; display:flex; align-items:center; gap:10px;">
-                <svg viewBox="0 0 24 24" style="width:24px; height:24px; fill:var(--primary);"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-                Snippets
-            </h2>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding:0 4px;">
-                <span style="font-size:11px; font-weight:800; text-transform:uppercase; color:var(--text-muted); letter-spacing:1px;">Folders</span>
-                <button onclick="window._addSnippetFolder()" style="background:none; border:none; color:var(--primary); font-size:18px; cursor:pointer; font-weight:bold;">+</button>
+        <div class="hub-sidebar">
+            <div class="hub-sidebar-header">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--primary)"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+                <span>Snippets Manager</span>
             </div>
-            <div style="flex:1; overflow-y:auto; margin:0 -8px; padding:0 8px;">${folderListHtml}</div>
-            <div style="padding-top:20px; border-top:1px solid var(--border-light);">
-                <button class="btn-outline" style="width:100%; justify-content:center;" onclick="document.getElementById('modalOverlay').style.display='none'">Close Library</button>
+            <div class="hub-sidebar-scroll">
+                <div class="hub-section-label">FOLDERS <button onclick="window._addSnippetFolder()" class="add-f-btn">+</button></div>
+                ${folderListHtml}
+            </div>
+            <div class="hub-sidebar-footer">
+                <button class="btn-hub-secondary" style="width:100%;" onclick="document.getElementById('modalOverlay').style.display='none'">Exit Library</button>
             </div>
         </div>
-        <div class="snippet-content-main">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
-                <div>
-                    <h3 style="font-size:22px; font-weight:800; color:var(--text-main); margin:0;">${activeFolder ? activeFolder.name : 'Select Folder'}</h3>
-                    <p style="font-size:13px; color:var(--text-muted); margin-top:4px;">${folderSnippets.length} templates available</p>
+        <div class="hub-main">
+            <div class="hub-header">
+                <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:20px;">
+                    <h2 style="margin:0; font-size:22px; font-weight:800;">${activeFolder ? activeFolder.name : 'Templates'}</h2>
+                    <div style="display:flex; gap:12px;">
+                        <button class="btn-hub-secondary" onclick="window._addSnippetFolder()">New Folder</button>
+                        <button class="btn-hub-primary" onclick="window._showCreateSnippet()">Create snippet</button>
+                    </div>
                 </div>
-                <button class="btn-action" onclick="window._showCreateSnippet()" style="box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);">+ Create Snippet</button>
+                <div class="hub-controls">
+                    <div class="hub-search">
+                        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                        <input type="text" placeholder="Search template name or content..." oninput="window._snippetSearchTerm=this.value; window._renderSnippetModal();" value="${window._snippetSearchTerm || ''}">
+                    </div>
+                    <div class="hub-count">${folderSnippets.length} snippets listed</div>
+                </div>
             </div>
-            <div style="flex:1; overflow-y:auto; padding-right:10px;">${snippetListHtml}</div>
+            <div class="hub-table-wrapper">
+                <table class="hub-table">
+                    <thead>
+                        <tr>
+                            <th style="width:40px;"><input type="checkbox"></th>
+                            <th>NAME</th>
+                            <th>CREATED BY</th>
+                            <th>DATE UPDATED</th>
+                            <th style="width:100px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${snippetRowsHtml || '<tr><td colspan="5" style="text-align:center; padding:120px; color:var(--text-muted);"><div style="font-size:40px; margin-bottom:12px;">📭</div>No snippets found.</td></tr>'}
+                    </tbody>
+                </table>
+            </div>
         </div>
     `;
-
-    overlay.style.display = 'flex';
+    document.getElementById('modalOverlay').style.display = 'flex';
 };
 
 window._selectSnippetFolder = function(folderId) {
