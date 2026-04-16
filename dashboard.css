@@ -2319,6 +2319,175 @@ select.status-pill {
 [data-theme="dark"] .premium-solicitor-select { background: rgba(0, 122, 255, 0.15); border-color: rgba(0, 122, 255, 0.25); }
 [data-theme="dark"] .mini-solicitor-dropdown { color: #3b82f6; }
 
+/* ═══════════════════════════════════════
+   PREMIUM MODAL & ELEMENT STYLES
+═══════════════════════════════════════ */
+.snippet-modal-container {
+    padding: 0;
+    width: 900px !important;
+    max-width: 95vw;
+}
+
+.snippet-sidebar {
+    background: var(--bg-surface-2);
+    border-right: 1px solid var(--border-light);
+    width: 240px;
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+}
+
+.snippet-content-main {
+    flex: 1;
+    padding: 32px;
+    background: var(--bg-main);
+    display: flex;
+    flex-direction: column;
+}
+
+.snippet-folder-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-bottom: 4px;
+}
+
+.snippet-folder-item:hover {
+    background: rgba(79, 70, 229, 0.05);
+    color: var(--primary);
+}
+
+.snippet-folder-item.active {
+    background: var(--primary);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.snippet-card {
+    background: #fff;
+    border: 1px solid var(--border-light);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+    cursor: pointer;
+    transition: all 0.25s var(--ease-spring);
+    position: relative;
+    border-left: 4px solid transparent;
+}
+
+[data-theme="dark"] .snippet-card { background: #1f2937; border-color: rgba(255,255,255,0.05); }
+
+.snippet-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+    border-left-color: var(--primary);
+}
+
+.snippet-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.snippet-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.snippet-body-text {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 16px;
+}
+
+.snippet-preview-box {
+    background: rgba(16, 185, 129, 0.04);
+    border: 1px dashed rgba(16, 185, 129, 0.3);
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 13px;
+    color: #059669;
+    font-style: italic;
+}
+
+.emoji-full-picker {
+    position: absolute;
+    bottom: 80px;
+    right: 20px;
+    width: 320px;
+    height: 400px;
+    background: #fff;
+    border-radius: 24px;
+    box-shadow: 0 15px 50px rgba(0,0,0,0.2);
+    border: 1px solid var(--border-light);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: dialerPopIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+[data-theme="dark"] .emoji-full-picker { background: #1C1C2E; border-color: rgba(255,255,255,0.1); }
+
+.emoji-category-tabs {
+    display: flex;
+    padding: 12px;
+    gap: 8px;
+    border-bottom: 1px solid var(--border-light);
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.emoji-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    padding: 12px;
+    gap: 8px;
+    overflow-y: auto;
+}
+
+.emoji-item {
+    font-size: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.emoji-item:hover {
+    background: rgba(0,0,0,0.05);
+    transform: scale(1.2);
+}
+
+[data-theme="dark"] .emoji-item:hover { background: rgba(255,255,255,0.1); }
+
+.msg-sender-label {
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    opacity: 0.7;
+}
+
+.msg-bubble.outbound .msg-sender-label { color: rgba(255,255,255,0.8); text-align: right; }
+.msg-bubble.inbound .msg-sender-label { color: var(--primary); }
+
 .details-pane-header {
     padding: 24px;
     font-size: 13px;

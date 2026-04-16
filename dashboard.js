@@ -3024,7 +3024,7 @@ window.sendCommSms = function() {
     
     const bubble = document.createElement('div');
     bubble.className = 'msg-bubble outbound';
-    bubble.innerHTML = msg + '<span class="msg-time">Sending...</span>';
+    bubble.innerHTML = '<div class="msg-sender-label">You (Admin)</div>' + msg + '<span class="msg-time">Sending...</span>';
     msgContainer.appendChild(bubble);
     
     input.value = '';
@@ -3047,7 +3047,7 @@ window.sendCommSms = function() {
                     typing.style.display = 'none';
                     var reply = document.createElement('div');
                     reply.className = 'msg-bubble inbound';
-                    reply.innerHTML = 'Okay, received. Thank you! <span class="msg-time">Just now</span>';
+                    reply.innerHTML = '<div class="msg-sender-label">Client</div>' + 'Okay, received. Thank you! <span class="msg-time">Just now</span>';
                     msgContainer.appendChild(reply);
                     msgContainer.scrollTop = msgContainer.scrollHeight;
                     
@@ -3066,15 +3066,31 @@ window.sendCommSms = function() {
    LIQUID TAG PARSER (Regex Engine)
 ═══════════════════════════════════════ */
 window._parseLiquidTags = function(template) {
+    if (!template) return '';
     if (!activeChatLeadId) return template;
     var lead = submissionsData.find(function(l) { return String(l.id) === String(activeChatLeadId); });
     if (!lead) return template;
 
-    var firstName = lead.first_name || (lead.name ? lead.name.split(' ')[0] : 'Client');
-    var lastName = lead.last_name || '';
-    var fullName = lead.name || ((firstName + ' ' + lastName).trim()) || 'Client';
+    // Enhanced name detection
+    var rawName = (lead.name || lead.full_name || '').trim();
+    var firstName = (lead.first_name || '').trim();
+    var lastName = (lead.last_name || '').trim();
+
+    if (!firstName && rawName) {
+        firstName = rawName.split(' ')[0];
+    }
+    if (!firstName) firstName = 'Client';
+
+    if (!lastName && rawName && rawName.includes(' ')) {
+        lastName = rawName.split(' ').slice(1).join(' ');
+    }
+
+    var fullName = firstName + (lastName ? ' ' + lastName : '');
+    if (rawName && rawName.length > fullName.length) fullName = rawName;
+
     var solicitor = (lead.companies && lead.companies.company_name) ? lead.companies.company_name : 'your solicitor';
-    var phone = lead.phone || lead.mobile_number || '';
+    var phone = lead.phone || lead.mobile_number || 'N/A';
+    var email = lead.email || 'N/A';
 
     return template
         .replace(/\{\{first_name\}\}/g, firstName)
@@ -3084,6 +3100,7 @@ window._parseLiquidTags = function(template) {
         .replace(/\{\{solicitor\}\}/g, solicitor)
         .replace(/\{\{solicitor_name\}\}/g, solicitor)
         .replace(/\{\{phone\}\}/g, phone)
+        .replace(/\{\{email\}\}/g, email)
         .replace(/\{\{case_id\}\}/g, lead.id ? ('CASE-' + String(lead.id).substring(0, 6).toUpperCase()) : 'CASE-000');
 };
 
@@ -3093,8 +3110,11 @@ window.insertSnippet = function(template) {
     if (input) {
         input.value = parsed;
         input.focus();
-        if (template !== parsed) {
-            showNotification('Dynamic variables injected from lead data', 'info');
+        showNotification('Snippet injected with lead data', 'success');
+        
+        // Auto-check for any remaining tags
+        if (parsed.includes('{{')) {
+            showNotification('Note: Some variables could not be mapped.', 'warning');
         }
     }
 };
@@ -3119,9 +3139,16 @@ window._renderSnippetModal = function() {
     var store = window._snippetStore;
     var activeId = window._activeSnippetFolder;
 
+    // Apply premium class to modal box
+    box.className = 'modal-box snippet-modal-container';
+    box.style.padding = '0';
+    box.style.display = 'flex';
+    box.style.overflow = 'hidden';
+
     var folderListHtml = store.folders.map(function(f) {
-        var cls = f.id === activeId ? 'background:var(--primary); color:#fff; font-weight:700;' : 'background:transparent; color:var(--label-2);';
-        return '<button onclick="window._selectSnippetFolder(\'' + f.id + '\')" style="text-align:left; padding:10px 12px; border:none; border-radius:8px; cursor:pointer; font-size:13px; width:100%; transition:all 0.2s; ' + cls + '">📁 ' + f.name + '</button>';
+        var activeCls = f.id === activeId ? 'active' : '';
+        return '<div class="snippet-folder-item ' + activeCls + '" onclick="window._selectSnippetFolder(\'' + f.id + '\')">' +
+            '<span style="font-size:18px;">' + (f.id === activeId ? '📂' : '📁') + '</span> ' + f.name + '</div>';
     }).join('');
 
     var activeFolder = store.folders.find(function(f) { return f.id === activeId; });
@@ -3129,50 +3156,59 @@ window._renderSnippetModal = function() {
 
     var snippetListHtml = '';
     if (folderSnippets.length === 0) {
-        snippetListHtml = '<div style="text-align:center; padding:40px; color:var(--label-3); font-size:13px;">No snippets in this folder yet.</div>';
+        snippetListHtml = '<div style="text-align:center; padding:60px; color:var(--text-muted);">' +
+            '<div style="font-size:48px; margin-bottom:16px; opacity:0.3;">📭</div>' +
+            '<div style="font-size:15px; font-weight:600;">No snippets in this folder</div>' +
+            '<p style="font-size:13px; margin-top:8px;">Create your first message template to get started.</p>' +
+            '</div>';
     } else {
         snippetListHtml = folderSnippets.map(function(s) {
             var preview = window._parseLiquidTags(s.content);
             var tagCount = (s.content.match(/\{\{[^}]+\}\}/g) || []).length;
-            return '<div style="padding:14px 16px; border:1px solid var(--border); border-radius:10px; cursor:pointer; transition:all 0.2s; margin-bottom:8px;" onmouseenter="this.style.borderColor=\'var(--primary)\';this.style.boxShadow=\'0 4px 12px rgba(0,122,255,0.08)\'" onmouseleave="this.style.borderColor=\'var(--border)\';this.style.boxShadow=\'none\'">' +
-                '<div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:6px;">' +
-                    '<strong style="font-size:14px; color:var(--label-1);">' + s.title + '</strong>' +
-                    '<button onclick="event.stopPropagation(); window._deleteSnippet(\'' + s.id + '\')" style="background:none; border:none; cursor:pointer; color:var(--label-3); font-size:16px; padding:0 4px;" title="Delete">&times;</button>' +
+            return '<div class="snippet-card" onclick="window._useSnippetInChat(\'' + s.id + '\')">' +
+                '<div class="snippet-card-header">' +
+                    '<div class="snippet-title">' + s.title + '</div>' +
+                    '<button onclick="event.stopPropagation(); window._deleteSnippet(\'' + s.id + '\')" style="background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:18px;">&times;</button>' +
                 '</div>' +
-                '<p style="margin:0 0 8px; font-size:12px; color:var(--label-3); line-height:1.5;">' + s.content + '</p>' +
-                '<div style="display:flex; justify-content:space-between; align-items:center;">' +
-                    (tagCount > 0 ? '<span style="font-size:10px; color:var(--primary); font-family:monospace; background:rgba(0,122,255,0.08); padding:2px 8px; border-radius:4px;">Uses ' + tagCount + ' tag' + (tagCount > 1 ? 's' : '') + '</span>' : '<span></span>') +
-                    '<div style="display:flex; gap:6px;">' +
-                        '<button onclick="window._useSnippetInChat(\'' + s.id + '\')" style="font-size:11px; padding:4px 10px; border:1px solid var(--primary); color:var(--primary); background:transparent; border-radius:6px; cursor:pointer; font-weight:600;">Insert</button>' +
-                        '<button onclick="window._sendSnippetNow(\'' + s.id + '\')" style="font-size:11px; padding:4px 10px; border:none; color:#fff; background:var(--primary); border-radius:6px; cursor:pointer; font-weight:600;">Send Now</button>' +
+                '<div class="snippet-body-text">' + s.content + '</div>' +
+                '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">' +
+                    (tagCount > 0 ? '<span class="status-chip" style="font-size:9px; padding:3px 8px;">' + tagCount + ' Variables Found</span>' : '<span></span>') +
+                    '<div style="display:flex; gap:8px;">' +
+                        '<button class="btn-outline" style="padding:6px 12px; font-size:11px;" onclick="event.stopPropagation(); window._useSnippetInChat(\'' + s.id + '\')">Insert</button>' +
+                        '<button class="btn-action" style="padding:6px 14px; font-size:11px;" onclick="event.stopPropagation(); window._sendSnippetNow(\'' + s.id + '\')">Send Now</button>' +
                     '</div>' +
                 '</div>' +
-                (preview !== s.content ? '<div style="margin-top:8px; padding:8px 10px; background:rgba(16,185,129,0.06); border-radius:6px; font-size:11px; color:#10B981; border-left:3px solid #10B981;">Preview: ' + preview + '</div>' : '') +
+                (preview !== s.content ? '<div class="snippet-preview-box"><strong>Preview:</strong> ' + preview + '</div>' : '') +
             '</div>';
         }).join('');
     }
 
-    box.innerHTML =
-        '<div class="modal-header">' +
-            '<h2>Snippet Library</h2>' +
-            '<button class="close-btn" onclick="document.getElementById(\'modalOverlay\').style.display=\'none\'">&times;</button>' +
-        '</div>' +
-        '<div style="display:flex; gap:20px; min-height:340px;">' +
-            '<div style="width:200px; flex-shrink:0; border-right:1px solid var(--border); padding-right:16px; display:flex; flex-direction:column;">' +
-                '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">' +
-                    '<span style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--label-3);">Folders</span>' +
-                    '<button onclick="window._addSnippetFolder()" style="font-size:11px; padding:3px 8px; border:1px solid var(--border); background:transparent; border-radius:6px; cursor:pointer; color:var(--label-2); font-weight:600;">+ New</button>' +
-                '</div>' +
-                '<div style="display:flex; flex-direction:column; gap:4px; flex:1; overflow-y:auto;">' + folderListHtml + '</div>' +
-            '</div>' +
-            '<div style="flex:1; display:flex; flex-direction:column;">' +
-                '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">' +
-                    '<h4 style="margin:0; font-size:15px; color:var(--label-1);">' + (activeFolder ? activeFolder.name : 'Select a folder') + '</h4>' +
-                    '<button onclick="window._showCreateSnippet()" style="font-size:11px; padding:5px 12px; border:none; background:var(--primary); color:#fff; border-radius:6px; cursor:pointer; font-weight:600;">+ Create Snippet</button>' +
-                '</div>' +
-                '<div style="flex:1; overflow-y:auto;">' + snippetListHtml + '</div>' +
-            '</div>' +
-        '</div>';
+    box.innerHTML = `
+        <div class="snippet-sidebar">
+            <h2 style="font-size:18px; font-weight:900; color:var(--text-main); margin-bottom:24px; display:flex; align-items:center; gap:10px;">
+                <svg viewBox="0 0 24 24" style="width:24px; height:24px; fill:var(--primary);"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+                Snippets
+            </h2>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding:0 4px;">
+                <span style="font-size:11px; font-weight:800; text-transform:uppercase; color:var(--text-muted); letter-spacing:1px;">Folders</span>
+                <button onclick="window._addSnippetFolder()" style="background:none; border:none; color:var(--primary); font-size:18px; cursor:pointer; font-weight:bold;">+</button>
+            </div>
+            <div style="flex:1; overflow-y:auto; margin:0 -8px; padding:0 8px;">${folderListHtml}</div>
+            <div style="padding-top:20px; border-top:1px solid var(--border-light);">
+                <button class="btn-outline" style="width:100%; justify-content:center;" onclick="document.getElementById('modalOverlay').style.display='none'">Close Library</button>
+            </div>
+        </div>
+        <div class="snippet-content-main">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+                <div>
+                    <h3 style="font-size:22px; font-weight:800; color:var(--text-main); margin:0;">${activeFolder ? activeFolder.name : 'Select Folder'}</h3>
+                    <p style="font-size:13px; color:var(--text-muted); margin-top:4px;">${folderSnippets.length} templates available</p>
+                </div>
+                <button class="btn-action" onclick="window._showCreateSnippet()" style="box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);">+ Create Snippet</button>
+            </div>
+            <div style="flex:1; overflow-y:auto; padding-right:10px;">${snippetListHtml}</div>
+        </div>
+    `;
 
     overlay.style.display = 'flex';
 };
@@ -3192,40 +3228,58 @@ window._addSnippetFolder = function() {
 
 window._showCreateSnippet = function() {
     if (!window._activeSnippetFolder) { showNotification('Select a folder first', 'error'); return; }
-    var overlay = document.getElementById('modalOverlay');
     var box = document.getElementById('modalBox');
+    box.className = 'modal-box';
+    box.style.display = 'block';
+    box.style.width = '550px';
 
-    box.innerHTML =
-        '<div class="modal-header">' +
-            '<h2>Create Snippet</h2>' +
-            '<button class="close-btn" onclick="window._renderSnippetModal()">&times;</button>' +
-        '</div>' +
-        '<div style="display:flex; flex-direction:column; gap:14px;">' +
-            '<div>' +
-                '<label style="font-size:12px; font-weight:600; color:var(--label-2); display:block; margin-bottom:6px;">Title</label>' +
-                '<input type="text" id="newSnippetTitle" placeholder="e.g. Initial Follow-Up" style="width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:8px; font-size:14px; outline:none; background:var(--surface-2); color:var(--label-1);">' +
-            '</div>' +
-            '<div>' +
-                '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">' +
-                    '<label style="font-size:12px; font-weight:600; color:var(--label-2); display:block;">Content</label>' +
-                    '<div style="position:relative;">' +
-                        '<button type="button" onclick="var d=document.getElementById(\'snippetVarDrop\'); d.style.display=d.style.display===\'none\'?\'block\':\'none\';" style="font-size:11px; padding:4px 8px; border:1px solid var(--border-med); border-radius:6px; cursor:pointer; background:var(--surface-1); color:var(--blue); font-weight:700;">{ } Insert Variable</button>' +
-                        '<div id="snippetVarDrop" style="display:none; position:absolute; right:0; top:100%; margin-top:4px; width:160px; background:var(--surface-1); border:1px solid var(--border); box-shadow:var(--shadow-md); border-radius:8px; z-index:1000; overflow:hidden;">' +
-                            '<div onclick="window._insertVarIntoSnippet(\'{{first_name}}\')" style="padding:8px 12px; font-size:12px; color:var(--label-1); cursor:pointer; border-bottom:1px solid var(--border); transition:0.2s;" onmouseover="this.style.background=\'var(--surface-2)\'" onmouseout="this.style.background=\'transparent\'">Contact Name</div>' +
-                            '<div onclick="window._insertVarIntoSnippet(\'{{solicitor_name}}\')" style="padding:8px 12px; font-size:12px; color:var(--label-1); cursor:pointer; border-bottom:1px solid var(--border); transition:0.2s;" onmouseover="this.style.background=\'var(--surface-2)\'" onmouseout="this.style.background=\'transparent\'">Solicitor Name</div>' +
-                            '<div onclick="window._insertVarIntoSnippet(\'{{case_id}}\')" style="padding:8px 12px; font-size:12px; color:var(--label-1); cursor:pointer; transition:0.2s;" onmouseover="this.style.background=\'var(--surface-2)\'" onmouseout="this.style.background=\'transparent\'">Case ID</div>' +
-                        '</div>' +
-                    '</div>' +
-                '</div>' +
-                '<textarea id="newSnippetContent" rows="5" placeholder="Hi {{first_name}}, ..." style="width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:8px; font-size:14px; outline:none; resize:vertical; font-family:inherit; background:var(--surface-2); color:var(--label-1);"></textarea>' +
-            '</div>' +
-            '<div style="display:flex; gap:10px; justify-content:flex-end; padding-top:6px;">' +
-                '<button onclick="window._renderSnippetModal()" style="padding:8px 16px; border:1px solid var(--border); background:transparent; border-radius:8px; cursor:pointer; font-weight:600; color:var(--label-2);">Cancel</button>' +
-                '<button onclick="window._saveNewSnippet()" style="padding:8px 20px; border:none; background:var(--primary); color:#fff; border-radius:8px; cursor:pointer; font-weight:600;">Save Snippet</button>' +
-            '</div>' +
-        '</div>';
+    box.innerHTML = `
+        <div class="modal-header">
+            <h2>Create New Snippet</h2>
+            <button class="close-btn" onclick="window._renderSnippetModal()">&times;</button>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:20px; padding:20px;">
+            <div>
+                <label style="font-size:12px; font-weight:800; color:var(--text-muted); text-transform:uppercase; display:block; margin-bottom:8px;">Snippet Title</label>
+                <input type="text" id="newSnippetTitle" placeholder="e.g. Follow-up regarding photos" class="modern-input" style="width:100%; height:44px;">
+            </div>
+            <div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <label style="font-size:12px; font-weight:800; color:var(--text-muted); text-transform:uppercase;">Message Template</label>
+                    <div style="position:relative;">
+                        <button type="button" class="btn-outline" style="padding:4px 10px; font-size:11px; gap:4px;" onclick="var d=document.getElementById('snippetVarDrop'); d.style.display=d.style.display==='none'?'block':'none';">
+                            <span>{ }</span> Insert Variable
+                        </button>
+                        <div id="snippetVarDrop" style="display:none; position:absolute; right:0; top:100%; margin-top:6px; width:200px; background:var(--bg-main); border:1px solid var(--border-light); box-shadow:0 10px 30px rgba(0,0,0,0.15); border-radius:12px; z-index:1000; overflow:hidden;">
+                            <div onclick="window._insertVarIntoSnippet('{{first_name}}')" style="padding:10px 14px; font-size:13px; color:var(--text-main); cursor:pointer; border-bottom:1px solid var(--border-light); transition:0.2s;" onmouseover="this.style.background='rgba(79, 70, 229, 0.05)'" onmouseout="this.style.background='transparent'">First Name</div>
+                            <div onclick="window._insertVarIntoSnippet('{{full_name}}')" style="padding:10px 14px; font-size:13px; color:var(--text-main); cursor:pointer; border-bottom:1px solid var(--border-light); transition:0.2s;" onmouseover="this.style.background='rgba(79, 70, 229, 0.05)'" onmouseout="this.style.background='transparent'">Full Name</div>
+                            <div onclick="window._insertVarIntoSnippet('{{solicitor_name}}')" style="padding:10px 14px; font-size:13px; color:var(--text-main); cursor:pointer; border-bottom:1px solid var(--border-light); transition:0.2s;" onmouseover="this.style.background='rgba(79, 70, 229, 0.05)'" onmouseout="this.style.background='transparent'">Solicitor Name</div>
+                            <div onclick="window._insertVarIntoSnippet('{{case_id}}')" style="padding:10px 14px; font-size:13px; color:var(--text-main); cursor:pointer; transition:0.2s;" onmouseover="this.style.background='rgba(79, 70, 229, 0.05)'" onmouseout="this.style.background='transparent'">Case ID</div>
+                        </div>
+                    </div>
+                </div>
+                <textarea id="newSnippetContent" class="modern-input" rows="5" placeholder="Use tags like {{first_name}} to personalize..." style="width:100%; height:auto; padding:12px;"></textarea>
+            </div>
+            <div id="snippetPreviewArea" class="snippet-preview-box" style="display:none;"></div>
+            <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:10px;">
+                <button class="btn-outline" onclick="window._renderSnippetModal()">Cancel</button>
+                <button class="btn-action" onclick="window._saveNewSnippet()">Save Snippet</button>
+            </div>
+        </div>
+    `;
 
-    overlay.style.display = 'flex';
+    document.getElementById('newSnippetContent').addEventListener('input', function() {
+        var preview = window._parseLiquidTags(this.value);
+        var previewArea = document.getElementById('snippetPreviewArea');
+        if (this.value) {
+            previewArea.style.display = 'block';
+            previewArea.innerHTML = '<strong>Live Preview:</strong> ' + preview;
+        } else {
+            previewArea.style.display = 'none';
+        }
+    });
+
+    document.getElementById('modalOverlay').style.display = 'flex';
 };
 
 window._insertVarIntoSnippet = function(variable) {
@@ -3286,8 +3340,33 @@ window._sendSnippetNow = function(snippetId) {
    EMOJI PICKER (Cursor-Aware Insertion)
 ═══════════════════════════════════════ */
 window.toggleEmojiPicker = function() {
-    var picker = document.getElementById('emojiPicker');
-    if (picker) picker.style.display = picker.style.display === 'none' ? 'flex' : 'none';
+    var existing = document.getElementById('emojiFullPicker');
+    if (existing) {
+        existing.remove();
+        return;
+    }
+
+    var picker = document.createElement('div');
+    picker.id = 'emojiFullPicker';
+    picker.className = 'emoji-full-picker';
+    
+    var emojis = [
+        '😀','😃','😄','😁','😆','😅','😂','🤣','😊','😇','🙂','🙃','😉','😌','😍','🥰','😘','😗','😙','😚','😋','😛','😝','😜','🤪','🤨','🧐','🤓','😎','🤩','🥳','😏','😒','😞','😔','😟','😕','🙁','☹️','😣','😖','😫','😩','🥺','😢','😭','😤','😠','😡','🤬','🤯','😳','🥵','🥶','😱','😨','😰','😥','😓','🤗','🤔','🤭','🤫','🤥','😶','😐','😑','😬','🙄','😯','😦','😧','😮','😲','🥱','😴','🤤','😪','😵','🤐','🥴','🤢','🤮','🤧','😷','🤒','🤕','🤑','🤠','😈','👿','👹','👺','🤡','👻','💀','☠️','👽','👾','🤖','💩','😺','😸','😻','😼','😽','🙀','😿','😾','🙈','🙉','🙊','💋','💌','💘','💝','💖','💗','💓','💞','💕','💟','❣️','💔','❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💪','🤙','👋','🤚','🖐️','✋','🖖','👌','🤏','✌️','🤞','🤟','🤘','🤙','☝️','👆','👇','👈','👉','🙌','🙏','🤝','👏','👍','👎','👊','✊','🤛','🤜','✨','🔥','✅','❌','⚠️','💰','📍','📞','✉️'
+    ];
+
+    var emojiHtml = emojis.map(function(e) {
+        return '<div class="emoji-item" onclick="window.insertEmoji(\'' + e + '\')">' + e + '</div>';
+    }).join('');
+
+    picker.innerHTML = `
+        <div style="padding:16px; border-bottom:1px solid var(--border-light); display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:14px; font-weight:800; color:var(--text-main);">Choose Emoji</span>
+            <button onclick="document.getElementById('emojiFullPicker').remove()" style="background:none; border:none; cursor:pointer; font-size:18px;">&times;</button>
+        </div>
+        <div class="emoji-grid">${emojiHtml}</div>
+    `;
+
+    document.getElementById('commInputArea').appendChild(picker);
 };
 
 window.insertEmoji = function(emoji) {
@@ -3357,7 +3436,7 @@ window.receiveLiveMessage = function(msg, senderName) {
     if (msgContainer) {
         var reply = document.createElement('div');
         reply.className = 'msg-bubble inbound';
-        reply.innerHTML = msg + ' <span class="msg-time">Just now</span>';
+        reply.innerHTML = '<div class="msg-sender-label">Client</div>' + msg + ' <span class="msg-time">Just now</span>';
         msgContainer.appendChild(reply);
         msgContainer.scrollTop = msgContainer.scrollHeight;
     }
