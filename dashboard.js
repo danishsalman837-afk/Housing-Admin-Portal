@@ -2690,17 +2690,37 @@ window.openWhatsAppChat = function (leadId, name, phone) {
 // SMART DIALER & COMMUNICATION HUB
 // ═══════════════════════════════════════
 
-window.toggleDialer = function () {
+window.toggleDialer = function (number = null) {
     const dialer = document.getElementById('globalDialer');
     if (!dialer) return;
     const isVisible = dialer.classList.contains('active');
+
+    // If a number is passed, we always want to show the dialer and set the number
+    if (number) {
+        dialer.style.display = 'flex';
+        dialer.offsetHeight;
+        dialer.classList.add('active');
+        const input = document.getElementById('dialerInput');
+        if (input) {
+            // Clean the input (it might contain "No Phone" or "Select Lead")
+            const cleanNum = (number && !number.includes(':') && !number.toLowerCase().includes('lead') && !number.toLowerCase().includes('phone')) 
+                ? number.trim() 
+                : '';
+            
+            if (cleanNum) {
+                input.value = cleanNum;
+                onDialerInputChange();
+            }
+            input.focus();
+        }
+        return;
+    }
 
     if (isVisible) {
         dialer.classList.remove('active');
         dialer.style.display = 'none';
     } else {
         dialer.style.display = 'flex';
-        // Force reflow for animation
         dialer.offsetHeight;
         dialer.classList.add('active');
         const input = document.getElementById('dialerInput');
