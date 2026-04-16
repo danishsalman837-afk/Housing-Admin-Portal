@@ -449,8 +449,8 @@ function renderTable(data) {
                         <button class="dropdown-item" onclick="window.exportDocx('${item.id}')">
                             <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg> Download Word
                         </button>
-                        <button class="dropdown-item" onclick="window.openWhatsAppChat('${item.id}', '${(item.name || item.first_name || 'Lead').replace(/'/g, "\\'")}', '${item.phone || item.mobile_number}')">
-                            <svg viewBox="0 0 24 24" style="fill:#25D366;"><path d="M17.472 14.382c-.301-.15-1.781-.88-2.057-.981-.277-.101-.478-.15-.678.15s-.573.981-.703 1.129c-.13.15-.261.171-.562.021-.301-.15-1.274-.469-2.426-1.496-.897-.799-1.503-1.785-1.28-2.164.223-.379.223-.553.301-.703.15-.301.075-.478-.038-.703-.113-.225-.678-1.781-.929-2.383-.245-.59-.494-.51-.678-.519h-.573c-.201 0-.527.075-.803.379-.277.301-1.055 1.03-1.055 2.515s1.08 2.912 1.23 3.111c.15.201 2.126 3.245 5.15 4.554.719.311 1.28.497 1.716.637.722.229 1.38.197 1.9.12.58-.085 1.781-.728 2.031-1.431.25-.703.25-1.306.175-1.432-.075-.125-.276-.201-.577-.352zm-5.441 5.313h-.005c-1.63 0-3.226-.439-4.615-1.268l-.331-.197-3.434.901.917-3.347-.216-.344c-.909-1.447-1.387-3.125-1.387-4.853 0-5.064 4.119-9.183 9.186-9.183 2.454 0 4.761.956 6.495 2.691s2.69 4.041 2.69 6.493c0 5.067-4.12 9.184-9.188 9.184zm8.435-16.147C18.274 1.325 15.264 0 12.031 0 5.462 0 .113 5.35.11 11.919c0 2.099.549 4.148 1.594 5.961L0 24l6.233-1.636c1.745.952 3.712 1.455 5.717 1.456h.006c6.567 0 11.917-5.351 11.92-11.921 0-3.184-1.24-6.179-3.468-8.43z"/></svg> WhatsApp Chat
+                        <button class="dropdown-item" onclick="window.openCommHub('${item.id}', '${(item.name || item.first_name || 'Lead').replace(/'/g, "\\'")}', '${item.phone || item.mobile_number}')">
+                            <svg viewBox="0 0 24 24" style="fill:var(--primary);"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg> Communication Hub
                         </button>
                         <div style="border-top:1px solid var(--border); margin:4px 0;"></div>
                         <button class="dropdown-item danger" onclick="window.archiveLead('${item.id}')">
@@ -2671,7 +2671,7 @@ function setupWhatsAppRealtime() {
             }
             fetchActiveChatContacts();
             if (newMsg.direction === 'inbound') {
-                showToast("New WhatsApp message received", "info");
+                showToast("New communication received", "info");
             }
         })
         .subscribe();
@@ -2689,7 +2689,7 @@ window.filterChatContacts = function () {
     });
 };
 
-window.openWhatsAppChat = function (leadId, name, phone) {
+window.openCommHub = function (leadId, name, phone) {
     window.switchView('comm');
     window.selectChatContact(leadId, name, phone);
 };
