@@ -2585,7 +2585,7 @@ window.selectChatContact = async function (leadId, name, phone) {
 };
 
 async function fetchChatMessages(leadId) {
-    const chatContainer = document.getElementById('chatMessages');
+    const chatContainer = document.getElementById('commMessages');
     chatContainer.innerHTML = '<div class="loading-spinner"></div>';
 
     const { data: messages, error } = await supabase
@@ -2604,20 +2604,27 @@ async function fetchChatMessages(leadId) {
 }
 
 function renderMessages() {
-    const chatContainer = document.getElementById('chatMessages');
+    const chatContainer = document.getElementById('commMessages');
     if (!chatContainer) return;
 
     if (whatsappMessages.length === 0) {
-        chatContainer.innerHTML = '<div class="chat-welcome"><h3>No messages yet</h3><p>Send your first message to this lead.</p></div>';
+        chatContainer.innerHTML = '<div class="chat-welcome" style="margin:auto;"><div class="welcome-icon">💬</div><h3>No messages yet</h3><p>Send your first message to this lead.</p></div>';
         return;
     }
 
-    chatContainer.innerHTML = whatsappMessages.map(m => `
-        <div class="msg-bubble ${m.direction}">
-            <div class="msg-text">${m.message_body}</div>
-            <div class="msg-time">${new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-        </div>
-    `).join('');
+    chatContainer.innerHTML = whatsappMessages.map(m => {
+        const side = m.direction === 'inbound' ? 'inbound' : 'outbound';
+        const sender = m.direction === 'inbound' ? 'Client' : 'You (Admin)';
+        const checkmarks = m.direction === 'outbound' ? (m.status === 'read' ? ' <span style="color:#34B7F1;">✓✓</span>' : ' ✓') : '';
+        
+        return `
+            <div class="msg-bubble ${side}">
+                <div class="msg-sender-label">${sender}</div>
+                <div class="msg-text" style="white-space: pre-wrap;">${m.message_body}</div>
+                <div class="msg-time">${new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}${checkmarks}</div>
+            </div>
+        `;
+    }).join('');
 
     chatContainer.scrollTop = chatContainer.scrollHeight;
 }
@@ -3014,6 +3021,11 @@ window.handleCommKeydown = function(e) {
     }
 };
 
+window.autoExpandCommInput = function(el) {
+    el.style.height = 'auto';
+    el.style.height = (el.scrollHeight) + 'px';
+};
+
 window.sendCommSms = function() {
     const input = document.getElementById('commInputMessage');
     if (!input) return;
@@ -3031,10 +3043,28 @@ window.sendCommSms = function() {
     
     const bubble = document.createElement('div');
     bubble.className = 'msg-bubble outbound';
-    bubble.innerHTML = '<div class="msg-sender-label">You (Admin)</div>' + msg + '<span class="msg-time">Sending...</span>';
+    
+    const senderLabel = document.createElement('div');
+    senderLabel.className = 'msg-sender-label';
+    senderLabel.innerText = 'You (Admin)';
+    
+    const msgText = document.createElement('div');
+    msgText.innerText = msg; // innerText handles \n with pre-wrap perfectly and is safe
+    
+    const timeLabel = document.createElement('span');
+    timeLabel.className = 'msg-time';
+    timeLabel.innerText = 'Sending...';
+    
+    bubble.appendChild(senderLabel);
+    bubble.appendChild(msgText);
+    bubble.appendChild(timeLabel);
+    
     msgContainer.appendChild(bubble);
     
+    // Clear input
     input.value = '';
+    input.style.height = 'auto'; // Reset height
+    window.autoExpandCommInput(input);
     msgContainer.scrollTop = msgContainer.scrollHeight;
 
     setTimeout(function() {
@@ -3134,6 +3164,7 @@ window.insertSnippet = function(template) {
         if (parsed.includes('{{')) {
             showNotification('Note: Some variables could not be mapped.', 'warning');
         }
+        window.autoExpandCommInput(input);
     }
 };
 
