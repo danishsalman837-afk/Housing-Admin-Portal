@@ -399,10 +399,9 @@ function renderTable(data) {
                 }).join('');
 
                 solicitorDisplay = `
-                    <div style="display:flex; align-items:center; gap:5px; margin-top:6px; padding-left:2px;">
-                        <span style="font-size:11px; opacity:0.8;">👤</span>
-                        <select class="modern-select" style="padding: 2px 20px 2px 6px; font-size: 10px; border:none; background:var(--blue-light); color:var(--blue); font-weight:700; width:auto; min-width:130px; border-radius:6px; cursor:pointer;" onchange="window.handleFieldUpdate('${item.id}', 'assigned_solicitor_id', this.value)">
-                            <option value="">Select Solicitor...</option>
+                    <div style="display:flex; align-items:center; gap:6px; margin-top:4px;">
+                        <select class="sleek-select" style="background:var(--blue-light) !important; color:var(--blue) !important; border:none !important; height:24px !important; min-width:120px !important;" onchange="window.handleFieldUpdate('${item.id}', 'assigned_solicitor_id', this.value)">
+                            <option value="">👤 Member...</option>
                             ${solOptions}
                         </select>
                     </div>`;
@@ -417,7 +416,7 @@ function renderTable(data) {
             <td style="color:var(--label-3);">${item.phone || item.mobile_number || "---"}</td>
             <td style="color:var(--label-3);">${item.timestamp ? new Date(item.timestamp).toLocaleDateString() : '---'}</td>
             <td>
-                <select class="modern-select" style="padding: 6px 30px 6px 12px; font-size: 11px; width:100%; max-width:180px;" onchange="window.handleFieldUpdate('${item.id}', 'assigned_company_id', this.value)">${compOptions}</select>
+                <select class="sleek-select" style="width:100%; max-width:160px;" onchange="window.handleFieldUpdate('${item.id}', 'assigned_company_id', this.value)">${compOptions}</select>
                 ${solicitorDisplay}
             </td>
             <td>
