@@ -2318,7 +2318,7 @@ select.status-pill {
 .add-f-btn {
     background: none;
     border: none;
-    color: var(--primary);
+    color: #ff7a59;
     cursor: pointer;
     font-weight: 900;
 }
@@ -2328,22 +2328,31 @@ select.status-pill {
     align-items: center;
     gap: 12px;
     padding: 10px 24px;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     color: #33475b;
     cursor: pointer;
     transition: all 0.2s;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.folder-name-text {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .hub-folder-item:hover {
     background: #f5f8fa;
-    color: var(--primary);
+    color: #ff7a59;
 }
 
 .hub-folder-item.active {
     background: #eaf0f6;
-    color: var(--primary);
-    border-right: 3px solid var(--primary);
+    color: #ff7a59;
+    border-right: 3px solid #ff7a59;
 }
 
 .hub-folder-item .f-icon {
@@ -2353,7 +2362,7 @@ select.status-pill {
 }
 
 .hub-folder-item.active .f-icon {
-    fill: var(--primary);
+    fill: #ff7a59;
 }
 
 .f-actions { display: none; gap: 8px; }
@@ -2404,8 +2413,8 @@ select.status-pill {
 }
 
 .hub-search input:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    border-color: #ff7a59;
+    box-shadow: 0 0 0 3px rgba(255, 122, 89, 0.1);
 }
 
 .hub-count { font-size: 13px; color: #516f90; font-weight: 600; }
@@ -2413,7 +2422,7 @@ select.status-pill {
 .hub-table-wrapper {
     flex: 1;
     overflow-y: auto;
-    padding: 30px;
+    padding: 20px 30px;
 }
 
 .hub-table {
@@ -2422,6 +2431,7 @@ select.status-pill {
     border: 1px solid #dfe3e8;
     border-collapse: collapse;
     border-radius: 4px;
+    table-layout: fixed;
 }
 
 .hub-table th {
@@ -2439,17 +2449,19 @@ select.status-pill {
     font-size: 14px;
     color: #33475b;
     border-bottom: 1px solid #f5f8fa;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.hub-row { cursor: pointer; transition: background 0.2s; }
+.hub-row { cursor: pointer; transition: background 0.1s; }
 .hub-row:hover { background: #f5f8fa; }
-.hub-row.selected { background: #eaf0f6; box-shadow: inset 4px 0 0 var(--primary); }
+.hub-row.selected { background: #eaf0f6; box-shadow: inset 4px 0 0 #ff7a59; }
 
 .hub-col-name .name-text { font-weight: 700; color: #007799; }
-.content-preview { font-size: 12px; color: #516f90; margin-top: 4px; }
 
 .hub-action-btn {
-    background: #f5f8fa;
+    background: #fff;
     border: 1px solid #cbd6e2;
     padding: 6px 12px;
     border-radius: 4px;
@@ -2469,23 +2481,23 @@ select.status-pill {
     border-radius: 4px;
     box-shadow: 0 8px 16px rgba(0,0,0,0.1);
     z-index: 1000;
-    min-width: 160px;
+    min-width: 180px;
+    text-align: left;
 }
 
 .hub-dropdown div {
     padding: 10px 16px;
     font-size: 13px;
     font-weight: 600;
+    white-space: nowrap;
 }
 
-.hub-dropdown div:hover { background: #f5f8fa; color: var(--primary); }
+.hub-dropdown div:hover { background: #f5f8fa; color: #ff7a59; }
 .hub-dropdown hr { margin: 0; border: none; border-top: 1px solid #dfe3e8; }
 
 .hub-preview-row { background: #fbfcfd; }
-.hub-preview-panel { padding: 30px; border-bottom: 2px solid #eaf0f6; }
-.preview-header { font-size: 12px; font-weight: 800; color: #516f90; text-transform: uppercase; margin-bottom: 16px; }
-.preview-content { padding: 16px; background: #fff; border: 1px solid #dfe3e8; border-radius: 4px; font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
-.preview-live-box { margin-top: 20px; padding: 16px; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 4px; }
+.hub-preview-panel { padding: 25px; border-bottom: 1px solid #dfe3e8; }
+.preview-header { font-size: 11px; font-weight: 800; color: #516f90; text-transform: uppercase; letter-spacing: 0.5px; }
 
 .btn-hub-primary {
     background: #ff7a59;
@@ -2496,7 +2508,10 @@ select.status-pill {
     font-weight: 700;
     font-size: 14px;
     cursor: pointer;
+    transition: background 0.2s;
 }
+
+.btn-hub-primary:hover { background: #f2522e; }
 
 .btn-hub-secondary {
     background: #fff;
@@ -2505,6 +2520,7 @@ select.status-pill {
     padding: 10px 20px;
     border-radius: 3px;
     font-weight: 700;
+    cursor: pointer;
 }
 
 [data-theme="dark"] .snippet-hubspot-container { background: #0b121f; }
