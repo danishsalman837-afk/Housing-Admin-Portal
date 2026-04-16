@@ -3217,29 +3217,38 @@ window._renderSnippetModal = function() {
     } else {
         snippetListHtml = folderSnippets.map(function(s) {
             var isSelected = s.id === window._selectedSnippetId;
+            var tagCount = (s.content.match(/\{\{[^}]+\}\}/g) || []).length;
             
             if (!isSelected) {
                 return '<div class="snippet-item-compact" onclick="window._selectedSnippetId=\'' + s.id + '\'; window._renderSnippetModal();">' +
-                    '<div class="snippet-title" style="font-size:14px;">' + s.title + '</div>' +
-                    '<svg viewBox="0 0 24 24" style="width:16px; height:16px; opacity:0.3;"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>' +
+                    '<div class="snippet-title" style="font-size:14px; flex:1;">' + s.title + '</div>' +
+                    '<div class="snippet-item-actions" style="position:relative;">' +
+                        '<button onclick="event.stopPropagation(); var d=document.getElementById(\'menu-' + s.id + '\'); d.style.display=d.style.display===\'none\'?\'block\':\'none\';" style="background:none; border:none; padding:8px; cursor:pointer; color:var(--text-muted); opacity:0.6;">' +
+                            '<svg viewBox="0 0 24 24" style="width:18px; height:18px; fill:currentColor;"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>' +
+                        '</button>' +
+                        '<div id="menu-' + s.id + '" class="snippet-dot-menu" style="display:none; position:absolute; right:0; top:36px; background:var(--bg-main); border:1px solid var(--border-light); border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.1); z-index:100; min-width:140px; overflow:hidden;">' +
+                            '<div class="dot-menu-item" onclick="event.stopPropagation(); window._selectedSnippetId=\'' + s.id + '\'; window._renderSnippetModal();">Preview</div>' +
+                            '<div class="dot-menu-item" onclick="event.stopPropagation(); window._showCreateSnippet(\'' + s.id + '\')">Edit</div>' +
+                            '<div class="dot-menu-item delete" onclick="event.stopPropagation(); window._deleteSnippet(\'' + s.id + '\')">Delete</div>' +
+                        '</div>' +
+                    '</div>' +
                 '</div>';
             }
 
             var preview = window._parseLiquidTags ? window._parseLiquidTags(s.content) : s.content;
-            var tagCount = (s.content.match(/\{\{[^}]+\}\}/g) || []).length;
             
-            return '<div class="snippet-card-expanded">' +
+            return '<div class="snippet-card-expanded" style="position:relative;">' +
                 '<div class="snippet-card-header">' +
                     '<div class="snippet-title">' + s.title + '</div>' +
-                    '<div style="display:flex; gap:12px; align-items:center;">' +
-                        '<button onclick="event.stopPropagation(); window._showCreateSnippet(\'' + s.id + '\')" class="btn-text-only" style="color:var(--primary); font-size:12px; font-weight:700;">Edit</button>' +
-                        '<button onclick="event.stopPropagation(); window._deleteSnippet(\'' + s.id + '\')" style="background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:18px;">&times;</button>' +
+                    '<div style="display:flex; gap:8px;">' +
+                        '<button onclick="window._selectedSnippetId=null; window._renderSnippetModal();" style="background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:18px;">&times;</button>' +
                     '</div>' +
                 '</div>' +
                 '<div class="snippet-body-text" style="background:var(--bg-soft); padding:12px; border-radius:10px; font-size:13px; margin-bottom:12px; white-space:pre-wrap;">' + s.content + '</div>' +
                 '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">' +
                     (tagCount > 0 ? '<span class="status-chip" style="background:rgba(79, 70, 229, 0.1); color:var(--primary); font-size:9px; padding:3px 8px;">' + tagCount + ' Variables Found</span>' : '<span></span>') +
                     '<div style="display:flex; gap:8px;">' +
+                         '<button class="btn-text-only" style="color:var(--primary); font-size:12px; font-weight:700; padding:0 10px;" onclick="window._showCreateSnippet(\'' + s.id + '\')">Edit</button>' +
                         '<button class="btn-outline" style="padding:6px 12px; font-size:11px;" onclick="event.stopPropagation(); window._useSnippetInChat(\'' + s.id + '\')">Insert</button>' +
                         '<button class="btn-action" style="padding:6px 14px; font-size:11px; font-weight:700;" onclick="event.stopPropagation(); window._sendSnippetNow(\'' + s.id + '\')">Send Now</button>' +
                     '</div>' +
@@ -3334,14 +3343,19 @@ window._showCreateSnippet = function(editId) {
     box.style.boxShadow = '0 25px 50px -12px rgba(0, 0, 0, 0.25)';
 
     box.innerHTML = `
-        <div class="modal-header" style="background:var(--bg-main); padding: 24px 30px; border-bottom: 1px solid var(--border-light); display:flex; justify-content:space-between; align-items:center;">
-            <div style="display:flex; align-items:center; gap:14px;">
-                <div style="background:rgba(79, 70, 229, 0.1); width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; color:var(--primary);">
-                    <svg viewBox="0 0 24 24" style="width:24px; height:24px; fill:currentColor;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-                </div>
-                <div>
-                    <h2 style="font-size:18px; font-weight:800; margin:0; letter-spacing:-0.5px;">${existing ? 'Edit Snippet' : 'Create New Snippet'}</h2>
-                    <div style="font-size:12px; color:var(--text-muted); font-weight:600;">Folder: <span style="color:var(--primary);">${folderId}</span></div>
+        <div class="modal-header" style="background:var(--bg-main); padding: 20px 30px; border-bottom: 1px solid var(--border-light); display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:18px;">
+                <button class="back-nav-btn" title="Back" onclick="window._renderSnippetModal()" style="background:var(--bg-soft); width:36px; height:36px; border-radius:10px; border:1px solid var(--border-light); color:var(--text-main); display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                    <svg viewBox="0 0 24 24" style="width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round;"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                </button>
+                <div style="display:flex; align-items:center; gap:14px;">
+                    <div style="background:rgba(79, 70, 229, 0.1); width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; color:var(--primary);">
+                        <svg viewBox="0 0 24 24" style="width:20px; height:20px; fill:currentColor;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                    </div>
+                    <div>
+                        <h2 style="font-size:17px; font-weight:800; margin:0; letter-spacing:-0.4px;">${existing ? 'Edit Snippet' : 'Create New Snippet'}</h2>
+                        <div style="font-size:11px; color:var(--text-muted); font-weight:600;">Folder: <span style="color:var(--primary); opacity:0.8;">${folderId}</span></div>
+                    </div>
                 </div>
             </div>
             <button class="close-btn" style="background:var(--bg-soft); width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center;" onclick="window._renderSnippetModal()">&times;</button>
