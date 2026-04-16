@@ -1802,52 +1802,65 @@ select.status-pill {
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 10px;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     -webkit-tap-highlight-color: transparent;
-    position: relative;
-    overflow: hidden;
+    font-size: 18px;
+    font-weight: 600;
 }
 
-.dial-btn svg { width: 24px; height: 24px; fill: #ffffff; }
+.dial-btn svg { width: 24px; height: 24px; }
 
-.dial-btn.call {
-    background: #34C759;
-    background: linear-gradient(145deg, #34C759, #28a745);
-    box-shadow: 0 4px 14px rgba(52, 199, 89, 0.4);
+.dial-btn.call-full {
+    background: linear-gradient(135deg, #95DC7F 0%, #68C296 100%);
+    color: white;
+    box-shadow: 0 4px 14px rgba(104, 194, 150, 0.3);
 }
-.dial-btn.call:hover  { transform: translateY(-3px) scale(1.02); box-shadow: 0 8px 20px rgba(52, 199, 89, 0.5); }
-.dial-btn.call:active { transform: scale(0.94); }
+.dial-btn.call-full svg { fill: white; }
+.dial-btn.call-full:hover  { transform: translateY(-3px) scale(1.02); box-shadow: 0 8px 20px rgba(104, 194, 150, 0.4); }
 
 /* Pulse animation for active call */
 @keyframes heartBeat {
-    0% { transform: scale(1); box-shadow: 0 4px 14px rgba(52, 199, 89, 0.4); }
-    14% { transform: scale(1.05); }
+    0% { transform: scale(1); box-shadow: 0 4px 14px rgba(104, 194, 150, 0.3); }
+    14% { transform: scale(1.03); }
     28% { transform: scale(1); }
-    42% { transform: scale(1.05); }
-    70% { transform: scale(1); box-shadow: 0 8px 20px rgba(52, 199, 89, 0.6); }
+    42% { transform: scale(1.03); }
+    70% { transform: scale(1); box-shadow: 0 8px 20px rgba(104, 194, 150, 0.5); }
 }
 
-.dial-btn.call.calling { 
+.dial-btn.call-full.calling { 
     background: #FF3B30; 
     animation: heartBeat 1.5s infinite ease-in-out;
     box-shadow: 0 4px 14px rgba(255, 59, 48, 0.4);
 }
 
-.dial-btn.sms {
-    background: #007AFF;
-    background: linear-gradient(145deg, #007AFF, #0062cc);
-    box-shadow: 0 4px 14px rgba(0, 122, 255, 0.35);
-}
-.dial-btn.sms:hover  { transform: translateY(-3px) scale(1.02); box-shadow: 0 8px 20px rgba(0, 122, 255, 0.45); }
-.dial-btn.sms:active { transform: scale(0.94); }
-
-.dial-btn.backspace {
-    background: #F2F2F7;
+.dial-btn.message-full {
+    background: #E8EDF7;
+    color: #6B7280;
     box-shadow: none;
-    border: 1px solid rgba(0, 0, 0, 0.05);
 }
-[data-theme="dark"] .dial-btn.backspace { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.1); }
+.dial-btn.message-full svg { fill: #007AFF; }
+.dial-btn.message-full:hover { background: #E0E7F5; transform: translateY(-2px); }
+
+[data-theme="dark"] .dial-btn.message-full {
+    background: rgba(255, 255, 255, 0.08);
+    color: #9CA3AF;
+}
+
+.dialer-screen {
+    background: #ffffff;
+    border: 1px solid #C4D3F5;
+    border-radius: 14px;
+    padding: 12px 16px;
+    margin-bottom: 22px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+[data-theme="dark"] .dialer-screen {
+    background: rgba(255, 255, 255, 0.02);
+    border-color: rgba(255, 255, 255, 0.1);
+}
 .dial-btn.backspace svg { fill: #3C3C43; opacity: 0.7; }
 [data-theme="dark"] .dial-btn.backspace svg { fill: #EBEBF5; }
 .dial-btn.backspace:hover  { background: #E5E5EA; transform: translateY(-2px); border-color: rgba(0, 0, 0, 0.1); }

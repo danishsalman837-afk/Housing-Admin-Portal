@@ -2879,148 +2879,7 @@
             border-color: var(--blue-ring);
         }
 
-        /* ═══════════════════════════════════════
-           GLOBAL SMART DIALER (PREMIUM)
-        ═══════════════════════════════════════ */
-        .dialer-container {
-            position: fixed;
-            top: 74px;
-            right: 32px;
-            width: 320px;
-            background: rgba(255, 255, 255, 0.75);
-            backdrop-filter: blur(25px) saturate(180%);
-            -webkit-backdrop-filter: blur(25px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 24px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-            z-index: 1000;
-            display: none;
-            flex-direction: column;
-            padding: 24px;
-            animation: slideDownIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
 
-        [data-theme="dark"] .dialer-container {
-            background: rgba(28, 28, 30, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        @keyframes slideDownIn {
-            from { opacity: 0; transform: translateY(-20px) scale(0.95); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        .dialer-container.active { display: flex; }
-
-        .dialer-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 20px;
-        }
-
-        .dialer-lead-info { display: flex; flex-direction: column; gap: 2px; }
-        #dialerLeadName { font-size: 16px; font-weight: 700; color: var(--label-1); }
-        #dialerLeadStatus { font-size: 11px; color: var(--blue); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-
-        .close-dialer {
-            background: var(--surface-3);
-            border: none;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--label-3);
-            transition: 0.2s;
-        }
-
-        .close-dialer:hover { background: var(--red-light); color: var(--red); }
-
-        .dialer-screen {
-            background: var(--surface-2);
-            border-radius: 12px;
-            padding: 12px;
-            margin-bottom: 20px;
-            border: 1px solid var(--border);
-        }
-
-        #dialerInput {
-            width: 100%;
-            background: transparent;
-            border: none;
-            font-size: 26px;
-            font-weight: 700;
-            color: var(--label-1);
-            text-align: center;
-            letter-spacing: 1px;
-            outline: none;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .dialer-keypad {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin-bottom: 24px;
-        }
-
-        .dialer-keypad button {
-            height: 56px;
-            border-radius: 16px;
-            border: 1px solid transparent;
-            background: var(--surface-2);
-            font-size: 20px;
-            font-weight: 600;
-            color: var(--label-1);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .dialer-keypad button:hover {
-            background: var(--surface-3);
-            transform: scale(1.05);
-            border-color: var(--blue-ring);
-        }
-
-        .dialer-keypad button span {
-            font-size: 9px;
-            font-weight: 500;
-            color: var(--label-4);
-            text-transform: uppercase;
-            margin-top: -2px;
-        }
-
-        .dialer-actions {
-            display: flex;
-            justify-content: space-between;
-            gap: 12px;
-        }
-
-        .dial-btn {
-            flex: 1;
-            height: 54px;
-            border-radius: 16px;
-            border: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .dial-btn svg { width: 22px; height: 22px; fill: white; }
-        .dial-btn.call { background: var(--green); box-shadow: 0 4px 12px var(--green-light); }
-        .dial-btn.sms { background: var(--blue); box-shadow: 0 4px 12px var(--blue-light); }
-        .dial-btn.backspace { background: var(--surface-3); flex: 0 0 54px; }
-        .dial-btn.backspace svg { fill: var(--label-3); }
 
         /* ═══════════════════════════════════════
            COMMUNICATION HUB (PREMIUM)
@@ -3314,20 +3173,16 @@
                 <!-- Action Row -->
                 <div class="dialer-actions">
                     <div class="dial-action-item">
-                        <button class="dial-btn call" onclick="startCall()">
+                        <button class="dial-btn call-full" onclick="startCall()">
                             <svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+                            <span>Call</span>
                         </button>
                         <span class="dial-action-label">Call</span>
                     </div>
                     <div class="dial-action-item">
-                        <button class="dial-btn sms" onclick="openSmsFromDialer()">
+                        <button class="dial-btn message-full" onclick="openSmsFromDialer()">
                             <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
-                        </button>
-                        <span class="dial-action-label">Message</span>
-                    </div>
-                    <div class="dial-action-item">
-                        <button class="dial-btn backspace" onclick="backspaceDialer()">
-                            <svg viewBox="0 0 24 24"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"/></svg>
+                            <span>Message</span>
                         </button>
                         <span class="dial-action-label">Delete</span>
                     </div>
