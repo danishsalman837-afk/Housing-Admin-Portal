@@ -2985,8 +2985,13 @@ window.selectCommContact = function(leadId) {
 
         if (sideSol) sideSol.innerText = lead.companies?.company_name || 'Unassigned';
         if (sideStatus) {
-            sideStatus.innerText = lead.status?.toUpperCase() || 'NEW LEAD';
-            sideStatus.className = 'info-field status-chip ' + (lead.status === 'paid' ? 'paid' : '');
+            if (lead.status && lead.status.toLowerCase() === 'accepted') {
+                sideStatus.innerHTML = '<svg style="width:14px;height:14px;margin-right:4px;vertical-align:middle;fill:currentColor;" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>' + 'ACCEPTED';
+                sideStatus.className = 'info-field status-chip paid'; 
+            } else {
+                sideStatus.innerText = lead.status?.toUpperCase() || 'NEW LEAD';
+                sideStatus.className = 'info-field status-chip ' + ((lead.status && lead.status.toLowerCase() === 'paid') ? 'paid' : '');
+            }
         }
         if (sideValue) {
             const mockValue = (Math.floor(Math.random() * 5000) + 1500).toLocaleString();
@@ -3037,8 +3042,11 @@ window.handleCommKeydown = function(e) {
 window.sendCommSms = function() {
     const input = document.getElementById('commInputMessage');
     if (!input) return;
-    const msg = input.value.trim();
-    if (!msg) return;
+    const msgTemplate = input.value.trim();
+    if (!msgTemplate) return;
+
+    // Apply real-time variable parsing
+    const msg = window._parseLiquidTags ? window._parseLiquidTags(msgTemplate) : msgTemplate;
 
     const msgContainer = document.getElementById('commMessages');
     if (!msgContainer) return;
@@ -3074,6 +3082,12 @@ window.sendCommSms = function() {
                     reply.innerHTML = 'Okay, received. Thank you! <span class="msg-time">Just now</span>';
                     msgContainer.appendChild(reply);
                     msgContainer.scrollTop = msgContainer.scrollHeight;
+                    
+                    try {
+                        var audio = new window.Audio('https://actions.google.com/sounds/v1/ui/message_notification.ogg');
+                        audio.volume = 0.5;
+                        audio.play();
+                    } catch(e) { }
                 }, 2500);
             }
         }, 3000);
@@ -3100,7 +3114,9 @@ window._parseLiquidTags = function(template) {
         .replace(/\{\{full_name\}\}/g, fullName)
         .replace(/\{\{client_name\}\}/g, fullName)
         .replace(/\{\{solicitor\}\}/g, solicitor)
-        .replace(/\{\{phone\}\}/g, phone);
+        .replace(/\{\{solicitor_name\}\}/g, solicitor)
+        .replace(/\{\{phone\}\}/g, phone)
+        .replace(/\{\{case_id\}\}/g, lead.id ? ('CASE-' + String(lead.id).substring(0, 6).toUpperCase()) : 'CASE-000');
 };
 
 window.insertSnippet = function(template) {
@@ -3222,7 +3238,17 @@ window._showCreateSnippet = function() {
                 '<input type="text" id="newSnippetTitle" placeholder="e.g. Initial Follow-Up" style="width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:8px; font-size:14px; outline:none; background:var(--surface-2); color:var(--label-1);">' +
             '</div>' +
             '<div>' +
-                '<label style="font-size:12px; font-weight:600; color:var(--label-2); display:block; margin-bottom:6px;">Content <span style="font-weight:400; color:var(--label-3);">(supports {{first_name}}, {{solicitor}}, {{phone}} etc.)</span></label>' +
+                '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">' +
+                    '<label style="font-size:12px; font-weight:600; color:var(--label-2); display:block;">Content</label>' +
+                    '<div style="position:relative;">' +
+                        '<button type="button" onclick="var d=document.getElementById(\'snippetVarDrop\'); d.style.display=d.style.display===\'none\'?\'block\':\'none\';" style="font-size:11px; padding:4px 8px; border:1px solid var(--border-med); border-radius:6px; cursor:pointer; background:var(--surface-1); color:var(--blue); font-weight:700;">{ } Insert Variable</button>' +
+                        '<div id="snippetVarDrop" style="display:none; position:absolute; right:0; top:100%; margin-top:4px; width:160px; background:var(--surface-1); border:1px solid var(--border); box-shadow:var(--shadow-md); border-radius:8px; z-index:1000; overflow:hidden;">' +
+                            '<div onclick="window._insertVarIntoSnippet(\'{{first_name}}\')" style="padding:8px 12px; font-size:12px; color:var(--label-1); cursor:pointer; border-bottom:1px solid var(--border); transition:0.2s;" onmouseover="this.style.background=\'var(--surface-2)\'" onmouseout="this.style.background=\'transparent\'">Contact Name</div>' +
+                            '<div onclick="window._insertVarIntoSnippet(\'{{solicitor_name}}\')" style="padding:8px 12px; font-size:12px; color:var(--label-1); cursor:pointer; border-bottom:1px solid var(--border); transition:0.2s;" onmouseover="this.style.background=\'var(--surface-2)\'" onmouseout="this.style.background=\'transparent\'">Solicitor Name</div>' +
+                            '<div onclick="window._insertVarIntoSnippet(\'{{case_id}}\')" style="padding:8px 12px; font-size:12px; color:var(--label-1); cursor:pointer; transition:0.2s;" onmouseover="this.style.background=\'var(--surface-2)\'" onmouseout="this.style.background=\'transparent\'">Case ID</div>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>' +
                 '<textarea id="newSnippetContent" rows="5" placeholder="Hi {{first_name}}, ..." style="width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:8px; font-size:14px; outline:none; resize:vertical; font-family:inherit; background:var(--surface-2); color:var(--label-1);"></textarea>' +
             '</div>' +
             '<div style="display:flex; gap:10px; justify-content:flex-end; padding-top:6px;">' +
@@ -3232,6 +3258,18 @@ window._showCreateSnippet = function() {
         '</div>';
 
     overlay.style.display = 'flex';
+};
+
+window._insertVarIntoSnippet = function(variable) {
+    var ta = document.getElementById('newSnippetContent');
+    if (!ta) return;
+    var start = ta.selectionStart;
+    var end = ta.selectionEnd;
+    var val = ta.value;
+    ta.value = val.substring(0, start) + variable + val.substring(end);
+    document.getElementById('snippetVarDrop').style.display = 'none';
+    ta.focus();
+    ta.setSelectionRange(start + variable.length, start + variable.length);
 };
 
 window._saveNewSnippet = function() {

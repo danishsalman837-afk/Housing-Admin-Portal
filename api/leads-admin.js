@@ -13,13 +13,22 @@ module.exports = async function handler(req, res) {
     if (method === 'GET' && (route === 'list' || (!req.query.phone && !route))) {
       const { data, error } = await supabase
         .from('submissions')
-        .select('*')
+        .select('*, whatsapp_messages(message_body, created_at), companies:solicitor_id(company_name)')
         .neq('leadStatus', 'Agent Saved')
         .neq('leadStatus', 'Archived')
         .order('timestamp', { ascending: false });
 
       if (error) return res.status(500).json({ error: error.message });
-      const normalizedData = (data || []).map(normalizeLead);
+      
+      const normalizedData = (data || []).map(lead => {
+          let l = normalizeLead(lead);
+          if (l.whatsapp_messages && l.whatsapp_messages.length > 0) {
+              l.whatsapp_messages.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+              l.last_message = l.whatsapp_messages[0].message_body;
+          }
+          delete l.whatsapp_messages;
+          return l;
+      });
       return res.status(200).json(normalizedData);
     }
 
