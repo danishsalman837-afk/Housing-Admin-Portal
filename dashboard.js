@@ -2748,37 +2748,56 @@ window.onDialerInputChange = function () {
     const input = document.getElementById('dialerInput');
     if (!input) return;
     const number = input.value.trim();
-    const nameDisplay = document.getElementById('dialerLeadName');
+    const nameDisplay  = document.getElementById('dialerLeadName');
     const statusDisplay = document.getElementById('dialerLeadStatus');
+    const statusDot    = document.getElementById('dialerStatusDot');
+    const avatarEl     = document.getElementById('dialerAvatar');
 
     if (!number) {
-        if (nameDisplay) nameDisplay.innerText = "Unknown Number";
-        if (statusDisplay) statusDisplay.innerText = "Not in CRM";
+        if (nameDisplay)  { nameDisplay.innerText = 'Ready to Dial'; nameDisplay.style.color = ''; }
+        if (statusDisplay)  statusDisplay.innerText = 'Not in CRM';
+        if (statusDot)      statusDot.style.background = 'var(--text-muted)';
+        if (avatarEl)       avatarEl.innerText = '?';
+        avatarEl.style.background = '';
         return;
     }
 
-    // Lead recognition logic
+    // Lead CRM recognition
     const cleanNumber = number.replace(/\D/g, '');
-
     const matchedLead = submissionsData.find(lead => {
-        if (!lead.phone) return false;
-        const cleanLeadPhone = lead.phone.replace(/\D/g, '');
-        return cleanLeadPhone === cleanNumber ||
-            (cleanLeadPhone.length >= 10 && cleanNumber.length >= 10 && cleanLeadPhone.slice(-10) === cleanNumber.slice(-10));
+        const p = (lead.phone || lead.mobile_number || '').replace(/\D/g, '');
+        return p && (p === cleanNumber ||
+            (p.length >= 10 && cleanNumber.length >= 10 && p.slice(-10) === cleanNumber.slice(-10)));
     });
 
     if (matchedLead) {
-        if (nameDisplay) {
-            nameDisplay.innerText = matchedLead.name || "Unnamed Lead";
-            nameDisplay.style.color = "var(--primary)";
+        const leadName   = matchedLead.name || matchedLead.first_name || 'Matched Lead';
+        const leadStatus = matchedLead.leadStatus || 'New Lead';
+
+        if (nameDisplay)  { nameDisplay.innerText = leadName; nameDisplay.style.color = 'var(--primary)'; }
+        if (statusDisplay)  statusDisplay.innerText = leadStatus;
+
+        // Colour the dot by status
+        const dotColours = {
+            'Accepted': '#34C759', 'Paid': '#34C759', 'Not Yet Invoiced': '#34C759',
+            'New Lead': '#007AFF', 'Allocated': '#007AFF', 'Sent': '#007AFF',
+            'Rejected': '#FF9500', 'Closed': '#FF3B30',
+        };
+        if (statusDot) statusDot.style.background = dotColours[leadStatus] || '#8E8E93';
+
+        // Avatar initials
+        if (avatarEl) {
+            const parts = leadName.trim().split(' ');
+            avatarEl.innerText = parts.length >= 2
+                ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+                : leadName.slice(0, 2).toUpperCase();
+            avatarEl.style.background = 'linear-gradient(135deg, var(--primary) 0%, #818CF8 100%)';
         }
-        if (statusDisplay) statusDisplay.innerText = `Matched Lead (${getStatusColor(matchedLead.status)})`;
     } else {
-        if (nameDisplay) {
-            nameDisplay.innerText = "Unknown Number";
-            nameDisplay.style.color = "var(--text-main)";
-        }
-        if (statusDisplay) statusDisplay.innerText = "Not in CRM";
+        if (nameDisplay)  { nameDisplay.innerText = 'Unknown Number'; nameDisplay.style.color = ''; }
+        if (statusDisplay)  statusDisplay.innerText = 'Not in CRM';
+        if (statusDot)      statusDot.style.background = '#8E8E93';
+        if (avatarEl)     { avatarEl.innerText = '#'; avatarEl.style.background = ''; }
     }
 };
 

@@ -3275,40 +3275,62 @@
 
             <!-- ══════════════ GLOBAL SMART DIALER ══════════════ -->
             <div id="globalDialer" class="dialer-container">
+                <!-- Header: Avatar + Contact Info + Close -->
                 <div class="dialer-header">
-                    <div class="dialer-lead-info">
-                        <span id="dialerLeadName">Unknown Number</span>
-                        <span id="dialerLeadStatus">Not in CRM</span>
+                    <div class="dialer-avatar-row">
+                        <div class="dialer-avatar" id="dialerAvatar">?</div>
+                        <div class="dialer-lead-info">
+                            <span id="dialerLeadName">Ready to Dial</span>
+                            <div class="dialer-status-badge" id="dialerStatusBadge">
+                                <span class="dialer-status-dot" id="dialerStatusDot"></span>
+                                <span id="dialerLeadStatus">Not in CRM</span>
+                            </div>
+                        </div>
                     </div>
-                    <button class="close-dialer" onclick="toggleDialer()">×</button>
+                    <button class="close-dialer" onclick="toggleDialer()" title="Close Dialer">×</button>
                 </div>
+
+                <!-- Number Display -->
                 <div class="dialer-screen">
-                    <input type="text" id="dialerInput" placeholder="Enter number..." oninput="onDialerInputChange()">
+                    <input type="tel" id="dialerInput" placeholder="Enter number…" oninput="onDialerInputChange()" autocomplete="off">
                 </div>
+
+                <!-- Keypad -->
                 <div class="dialer-keypad">
-                    <button onclick="appendDialer('1')">1<span>&nbsp;</span></button>
-                    <button onclick="appendDialer('2')">2<span>ABC</span></button>
-                    <button onclick="appendDialer('3')">3<span>DEF</span></button>
-                    <button onclick="appendDialer('4')">4<span>GHI</span></button>
-                    <button onclick="appendDialer('5')">5<span>JKL</span></button>
-                    <button onclick="appendDialer('6')">6<span>MNO</span></button>
-                    <button onclick="appendDialer('7')">7<span>PQRS</span></button>
-                    <button onclick="appendDialer('8')">8<span>TUV</span></button>
-                    <button onclick="appendDialer('9')">9<span>WXYZ</span></button>
-                    <button onclick="appendDialer('*')">*</button>
-                    <button onclick="appendDialer('0')">0<span>+</span></button>
-                    <button onclick="appendDialer('#')">#</button>
+                    <button onclick="appendDialer('1')"><span class="key-num">1</span><span class="key-sub">&nbsp;</span></button>
+                    <button onclick="appendDialer('2')"><span class="key-num">2</span><span class="key-sub">ABC</span></button>
+                    <button onclick="appendDialer('3')"><span class="key-num">3</span><span class="key-sub">DEF</span></button>
+                    <button onclick="appendDialer('4')"><span class="key-num">4</span><span class="key-sub">GHI</span></button>
+                    <button onclick="appendDialer('5')"><span class="key-num">5</span><span class="key-sub">JKL</span></button>
+                    <button onclick="appendDialer('6')"><span class="key-num">6</span><span class="key-sub">MNO</span></button>
+                    <button onclick="appendDialer('7')"><span class="key-num">7</span><span class="key-sub">PQRS</span></button>
+                    <button onclick="appendDialer('8')"><span class="key-num">8</span><span class="key-sub">TUV</span></button>
+                    <button onclick="appendDialer('9')"><span class="key-num">9</span><span class="key-sub">WXYZ</span></button>
+                    <button onclick="appendDialer('*')"><span class="key-num">*</span><span class="key-sub">&nbsp;</span></button>
+                    <button onclick="appendDialer('0')"><span class="key-num">0</span><span class="key-sub">+</span></button>
+                    <button onclick="appendDialer('#')"><span class="key-num">#</span><span class="key-sub">&nbsp;</span></button>
                 </div>
+
+                <!-- Action Row -->
                 <div class="dialer-actions">
-                    <button class="dial-btn call" onclick="startCall()">
-                        <svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
-                    </button>
-                    <button class="dial-btn sms" onclick="openSmsFromDialer()">
-                        <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
-                    </button>
-                    <button class="dial-btn backspace" onclick="backspaceDialer()">
-                        <svg viewBox="0 0 24 24"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"/></svg>
-                    </button>
+                    <div class="dial-action-item">
+                        <button class="dial-btn call" onclick="startCall()">
+                            <svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+                        </button>
+                        <span class="dial-action-label">Call</span>
+                    </div>
+                    <div class="dial-action-item">
+                        <button class="dial-btn sms" onclick="openSmsFromDialer()">
+                            <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
+                        </button>
+                        <span class="dial-action-label">Message</span>
+                    </div>
+                    <div class="dial-action-item">
+                        <button class="dial-btn backspace" onclick="backspaceDialer()">
+                            <svg viewBox="0 0 24 24"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"/></svg>
+                        </button>
+                        <span class="dial-action-label">Delete</span>
+                    </div>
                 </div>
             </div>
         </div>
