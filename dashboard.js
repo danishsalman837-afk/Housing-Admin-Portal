@@ -3275,7 +3275,12 @@ window.openSnippetManager = async function(isFullPageView = false) {
     window._renderSnippetModal(isFullPageView);
 };
 
-window._renderSnippetModal = function(isFullPageView = false) {
+window._renderSnippetModal = function(customFullPageCheck) {
+    // Auto-detect view state to prevent snapping back to modal layout dynamically
+    var isFullPageView = (typeof customFullPageCheck === 'boolean') 
+        ? customFullPageCheck 
+        : (document.getElementById('templatesView')?.classList.contains('active') || false);
+        
     var store = window._snippetStore || { folders: [], snippets: [] };
     var activeId = window._activeSnippetFolder;
     var box;
@@ -3332,13 +3337,13 @@ window._renderSnippetModal = function(isFullPageView = false) {
     }
 
     var snippetRowsHtml = folderSnippets.map(function(s) {
-        var isSelected = s.id === window._selectedSnippetId;
+        const createdDate = s.created_at ? new Date(s.created_at).toLocaleDateString() : 'Just now';
         return `
             <tr class="hub-row" onclick="window._selectedSnippetId='${s.id}'; window._renderSnippetModal();">
                 <td style="width:40px; text-align:center;"><input type="checkbox" onclick="event.stopPropagation()"></td>
                 <td class="hub-col-name"><div class="name-text">${s.title}</div></td>
                 <td class="hub-col-owner" style="width:140px; text-align:left;">Admin</td>
-                <td class="hub-col-date" style="width:140px; text-align:left;">Just now</td>
+                <td class="hub-col-date" style="width:140px; text-align:left;">${createdDate}</td>
                 <td class="hub-col-actions" style="width:120px; text-align:right; overflow:visible;">
                     <div style="position:relative; display:inline-block;">
                         <button class="hub-action-btn" onclick="window._toggleSnippetMenu(event, '${s.id}')">Actions ▾</button>
@@ -3877,8 +3882,13 @@ window._saveNewSnippet = async function(editId) {
         window._snippetStore.snippets.push(newSnippet);
         await _saveSnippetStore('snippet_add', newSnippet);
         showNotification('Snippet created!', 'success');
+        
+        // Ensure modal is closed after creation
+        document.getElementById('modalOverlay').style.display = 'none';
+        document.getElementById('modalBox').style.display = 'none';
     }
     
+    // Refresh the view immediately
     window._renderSnippetModal();
 };
 
@@ -4000,7 +4010,7 @@ window.receiveLiveMessage = function(msg, senderName) {
 
     // 2. Desktop Notification
     if ("Notification" in window && Notification.permission === "granted") {
-        new Notification('New message from ' + (senderName || 'Client'), { body: msg, icon: '/favicon.ico' });
+        new Notification('New message from ' + (senderName || 'Client'), { body: msg, icon: '/logo.png' });
     }
 
     // 3. Render in chat immediately
