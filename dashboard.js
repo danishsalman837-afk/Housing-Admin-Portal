@@ -800,16 +800,13 @@ window.openViewModal = function (id, showOriginal = false) {
         });
 
         modalBox.innerHTML = `
-            <div class="modal-header" style="position:sticky; top:0; background:var(--bg-surface); z-index:10; padding-bottom:20px; margin-bottom:20px; border-bottom:1px solid var(--border-light);">
-                <div style="flex:1;">
-                    <div style="font-size:11px; font-weight:700; color:var(--primary); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">${titlePrefix}</div>
-                    <h2 style="font-size:20px; font-weight:800; letter-spacing:-0.5px; margin:0;">${leadData.name || leadData.first_name || 'Lead Details'}</h2>
+            <div class="modal-header" style="position:sticky; top:0; background:white; z-index:10; padding:20px; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:flex-start; border-top-left-radius:16px; border-top-right-radius:16px;">
+                <div style="flex:1; padding-right:20px;">
+                    <div style="font-size:11px; font-weight:700; color:#3b82f6; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">${titlePrefix}</div>
+                    <h2 style="font-size:20px; font-weight:800; letter-spacing:-0.5px; margin:0; color:#1e293b;">${leadData.name || leadData.first_name || 'Lead Details'}</h2>
+                    <div style="margin-top:6px; font-size:12px; color:#64748B; font-weight:600;">Ref ID: <span style="color:#1e293b;">#${s.id}</span></div>
                 </div>
-                <div style="text-align:right; margin-right:40px;">
-                    <span style="font-size:10px; font-weight:700; color:#94A3B8; text-transform:uppercase; display:block; margin-bottom:2px;">Ref ID</span>
-                    <span style="font-size:12px; color:var(--text-main); font-weight:700;">#${s.id}</span>
-                </div>
-                <button class="close-btn" style="position:absolute; right:12px; top:12px; font-size:24px; background:var(--bg-surface-2); border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border-light); color:var(--text-muted); cursor:pointer;" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button>
+                <button class="close-btn" style="font-size:24px; background:#f1f5f9; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:1px solid #e2e8f0; color:#64748B; cursor:pointer; transition:all 0.2s;" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button>
             </div>
             
             <div class="modal-scroll-area" style="max-height:75vh; overflow-y:auto; overflow-x:hidden; padding:0 10px; margin-top:10px;">
@@ -879,9 +876,9 @@ window.openEditLeadModal = function (id) {
 
 
     document.getElementById('modalBox').innerHTML = `
-        <div class="modal-header">
-            <h2 style="font-size:20px; font-weight:800; letter-spacing:-0.5px;">Edit Full Lead Data</h2>
-            <button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button>
+        <div class="modal-header" style="background:white; padding:20px; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center; border-top-left-radius:16px; border-top-right-radius:16px;">
+            <h2 style="font-size:20px; font-weight:800; letter-spacing:-0.5px; margin:0; color:#1e293b;">Edit Full Lead Data</h2>
+            <button class="close-btn" style="font-size:24px; background:#f1f5f9; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:1px solid #e2e8f0; color:#64748B; cursor:pointer;" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button>
         </div>
         <div class="form-grid" id="editLeadForm" style="display:grid; grid-template-columns: repeat(2, 1fr); gap:16px; padding:0 8px; max-height:75vh; overflow-y:auto;">
             ${html}
