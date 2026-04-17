@@ -30,6 +30,7 @@ module.exports = async (req, res) => {
             const authUpdate = {
                 data: {
                     full_name: username,
+                    username: username,
                     avatar_url: avatar_url
                 }
             };

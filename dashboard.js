@@ -155,6 +155,8 @@ window.switchView = function (view) {
         if (typeof renderCommThreads === 'function') renderCommThreads();
     } else if (view === 'templates') {
         window.openSnippetManager(true);
+    } else if (view === 'settings') {
+        populateSettings();
     } else {
         renderFilteredLeads();
     }
@@ -692,38 +694,45 @@ function formatDob(val) {
 }
 
 window.openViewModal = function (id, showOriginal = false) {
+    console.log("Opening View Modal for ID:", id, "showOriginal:", showOriginal);
     const s = submissionsData.find(x => String(x.id) === String(id));
-    if (!s) return;
+    if (!s) {
+        console.error("Lead not found in submissionsData:", id);
+        return;
+    }
 
     let leadData = s;
     let titlePrefix = "Current Lead Profile";
 
-    if (showOriginal && s.agent_data) {
-        // Apply normalizeLead logic if it's not already normalized (it likely isn't if stored raw)
-        // But since normalizeLead overwrites, we should clone it
-        leadData = JSON.parse(JSON.stringify(s.agent_data));
-
+    if (showOriginal) {
+        if (s.agent_data) {
+            // Use the backup agent data if it exists
+            try {
+                leadData = typeof s.agent_data === 'string' ? JSON.parse(s.agent_data) : s.agent_data;
+                titlePrefix = "Original Agent Submission";
+            } catch (e) {
+                console.warn("Failed to parse agent_data, using current data:", e);
+                leadData = s;
+                titlePrefix = "Original Submission (Parse Error)";
+            }
+        } else {
+            leadData = s;
+            titlePrefix = "Original Submission (No Backup)";
+        }
+        
         // Ensure some fields from the main record are available if missing in backup
         if (!leadData.attachments && s.attachments) leadData.attachments = s.attachments;
         if (!leadData.id) leadData.id = s.id;
-
-        // We need to normalize it since it's raw DB row
-        // In this environment normalizeLead is not global, but we can replicate it or just use it if possible
-        // Wait, normalizeLead is available in the API, but here in dashboard.js it's not.
-        // However, dashboard.js has its own display mappings.
-        titlePrefix = "Original Agent Submission";
+        
         const agentName = s.agentName || s.agent_name || (s.agent_data && (s.agent_data.agentName || s.agent_data.agent_name));
         if (agentName) titlePrefix += ` — Agent: ${agentName}`;
-    } else if (showOriginal) {
-        titlePrefix = "Original Submission (No Edits)";
     }
 
     const ignoreKeys = ['id', 'created_at', 'notes', 'assigned_company_id', 'assigned_solicitor_id', 'call_notes', 'agent_data', 'is_edited'];
-    // Agent name should always be visible if present
 
     let dataHtml = '';
 
-    // Put agentName at top for Agent Submission view
+    // Order of fields to show
     let displayOrder = [...leadViewOrder];
     if (showOriginal) {
         displayOrder = ['agentName', ...leadViewOrder.filter(k => k !== 'agentName')];
@@ -733,60 +742,101 @@ window.openViewModal = function (id, showOriginal = false) {
     displayOrder.forEach(key => {
         if (ignoreKeys.includes(key)) return;
 
-        // Handle potential snake_case vs camelCase if leadData is raw
+        // Multi-level fallback for keys (DB vs Form vs Alternate)
         let val = leadData[key];
-        if (val === undefined || val === null) {
-            if (key === 'tenancyDuration') val = leadData['livingDuration'];
-            else if (key === 'agentName') {
-                val = leadData['agent_name'] || leadData['agentName'];
-                if (!val && leadData.agent_data) {
-                    val = leadData.agent_data.agent_name || leadData.agent_data.agentName || leadData.agent_data.dialler || leadData.agent_data.Dialler;
+        
+        if (val === undefined || val === null || val === '') {
+            // Try common alternated keys including snake_case versions
+            const fallbacks = {
+                'dob': ['dateOfBirth', 'DOB', 'date_of_birth'],
+                'dateOfBirth': ['dob', 'DOB', 'date_of_birth'],
+                'tenancyDuration': ['livingDuration', 'tenancy_duration', 'duration_of_tenancy'],
+                'livingDuration': ['tenancyDuration', 'tenancy_duration'],
+                'agentName': ['agent_name', 'dialler', 'Dialler', 'agent', 'operator'],
+                'phone': ['mobile_number', 'mobile', 'tel', 'phone_number'],
+                'mobile_number': ['phone', 'tel', 'phone_number'],
+                'address': ['address1', 'Address', 'property_address'],
+                'postcode': ['Postcode', 'zip', 'post_code'],
+                'tenantType': ['tenant_type', 'type_of_tenant'],
+                'landlordName': ['landlord_name', 'name_of_landlord'],
+                'hasDampMould': ['damp', 'has_damp_mould', 'damp_mould'],
+                'roomsAffected': ['rooms_affected', 'affected_rooms', 'dampRooms'],
+                'hasLeaks': ['leak', 'leaks', 'has_leaks']
+            };
+            
+            if (fallbacks[key]) {
+                for (let f of fallbacks[key]) {
+                    if (leadData[f] !== undefined && leadData[f] !== null && leadData[f] !== '') {
+                        val = leadData[f];
+                        break;
+                    }
+                }
+            } else {
+                // Try automatic snake_case conversion for any camelCase key
+                const snake = key.replace(/([A-Z])/g, "_$1").toLowerCase();
+                if (leadData[snake] !== undefined && leadData[snake] !== null && leadData[snake] !== '') {
+                    val = leadData[snake];
                 }
             }
         }
 
-        if (key !== 'agentName' && (val === undefined || val === null)) return;
+        // Special check for agentName at top level
+        if (key === 'agentName' && (val === undefined || val === null || val === '')) {
+            val = s.agent_name || s.agentName || (s.agent_data && (s.agent_data.agent_name || s.agent_data.agentName || s.agent_data.dialler));
+        }
 
-        let label = leadFieldLabels[key] || key.replace(/_/g, ' ');
+        // Don't show empty fields unless it's a critical one
+        const criticalKeys = ['name', 'phone', 'email', 'agentName'];
+        const isCritical = criticalKeys.includes(key);
+        if (!isCritical && (val === undefined || val === null || val === '')) return;
+
+        let label = leadFieldLabels[key] || key.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ').trim();
+        label = label.charAt(0).toUpperCase() + label.slice(1);
 
         if (key === 'dob' || key === 'dateOfBirth') val = formatDob(val);
         if (typeof val === 'object' && val !== null) val = JSON.stringify(val);
 
         dataHtml += `
-            <div style="margin-bottom:18px;">
-                <label style="font-size:11px; font-weight:700; color:#94A3B8; text-transform:uppercase; display:block; margin-bottom:4px;">${label}</label>
-                <div style="font-size:14px; color:#1E293B; font-weight:600; line-height:1.4; white-space:pre-wrap;">${val || '--'}</div>
+            <div style="margin-bottom:18px; border-bottom: 1px solid var(--border-light); padding-bottom: 8px;">
+                <label style="font-size:10px; font-weight:700; color:#94A3B8; text-transform:uppercase; display:block; margin-bottom:4px; letter-spacing:0.5px;">${label}</label>
+                <div style="font-size:14px; color:var(--text-main); font-weight:600; line-height:1.4; white-space:pre-wrap;">${val || '--'}</div>
             </div>`;
     });
 
-    document.getElementById('modalBox').innerHTML = `
+    const modalBox = document.getElementById('modalBox');
+    if (!modalBox) return;
+
+    modalBox.innerHTML = `
         <div class="modal-header">
             <div>
-                <div style="font-size:11px; font-weight:700; color:var(--blue); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">${titlePrefix}</div>
+                <div style="font-size:11px; font-weight:700; color:var(--primary); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">${titlePrefix}</div>
                 <h2 style="font-size:20px; font-weight:800; letter-spacing:-0.5px;">${leadData.name || leadData.first_name || 'Client'}</h2>
             </div>
-            ${showOriginal ? `<div style="text-align:right;"><span style="font-size:10px; font-weight:700; color:#94A3B8; text-transform:uppercase; display:block; margin-bottom:2px;">Ref ID</span><span style="font-size:12px; color:#1E293B; font-weight:700;">#${s.id}</span></div>` : ''}
+            <div style="text-align:right;">
+                <span style="font-size:10px; font-weight:700; color:#94A3B8; text-transform:uppercase; display:block; margin-bottom:2px;">Ref ID</span>
+                <span style="font-size:12px; color:var(--text-main); font-weight:700;">#${s.id}</span>
+            </div>
             <button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button>
         </div>
         <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:24px; padding:0 8px; max-height:75vh; overflow-y:auto;">
             ${dataHtml}
             
             <!-- 📎 PHOTO EVIDENCE -->
-            <div style="grid-column: span 2; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);">
-                <h3 style="font-size:15px; font-weight:700; color:var(--label-1); display:flex; align-items:center; gap:8px; margin-bottom:16px;">
-                    <svg style="width:18px; height:18px; fill:var(--blue);" viewBox="0 0 24 24"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.93 1.57 3.5 3.5 3.5s3.5-1.57 3.5-3.5V5c0-2.21-1.79-4-4-4S9 2.79 9 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/></svg>
+            <div style="grid-column: span 2; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border-light);">
+                <h3 style="font-size:15px; font-weight:700; color:var(--text-main); display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+                    <svg style="width:18px; height:18px; fill:var(--primary);" viewBox="0 0 24 24"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.93 1.57 3.5 3.5 3.5s3.5-1.57 3.5-3.5V5c0-2.21-1.79-4-4-4S9 2.79 9 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/></svg>
                     Photo Evidence
                 </h3>
                 <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap:12px;">
                     ${(leadData.attachments || []).map(a => `
-                        <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:6px; box-shadow:var(--shadow-xs);">
+                        <div style="background:var(--bg-surface-2); border:1px solid var(--border-light); border-radius:10px; padding:6px; box-shadow:var(--shadow-sm);">
                             <a href="${a.url}" target="_blank">
                                 <img src="${a.url}" style="width:100%; height:85px; object-fit:cover; border-radius:6px;">
                             </a>
-                            <div style="font-size:9px; color:var(--label-3); margin-top:4px; text-align:center; overflow:hidden; text-overflow:ellipsis;">${a.name}</div>
+                            <div style="font-size:9px; color:var(--text-muted); margin-top:4px; text-align:center; overflow:hidden; text-overflow:ellipsis;">${a.name}</div>
                         </div>
                     `).join('')}
-                    ${(!leadData.attachments || leadData.attachments.length === 0) ? '<p style="font-size:13px; color:var(--label-4); font-style:italic; grid-column:1/-1; text-align:center;">No pictures attached.</p>' : ''}
+                    ${(!leadData.attachments || leadData.attachments.length === 0) ? '<p style="font-size:13px; color:var(--text-light); font-style:italic; grid-column:1/-1; text-align:center;">No pictures attached.</p>' : ''}
                 </div>
             </div>
         </div>
@@ -1424,7 +1474,8 @@ window.initDashboard = async function () {
     try {
         const resSub = await fetch('/api/submissions');
         if (resSub.ok) {
-            submissionsData = JSON.parse(await resSub.text());
+            submissionsData = await resSub.json();
+            console.log("Submissions Data Loaded:", submissionsData.length);
             // Normalize lead status to remove whitespace
             submissionsData.forEach(s => {
                 if (s.leadStatus && typeof s.leadStatus === 'string') {
@@ -2143,11 +2194,26 @@ async function initUser() {
     }
 
     try {
-        const session = JSON.parse(sessionStr);
-        const user = session.user;
+        let session = JSON.parse(sessionStr);
+        let user = session.user;
 
-        // Get full name from metadata (stored as full_name during our new signup)
-        let fullName = user.user_metadata?.full_name || user.user_metadata?.username || user.email.split('@')[0];
+        // FETCH LATEST FROM SUPABASE (Priority)
+        try {
+            const res = await fetch('/api/profile');
+            if (res.ok) {
+                const data = await res.json();
+                if (data.profile) {
+                    // Sync local session metadata with DB
+                    if (!user.user_metadata) user.user_metadata = {};
+                    user.user_metadata.full_name = data.profile.username || data.profile.full_name;
+                    user.user_metadata.username = data.profile.username;
+                    user.user_metadata.avatar_url = data.profile.avatar_url;
+                    
+                    session.user = user;
+                    localStorage.setItem('admin_session', JSON.stringify(session));
+                }
+            }
+        } catch (e) { console.warn("Sync failed", e); }
 
         // Update UI displays
         const nameEl = document.getElementById('usernameDisplay');
@@ -2415,7 +2481,7 @@ window.saveProfileSettings = async function () {
 
     const payload = {
         id: userId,
-        username: fullName,
+        username: fullName, // Primary key used by backend to update profiles table
         email: email
     };
 
@@ -2437,6 +2503,12 @@ window.saveProfileSettings = async function () {
 
         // Update local session
         session.user = result.user;
+        
+        // Ensure metadata is consistent in the local session object
+        if (!session.user.user_metadata) session.user.user_metadata = {};
+        session.user.user_metadata.full_name = fullName;
+        session.user.user_metadata.username = fullName;
+
         localStorage.setItem('admin_session', JSON.stringify(session));
 
         showToast('Profile Updated', 'Your settings have been saved.', 'success');
@@ -3232,16 +3304,8 @@ async function _loadSnippets() {
             window._snippetStore = data;
         }
     } catch (e) {
-        console.error('Failed to load snippets from Supabase via API, falling back to local storage', e);
-        const stored = localStorage.getItem('snippetStore');
-        if (stored) {
-            window._snippetStore = JSON.parse(stored);
-        } else {
-            window._snippetStore = { 
-                folders: [{ id: 'f1', name: 'General Responses' }], 
-                snippets: [{ id: 's1', folder_id: 'f1', title: 'Initial Welcome', content: 'Hi {{first_name}},\n\nThank you for reaching out. We have received your inquiry regarding {{damp_location}}.\n\nBest,\n{{user_name}}' }] 
-            };
-        }
+        console.error('Failed to load snippets from Supabase', e);
+        showNotification('Failed to load snippets from cloud.', 'error');
     }
 }
 
@@ -3253,12 +3317,9 @@ async function _saveSnippetStore(action, payload) {
             body: JSON.stringify({ action, payload })
         });
         if (!res.ok) throw new Error('Cloud sync failed');
-        // Always maintain local backup
-        localStorage.setItem('snippetStore', JSON.stringify(window._snippetStore));
     } catch (e) {
         console.error('Storage sync error:', e);
-        showNotification('Cloud sync failed. Saved to local storage.', 'warning');
-        localStorage.setItem('snippetStore', JSON.stringify(window._snippetStore));
+        showNotification('Cloud sync failed. Information not saved.', 'error');
     }
 }
 
@@ -3290,11 +3351,7 @@ window._renderSnippetModal = function(customFullPageCheck) {
         box.className = 'snippet-hubspot-container full-page';
         box.style.display = 'flex';
         box.style.width = '100%';
-        box.style.height = 'calc(100vh - 120px)';
-        box.style.borderRadius = '20px';
-        box.style.background = 'var(--surface-1)';
-        box.style.border = '1px solid var(--border)';
-        box.style.boxShadow = 'var(--shadow-sm)';
+        // Use class based styling for better responsiveness instead of heavy inline styles
     } else {
         box = document.getElementById('modalBox');
         box.className = 'modal-box snippet-hubspot-container';

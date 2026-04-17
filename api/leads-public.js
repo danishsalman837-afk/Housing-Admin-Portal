@@ -29,7 +29,9 @@ module.exports = async function handler(req, res) {
         agentName: 'agent_name', name: 'name', phone: 'phone'
     };
     
-    // Save original keys for lookup before renaming
+    // Save a DEEP CLONE of the original raw data for the agent_data backup
+    const originalRawData = JSON.parse(JSON.stringify(data));
+    
     const rawPhone = data.phone || data.mobile_number;
     const rawAgentName = data.agentName || data.agent_name;
 
@@ -60,8 +62,6 @@ module.exports = async function handler(req, res) {
         const safeUpdate = {};
         for (const [key, val] of Object.entries(data)) {
             if (val !== null && val !== undefined) {
-                // We allow empty string '' to update if explicitly provided, 
-                // but usually agents want to fill it.
                 safeUpdate[key] = val;
             }
         }
@@ -70,13 +70,12 @@ module.exports = async function handler(req, res) {
         if (rawAgentName) {
             safeUpdate.agent_name = rawAgentName;
         } else if (existingLead.agent_name && !safeUpdate.agent_name) {
-            // Keep existing agent name if not provided in this update
             safeUpdate.agent_name = existingLead.agent_name;
         }
         
         // Backup original data if not already backed up
         if (!existingLead.agent_data) {
-            safeUpdate.agent_data = JSON.parse(JSON.stringify(data));
+            safeUpdate.agent_data = originalRawData;
         }
         
         if (isDraft) {
@@ -95,7 +94,7 @@ module.exports = async function handler(req, res) {
         if (!data.actual_status) data.actual_status = 'New';
         
         // Save initial submission as agent_data backup
-        data.agent_data = JSON.parse(JSON.stringify(data));
+        data.agent_data = originalRawData;
 
         const { data: inserted, error: insErr } = await supabase.from('submissions').insert([data]).select();
         if (insErr) throw insErr;
