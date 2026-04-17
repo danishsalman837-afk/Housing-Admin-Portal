@@ -2457,8 +2457,9 @@ select.status-pill {
 .hub-scroll-area {
     flex: 1;
     overflow-y: auto;
-    padding-bottom: 180px; /* Even more space for action menus */
+    padding-bottom: 200px;
     position: relative;
+    padding-top: 4px;
 }
 
 .hub-table-wrapper {
@@ -2496,9 +2497,10 @@ select.status-pill {
 }
 
 .hub-col-name .name-text {
-    font-weight: 700;
-    color: var(--primary);
-    text-align: left; /* Ensure left alignment */
+    font-weight: 600;
+    color: var(--text-main);
+    font-size: 15px;
+    letter-spacing: -0.2px;
 }
 
 .hub-col-actions {
@@ -3101,6 +3103,39 @@ select.status-pill {
 .hub-folder-item:hover .f-actions { 
     opacity: 1; 
 }
+
+.hub-sidebar-scroll {
+    padding: 12px 0;
+}
+
+.hub-folder-item {
+    transition: all 0.2s var(--ease);
+    border: 1px solid transparent;
+}
+
+.hub-folder-item:hover {
+    background: var(--bg-surface-2);
+    transform: translateX(2px);
+}
+
+.hub-folder-item.active {
+    background: var(--primary-light) !important;
+    color: var(--primary-text) !important;
+    border-color: rgba(13, 110, 253, 0.1) !important;
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.08) !important;
+}
+
+.hub-folder-item .f-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 12px;
+    fill: currentColor;
+    opacity: 0.7;
+}
+
+.hub-folder-item.active .f-icon {
+    opacity: 1;
+}
 .f-action-btn {
     width: 28px;
     height: 28px;
@@ -3236,10 +3271,9 @@ select.status-pill {
 }
 
 .snippet-hubspot-container.full-page .hub-scroll-area {
-    overflow: visible !important;
+    overflow-y: auto !important;
     flex: 1 !important;
-    height: auto !important;
-    padding-bottom: 300px !important; /* Massive padding to ensure dropdowns always visible */
+    padding-bottom: 200px !important;
 }
 
 /* Force all table parts to allow overflow for dropdowns */
@@ -3263,7 +3297,8 @@ select.status-pill {
     }
     
     .hub-scroll-area {
-        height: 600px;
+        height: auto;
+        min-height: 400px;
     }
 }
 
@@ -3307,9 +3342,8 @@ select.status-pill {
 }
 
 .hub-folder-item.active {
-    background: var(--blue-light);
-    color: var(--blue);
-    border-right: none;
+    background: var(--primary-light);
+    color: var(--primary-text);
     font-weight: 700;
 }
 

@@ -800,40 +800,59 @@ window.openViewModal = function (id, showOriginal = false) {
         });
 
         modalBox.innerHTML = `
-            <div class="modal-header" style="position:sticky; top:0; background:white; z-index:10; padding:20px; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:flex-start; border-top-left-radius:16px; border-top-right-radius:16px;">
+            <div class="modal-header" style="position:sticky; top:0; background:rgba(255,255,255,0.85); backdrop-filter:blur(15px); z-index:100; padding:24px 32px; border-bottom:1px solid var(--border-light); display:flex; justify-content:space-between; align-items:center;">
                 <div style="flex:1; padding-right:20px;">
-                    <div style="font-size:11px; font-weight:700; color:#3b82f6; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">${titlePrefix}</div>
-                    <h2 style="font-size:20px; font-weight:800; letter-spacing:-0.5px; margin:0; color:#1e293b;">${leadData.name || leadData.first_name || 'Lead Details'}</h2>
-                    <div style="margin-top:6px; font-size:12px; color:#64748B; font-weight:600;">Ref ID: <span style="color:#1e293b;">#${s.id}</span></div>
+                    <div style="font-size:11px; font-weight:800; color:var(--primary); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">${titlePrefix}</div>
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <h2 style="font-size:22px; font-weight:800; letter-spacing:-0.8px; margin:0; color:var(--text-main);">${leadData.name || leadData.first_name || 'Lead Details'}</h2>
+                        <span style="background:var(--bg-surface-2); color:var(--text-muted); padding:4px 10px; border-radius:8px; font-size:12px; font-weight:700;">#${s.id}</span>
+                    </div>
                 </div>
-                <button class="close-btn" style="font-size:24px; background:#f1f5f9; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:1px solid #e2e8f0; color:#64748B; cursor:pointer; transition:all 0.2s;" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button>
+                <button class="close-btn" style="background:var(--bg-surface-2); border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:none; color:var(--text-muted); cursor:pointer; font-size:22px; transition:all 0.2s;" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button>
             </div>
             
-            <div class="modal-scroll-area" style="max-height:75vh; overflow-y:auto; overflow-x:hidden; padding:0 10px; margin-top:10px;">
-                <div style="display:flex; flex-direction:column; gap:8px;">
-                    ${dataHtml || '<p style="padding: 40px; text-align:center; color:var(--text-muted);">No detailed data available for this record.</p>'}
+            <div class="modal-scroll-area" style="max-height:80vh; overflow-y:auto; padding:32px; background: var(--bg-surface);">
+                <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:24px;">
+                    ${dataHtml || `
+                        <div style="grid-column: 1/-1; padding: 60px 40px; text-align:center;">
+                            <div style="background: var(--bg-surface-2); width:64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px;">
+                                <svg style="width:24px; height:24px; fill: var(--text-muted);" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+                            </div>
+                            <h3 style="font-size:18px; font-weight:700; color: var(--text-main); margin-bottom:8px;">No Data Found</h3>
+                            <p style="font-size:14px; color: var(--text-muted); max-width:280px; margin:0 auto;">Something went wrong, or the data for this lead is empty.</p>
+                        </div>
+                    `}
                     
-                    <!-- 📎 PHOTO EVIDENCE -->
-                    <div style="margin-top: 24px; padding-top: 24px; border-top: 2px solid #f1f5f9;">
-                        <h3 style="font-size:15px; font-weight:700; color:#1e293b; display:flex; align-items:center; gap:8px; margin-bottom:16px;">
-                            <svg style="width:18px; height:18px; fill:#3b82f6;" viewBox="0 0 24 24"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.93 1.57 3.5 3.5 3.5s3.5-1.57 3.5-3.5V5c0-2.21-1.79-4-4-4S9 2.79 9 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/></svg>
-                            Photo Evidence
-                        </h3>
-                        <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap:16px; margin-top: 10px;">
+                    <div style="grid-column: 1/-1; margin-top: 16px; padding-top: 32px; border-top: 1px solid var(--border-light);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+                            <h3 style="font-size:16px; font-weight:800; color:var(--text-main); display:flex; align-items:center; gap:12px; margin:0; letter-spacing:-0.4px;">
+                                <div style="background:var(--primary-light); color:var(--primary); width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center;">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                </div>
+                                Photo Evidence
+                            </h3>
+                            <span style="font-size:12px; font-weight:700; color:var(--text-muted); background:var(--bg-surface-2); padding:4px 12px; border-radius:20px;">${(leadData.attachments || []).length} Files</span>
+                        </div>
+                        <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:20px;">
                             ${(leadData.attachments || []).map(a => `
-                                <div class="evidence-card" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:10px; transition:all 0.2s;">
-                                    <a href="${a.url}" target="_blank" style="display:block; position:relative; padding-top:100%; overflow:hidden; border-radius:10px;">
+                                <div class="evidence-card" style="background:var(--bg-surface-2); border:1px solid var(--border-light); border-radius:16px; padding:8px; transition:transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 10px 20px rgba(0,0,0,0.05)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                                    <a href="${a.url}" target="_blank" style="display:block; position:relative; padding-top:100%; overflow:hidden; border-radius:12px; background:var(--bg-surface);">
                                         <img src="${a.url}" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover;">
                                     </a>
-                                    <div style="font-size:11px; color:#64748B; font-weight:600; margin-top:10px; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${a.name}</div>
+                                    <div style="font-size:12px; color:var(--text-main); font-weight:600; margin-top:12px; padding:0 4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${a.name}</div>
                                 </div>
                             `).join('')}
-                            ${(!leadData.attachments || leadData.attachments.length === 0) ? '<div style="padding:24px; background:#f8fafc; border:1px dashed #e2e8f0; border-radius:12px; text-align:center; color:#94a3b8; font-style:italic; font-size:13px; grid-column:1/-1;">No pictures attached yet.</div>' : ''}
+                            ${(!leadData.attachments || leadData.attachments.length === 0) ? `
+                                <div style="padding:40px; background:var(--bg-surface-2); border:1px dashed var(--border-light); border-radius:16px; text-align:center; color:var(--text-muted); font-size:14px; font-weight:600; grid-column:1/-1;">
+                                    No photos have been uploaded for this client yet.
+                                </div>
+                            ` : ''}
                         </div>
                     </div>
                 </div>
             </div>
         `;
+
     } catch (err) {
         console.error("[Modal] Fatal Error:", err);
         modalBox.innerHTML = `
@@ -895,46 +914,53 @@ window.openEditLeadModal = function (id) {
 
 
     document.getElementById('modalBox').innerHTML = `
-        <div class="modal-header" style="background:white; padding:20px; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center; border-top-left-radius:16px; border-top-right-radius:16px;">
-            <h2 style="font-size:20px; font-weight:800; letter-spacing:-0.5px; margin:0; color:#1e293b;">Edit Full Lead Data</h2>
-            <button class="close-btn" style="font-size:24px; background:#f1f5f9; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:1px solid #e2e8f0; color:#64748B; cursor:pointer;" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button>
+        <div class="modal-header" style="background:rgba(255,255,255,0.85); backdrop-filter:blur(15px); padding:24px 32px; border-bottom:1px solid var(--border-light); display:flex; justify-content:space-between; align-items:center; border-top-left-radius:24px; border-top-right-radius:24px; position:sticky; top:0; z-index:100;">
+            <div>
+                <h2 style="font-size:20px; font-weight:800; letter-spacing:-0.5px; margin:0; color:var(--text-main);">Edit Lead Profile</h2>
+                <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-top:4px;">Lead ID: <span style="color:var(--primary);">#${s.id}</span></div>
+            </div>
+            <button class="close-btn" style="background:var(--bg-surface-2); border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:none; color:var(--text-muted); cursor:pointer; font-size:22px;" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button>
         </div>
-        <div class="form-grid" id="editLeadForm" style="display:grid; grid-template-columns: repeat(2, 1fr); gap:16px; padding:0 8px; max-height:75vh; overflow-y:auto;">
-            ${html}
-            
-            <!-- 📎 ATTACHMENTS SECTION -->
-            <div style="grid-column: span 2; margin-top: 24px; padding-top: 24px; border-top: 2px dashed #f1f5f9; background: #f8fafc; border-radius: 12px; padding: 20px; border:1px solid #e2e8f0;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-                    <h3 style="font-size:15px; font-weight:700; color:#1e293b; display:flex; align-items:center; gap:8px; margin:0;">
-                        <svg style="width:18px; height:18px; fill:#3b82f6;" viewBox="0 0 24 24"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.93 1.57 3.5 3.5 3.5s3.5-1.57 3.5-3.5V5c0-2.21-1.79-4-4-4S9 2.79 9 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/></svg>
-                        Case Evidences & Pictures
-                    </h3>
-                    <div style="display:flex; align-items:center; gap:12px;">
-                        <div id="uploadStatus" style="font-size:12px; font-weight:600; color:#64748B;"></div>
-                        <input type="file" id="attachInput" style="display:none;" onchange="window.handleAttachmentUpload('${s.id}', this)" accept="image/*" multiple>
-                        <button class="btn-action" style="font-size:12px; padding:7px 14px; background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; box-shadow:none;" onclick="document.getElementById('attachInput').click()">+ Add Photos</button>
-                        <button class="btn-action" style="font-size:12px; padding:7px 14px; background:#10b981; color:white; border:none; box-shadow:0 2px 4px rgba(16,185,129,0.2);" onclick="window.saveLeadEdits('${s.id}')">Save & Refresh</button>
+        <div style="background:var(--bg-surface); padding:32px;">
+            <div class="form-grid" id="editLeadForm" style="display:grid; grid-template-columns: repeat(2, 1fr); gap:20px; max-height:65vh; overflow-y:auto; padding-right:10px;">
+                ${html}
+                
+                <div style="grid-column: span 2; margin-top: 16px; padding: 24px; background: var(--bg-surface-2); border-radius: 20px; border: 1px solid var(--border-light);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                        <h3 style="font-size:15px; font-weight:800; color:var(--text-main); display:flex; align-items:center; gap:10px; margin:0;">
+                            <div style="background:var(--primary-light); color:var(--primary); width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            </div>
+                            Attachments & Evidence
+                        </h3>
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <div id="uploadStatus" style="font-size:12px; font-weight:700; color:var(--primary);"></div>
+                            <input type="file" id="attachInput" style="display:none;" onchange="window.handleAttachmentUpload('${s.id}', this)" accept="image/*" multiple>
+                            <button class="btn-hub-secondary" style="font-size:12px; height:36px; padding:0 16px; border-radius:10px;" onclick="document.getElementById('attachInput').click()">+ Upload Photos</button>
+                        </div>
+                    </div>
+                    
+                    <div id="attachmentList" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap:16px;">
+                        ${(s.attachments || []).map((a, i) => `
+                            <div class="attach-item" style="position:relative; background:var(--bg-surface); border:1px solid var(--border-light); border-radius:12px; padding:8px; transition:all 0.2s ease;">
+                                <a href="${a.url}" target="_blank" style="display:block; border-radius:8px; overflow:hidden;">
+                                    <img src="${a.url}" style="width:100%; height:100px; object-fit:cover;">
+                                </a>
+                                <div style="font-size:11px; color:var(--text-muted); font-weight:600; margin-top:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4px;">${a.name}</div>
+                                <button onclick="window.deleteAttachment('${s.id}', ${i})" style="position:absolute; top:-8px; right:-8px; background:#ef4444; color:white; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer; font-size:16px; font-weight:800; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 10px rgba(239,68,68,0.3);">&times;</button>
+                            </div>
+                        `).join('')}
+                        ${(!s.attachments || s.attachments.length === 0) ? '<p style="font-size:13px; color:var(--text-muted); font-style:italic; grid-column:1/-1; text-align:center; padding:30px 0; font-weight:600;">No pictures attached yet.</p>' : ''}
                     </div>
                 </div>
-                
-                <div id="attachmentList" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap:12px;">
-                    ${(s.attachments || []).map((a, i) => `
-                        <div class="attach-item" style="position:relative; background:white; border:1px solid #e2e8f0; border-radius:10px; padding:8px; transition:all 0.2s ease;">
-                            <a href="${a.url}" target="_blank" style="display:block; border-radius:6px; overflow:hidden;">
-                                <img src="${a.url}" style="width:100%; height:90px; object-fit:cover;">
-                            </a>
-                            <div style="font-size:10px; color:#64748B; margin-top:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4px;">${a.name}</div>
-                            <button onclick="window.deleteAttachment('${s.id}', ${i})" style="position:absolute; top:-6px; right:-6px; background:#ef4444; color:white; border:none; border-radius:50%; width:22px; height:22px; cursor:pointer; font-size:14px; font-weight:800; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(239,68,68,0.3);">&times;</button>
-                        </div>
-                    `).join('')}
-                    ${(!s.attachments || s.attachments.length === 0) ? '<p style="font-size:12px; color:#94a3b8; font-style:italic; grid-column:1/-1; text-align:center; padding:20px 0;">No pictures attached yet.</p>' : ''}
-                </div>
             </div>
-        </div>
-        <div style="margin-top:32px; display:flex; justify-content:flex-end; gap:12px; padding:0 8px;">
-           <button class="btn-outline" style="padding:10px 24px; font-weight:700;" onclick="document.getElementById('modalOverlay').style.display='none'">Cancel</button>
-           <button class="btn-action" style="padding:10px 32px; font-weight:700; background:#10B981;" onclick="window.saveLeadEdits('${s.id}')">Apply Changes</button>
+            
+            <div style="margin-top:32px; display:flex; justify-content:flex-end; gap:16px;">
+               <button class="btn-hub-secondary" style="padding:12px 28px; height:auto; font-size:14px; border-radius:12px; font-weight:700;" onclick="document.getElementById('modalOverlay').style.display='none'">Cancel</button>
+               <button class="btn-hub-primary" style="padding:12px 40px; height:auto; font-size:14px; border-radius:12px; font-weight:800; background:#10B981; border:none; box-shadow: 0 8px 20px rgba(16, 185, 129, 0.2);" onclick="window.saveLeadEdits('${s.id}')">Apply Changes</button>
+            </div>
         </div>`;
+
     document.getElementById('modalBox').style.display = 'block';
     document.getElementById('modalOverlay').style.display = 'flex';
 };
@@ -3199,9 +3225,12 @@ window.sendCommSms = function() {
                     msgContainer.scrollTop = msgContainer.scrollHeight;
                     
                     try {
-                        var audio = new window.Audio('https://actions.google.com/sounds/v1/ui/message_notification.ogg');
+                        var audio = new Audio('https://notifications.google.com/sounds/v1/ui/message_notification.ogg');
+                        // Fallback to mp3 if ogg fails or just catch the play error
                         audio.volume = 0.5;
-                        audio.play();
+                        audio.play().catch(function(e) { 
+                            console.warn("[CommHub] Audio playback skipped:", e.message); 
+                        });
                     } catch(e) { }
                 }, 2500);
             }
@@ -3402,22 +3431,49 @@ window._renderSnippetModal = function(customFullPageCheck) {
     }
 
     var snippetRowsHtml = folderSnippets.map(function(s) {
-        const createdDate = s.created_at ? new Date(s.created_at).toLocaleDateString() : 'Just now';
+        const createdDate = s.created_at ? new Date(s.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recently';
         return `
-            <tr class="hub-row" onclick="window._selectedSnippetId='${s.id}'; window._renderSnippetModal();">
-                <td style="width:40px; text-align:center;"><input type="checkbox" onclick="event.stopPropagation()"></td>
-                <td class="hub-col-name"><div class="name-text">${s.title}</div></td>
-                <td class="hub-col-owner" style="width:140px; text-align:left;">Admin</td>
-                <td class="hub-col-date" style="width:140px; text-align:left;">${createdDate}</td>
-                <td class="hub-col-actions" style="width:120px; text-align:right; overflow:visible;">
+            <tr class="hub-row" onclick="window._selectedSnippetId='${s.id}'; window._renderSnippetModal();" style="border-bottom: 1px solid var(--border-light); transition: background 0.2s;">
+                <td style="width:60px; text-align:center; padding: 20px 16px;"><input type="checkbox" onclick="event.stopPropagation()" style="width: 16px; height: 16px;"></td>
+                <td class="hub-col-name" style="padding: 20px 16px;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <div style="background: var(--bg-surface-2); color: var(--text-muted); width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        </div>
+                        <div class="name-text" style="font-size: 15px; font-weight: 600; color: var(--text-main);">${s.title}</div>
+                    </div>
+                </td>
+                <td class="hub-col-owner" style="width:160px; text-align:left; padding: 20px 16px; color: var(--text-muted); font-weight: 500;">Admin</td>
+                <td class="hub-col-date" style="width:180px; text-align:left; padding: 20px 16px; color: var(--text-muted); font-weight: 500;">${createdDate}</td>
+                <td class="hub-col-actions" style="width:120px; text-align:right; padding: 20px 16px; position:relative; overflow:visible;">
                     <div style="position:relative; display:inline-block;">
-                        <button class="hub-action-btn" onclick="window._toggleSnippetMenu(event, '${s.id}')">Actions ▾</button>
-                        <div id="menu-${s.id}" class="hub-dropdown">
-                            <div onclick="event.stopPropagation(); window._showCreateSnippet('${s.id}')">Edit Template</div>
-                            <div onclick="event.stopPropagation(); window._useSnippetInChat('${s.id}')">Insert into Chat</div>
-                            <div onclick="event.stopPropagation(); window._sendSnippetNow('${s.id}')" style="font-weight:700; color:var(--primary);">Send SMS Now</div>
-                            <hr>
-                            <div onclick="event.stopPropagation(); window._deleteSnippet('${s.id}')" style="color:#ef4444;">Delete Permanently</div>
+                        <button class="hub-action-btn" onclick="window._toggleSnippetMenu(event, '${s.id}')" style="background: var(--bg-surface-2); border: 1px solid var(--border-light); padding: 6px 14px; border-radius: 8px; font-weight: 700; font-size: 12px; color: var(--text-main); cursor: pointer; transition: all 0.2s;">Actions ▾</button>
+                        <div id="menu-${s.id}" class="hub-dropdown" style="display:none; position:absolute; right:0; top:100%; margin-top:8px; width:220px; background:var(--bg-surface); border:1px solid var(--border-light); box-shadow:0 15px 35px rgba(0,0,0,0.15); border-radius:14px; z-index:1000; overflow:hidden;">
+                            <div onclick="event.stopPropagation(); window._showCreateSnippet('${s.id}')" style="padding:12px 16px; font-size:13px; font-weight:600; cursor:pointer;" onmouseover="this.style.background='var(--bg-surface-2)'" onmouseout="this.style.background='transparent'">
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                    Edit Template
+                                </div>
+                            </div>
+                            <div onclick="event.stopPropagation(); window._useSnippetInChat('${s.id}')" style="padding:12px 16px; font-size:13px; font-weight:600; cursor:pointer;" onmouseover="this.style.background='var(--bg-surface-2)'" onmouseout="this.style.background='transparent'">
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 1 1-7.6-14 8.38 8.38 0 0 1 3.8.9L21 3z"/></svg>
+                                    Insert into Chat
+                                </div>
+                            </div>
+                            <div onclick="event.stopPropagation(); window._sendSnippetNow('${s.id}')" style="padding:12px 16px; font-size:13px; font-weight:800; color:var(--primary); cursor:pointer;" onmouseover="this.style.background='var(--primary-light)'" onmouseout="this.style.background='transparent'">
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polyline points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                                    Send SMS Now
+                                </div>
+                            </div>
+                            <hr style="margin:0; border:none; border-top:1px solid var(--border-light);">
+                            <div onclick="event.stopPropagation(); window._deleteSnippet('${s.id}')" style="padding:12px 16px; font-size:13px; font-weight:600; color:#ef4444; cursor:pointer;" onmouseover="this.style.background='rgba(239, 68, 68, 0.05)'" onmouseout="this.style.background='transparent'">
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                                    Delete Permanently
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </td>
@@ -3426,65 +3482,71 @@ window._renderSnippetModal = function(customFullPageCheck) {
     }).join('');
 
     box.innerHTML = `
-        <div class="hub-sidebar">
-            <div class="hub-sidebar-header">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--primary)"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-                <span class="hub-sidebar-title">Snippets Manager</span>
+        <div class="hub-sidebar" style="background: var(--bg-surface); border-right: 1px solid var(--border-light);">
+            <div class="hub-sidebar-header" style="padding: 24px; border-bottom: 1px solid var(--border-light);">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="background: var(--primary-light); color: var(--primary); width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+                    </div>
+                    <span class="hub-sidebar-title" style="font-size: 16px; font-weight: 700; color: var(--text-main); letter-spacing: -0.4px;">Snippets Manager</span>
+                </div>
             </div>
             <div class="hub-sidebar-scroll">
-                <div class="hub-section-label">FOLDERS</div>
-                ${folderListHtml}
+                <div class="hub-section-label" style="font-size: 11px; font-weight: 800; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.8px; padding: 20px 24px 8px;">FOLDERS</div>
+                <div style="padding: 0 12px;">
+                    ${folderListHtml}
+                </div>
             </div>
-            <div class="hub-sidebar-footer">
-                ${isFullPageView ? '' : `<button class="btn-hub-secondary" style="width:100%;" onclick="document.getElementById('modalOverlay').style.display='none'">Exit Library</button>`}
+            <div class="hub-sidebar-footer" style="margin-top: auto; padding: 24px; border-top: 1px solid var(--border-light);">
+                ${isFullPageView ? '' : `<button class="btn-hub-secondary" style="width:100%; border-radius: 10px; height: 44px;" onclick="document.getElementById('modalOverlay').style.display='none'">Exit Library</button>`}
             </div>
         </div>
-        <div class="hub-main">
-            <div class="hub-header">
-                <div class="hub-header-top">
-                    <div style="display:flex; align-items:center; gap:12px;">
+        <div class="hub-main" style="flex: 1; display: flex; flex-direction: column; background: var(--bg-main);">
+            <div class="hub-header" style="padding: 32px 40px; border-bottom: 1px solid var(--border-light); background: var(--bg-surface);">
+                <div class="hub-header-top" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <div style="display:flex; align-items:center; gap:16px;">
                         ${isFullPageView ? '' : `
-                        <button class="hub-back-arrow" title="Back to Chat" onclick="document.getElementById('modalOverlay').style.display='none'">
-                            <svg style="width:20px; height:20px;" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                        <button class="hub-back-arrow" title="Back to Chat" onclick="document.getElementById('modalOverlay').style.display='none'" style="background: var(--bg-surface-2); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;">
+                            <svg style="width:20px; height:20px; fill: var(--text-muted);" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
                         </button>
                         `}
-                        <h2 class="hub-title">${activeFolder ? activeFolder.name : 'Templates'}</h2>
+                        <h2 class="hub-title" style="font-size: 24px; font-weight: 800; color: var(--text-main); letter-spacing: -0.8px; margin: 0;">${activeFolder ? activeFolder.name : 'Templates'}</h2>
                     </div>
-                    <div class="hub-header-actions">
-                        <button class="btn-hub-secondary" onclick="window._addSnippetFolder()">New Folder</button>
-                        <button class="btn-hub-primary" onclick="window._showCreateSnippet()">Create snippet</button>
+                    <div class="hub-header-actions" style="display: flex; gap: 12px;">
+                        <button class="btn-hub-secondary" style="height: 40px; border-radius: 10px; font-size: 13px; font-weight: 700; padding: 0 20px;" onclick="window._addSnippetFolder()">New Folder</button>
+                        <button class="btn-hub-primary" style="height: 40px; border-radius: 10px; font-size: 13px; font-weight: 700; padding: 0 20px; background: var(--primary); box-shadow: 0 4px 12px rgba(13, 110, 253, 0.2);" onclick="window._showCreateSnippet()">Create snippet</button>
                     </div>
                 </div>
-                <div class="hub-controls">
-                    <div class="hub-search">
-                        <svg style="width:18px; height:18px; position:absolute; left:12px; top:50%; transform:translateY(-50%); fill:#7c98b6;" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                        <input type="text" placeholder="Search template name or content..." oninput="window._snippetSearchTerm=this.value; window._renderSnippetModal();" value="${window._snippetSearchTerm || ''}">
+                <div class="hub-controls" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div class="hub-search" style="position: relative; flex: 0 1 400px;">
+                        <svg style="width:18px; height:18px; position:absolute; left:16px; top:50%; transform:translateY(-50%); fill:#94a3b8; transition: fill 0.2s;" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                        <input type="text" placeholder="Search templates..." style="width: 100%; height: 44px; padding: 0 16px 0 48px; border-radius: 22px; border: 1px solid var(--border-light); background: var(--bg-surface-2); font-size: 14px; transition: all 0.2s;" oninput="window._snippetSearchTerm=this.value; window._renderSnippetModal();" value="${window._snippetSearchTerm || ''}">
                     </div>
-                    <div class="hub-count">${folderSnippets.length} snippets listed</div>
+                    <div class="hub-count" style="font-size: 12px; font-weight: 600; color: var(--text-light); letter-spacing: 0.2px;">${folderSnippets.length} snippets listed</div>
                 </div>
             </div>
-            <div class="hub-scroll-area">
-                <div class="hub-table-wrapper">
-                    <table class="hub-table">
+            <div class="hub-scroll-area" style="padding: 24px 40px;">
+                <div class="hub-table-wrapper" style="background: var(--bg-surface); border-radius: 16px; border: 1px solid var(--border-light); overflow: hidden; box-shadow: var(--shadow-sm);">
+                    <table class="hub-table" style="width: 100%; border-collapse: collapse;">
                         <thead>
-                            <tr>
-                                <th style="width:50px; text-align:center;"><input type="checkbox"></th>
-                                <th style="text-align:left;">NAME</th>
-                                <th style="width:140px; text-align:left;">CREATED BY</th>
-                                <th style="width:160px; text-align:left;">DATE UPDATED</th>
-                                <th style="width:120px; text-align:right;"></th>
+                            <tr style="background: var(--bg-surface-2);">
+                                <th style="width:60px; text-align:center; padding: 16px;"><input type="checkbox" style="width: 16px; height: 16px; border-radius: 4px;"></th>
+                                <th style="text-align:left; padding: 16px; font-size: 11px; font-weight: 800; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.8px;">NAME</th>
+                                <th style="width:160px; text-align:left; padding: 16px; font-size: 11px; font-weight: 800; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.8px;">CREATED BY</th>
+                                <th style="width:180px; text-align:left; padding: 16px; font-size: 11px; font-weight: 800; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.8px;">DATE UPDATED</th>
+                                <th style="width:120px; text-align:right; padding: 16px;"></th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody style="overflow: visible;">
                             ${snippetRowsHtml || `
                                 <tr>
-                                    <td colspan="5" style="padding:160px; text-align:center;">
-                                        <div style="background:var(--surface-3); width:80px; height:80px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 24px;">
-                                            <svg style="width:40px; height:40px; fill:var(--label-4);" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
+                                    <td colspan="5" style="padding:100px 40px; text-align:center;">
+                                        <div style="background: var(--primary-light); width:80px; height:80px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 24px;">
+                                            <svg style="width:36px; height:36px; fill: var(--primary);" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
                                         </div>
-                                        <h3 style="font-size:18px; font-weight:800; color:var(--label-1); margin-bottom:10px;">No templates here</h3>
-                                        <p style="font-size:14px; color:var(--label-3); max-width:280px; margin:0 auto 24px; line-height:1.6;">Create a snippet to save time on your frequent replies.</p>
-                                        <button class="btn-action" style="padding:10px 24px; background:var(--blue);" onclick="window._showCreateSnippet()">Create snippet</button>
+                                        <h3 style="font-size:20px; font-weight:800; color: var(--text-main); margin-bottom:12px; letter-spacing: -0.5px;">No templates here</h3>
+                                        <p style="font-size:14px; color: var(--text-muted); max-width:320px; margin:0 auto 32px; line-height:1.6;">Create a snippet to save time on your frequent replies and standard messages.</p>
+                                        <button class="btn-hub-primary" style="padding:12px 32px; height: auto; border-radius: 12px; background: var(--primary);" onclick="window._showCreateSnippet()">Create your first snippet</button>
                                     </td>
                                 </tr>
                             `}
@@ -3494,6 +3556,7 @@ window._renderSnippetModal = function(customFullPageCheck) {
             </div>
         </div>
     `;
+
     if (isFullPageView) {
         document.getElementById('modalOverlay').style.display = 'none';
     } else {
@@ -3801,80 +3864,76 @@ window._processDelete = async function(type, id) {
 window._showCreateSnippet = function(editId) {
     if (!window._activeSnippetFolder) { showNotification('Select a folder first', 'error'); return; }
     var folderId = window._activeSnippetFolder;
+    var folder = window._snippetStore.folders.find(f => f.id === folderId);
     
     var existing = editId ? window._snippetStore.snippets.find(function(x) { return x.id === editId; }) : null;
     var box = document.getElementById('modalBox');
     box.className = 'modal-box';
     box.style.display = 'block';
-    box.style.width = '600px';
+    box.style.width = '640px';
     box.style.borderRadius = '24px';
     box.style.overflow = 'hidden';
-    box.style.boxShadow = '0 25px 50px -12px rgba(0, 0, 0, 0.25)';
+    box.style.boxShadow = '0 25px 80px -20px rgba(0, 0, 0, 0.35)';
+    box.style.border = '1px solid var(--border-light)';
 
     box.innerHTML = `
-        <div class="modal-header" style="background:var(--bg-main); padding: 20px 30px; border-bottom: 1px solid var(--border-light); display:flex; justify-content:space-between; align-items:center;">
-            <div style="display:flex; align-items:center; gap:18px;">
-                <button class="back-nav-btn" title="Back" onclick="window._renderSnippetModal()" style="background:var(--bg-soft); width:36px; height:36px; border-radius:10px; border:1px solid var(--border-light); color:var(--text-main); display:flex; align-items:center; justify-content:center; cursor:pointer;">
-                    <svg viewBox="0 0 24 24" style="width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round;"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        <div class="modal-header" style="background: rgba(255,255,255,0.8); backdrop-filter: blur(20px); padding: 24px 32px; border-bottom: 1px solid var(--border-light); display:flex; justify-content:space-between; align-items:center; position: sticky; top: 0; z-index: 10;">
+            <div style="display:flex; align-items:center; gap:20px;">
+                <button class="back-nav-btn" title="Back to Library" onclick="window._renderSnippetModal()" style="background:var(--bg-surface-2); width:40px; height:40px; border-radius:12px; border:1px solid var(--border-light); color:var(--text-main); display:flex; align-items:center; justify-content:center; cursor:pointer; transition: all 0.2s;">
+                    <svg viewBox="0 0 24 24" style="width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round;"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
                 </button>
-                <div style="display:flex; align-items:center; gap:14px;">
-                    <div style="background:rgba(79, 70, 229, 0.1); width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; color:var(--primary);">
-                        <svg viewBox="0 0 24 24" style="width:20px; height:20px; fill:currentColor;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                <div style="display:flex; align-items:center; gap:16px;">
+                    <div style="background:var(--primary-light); width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; color:var(--primary);">
+                        <svg viewBox="0 0 24 24" style="width:22px; height:22px; fill:currentColor;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
                     </div>
                     <div>
-                        <h2 style="font-size:17px; font-weight:800; margin:0; letter-spacing:-0.4px;">${existing ? 'Edit Snippet' : 'Create New Snippet'}</h2>
-                        <div style="font-size:11px; color:var(--text-muted); font-weight:600;">Folder: <span style="color:var(--primary); opacity:0.8;">${folderId}</span></div>
+                        <h2 style="font-size:18px; font-weight:800; margin:0; letter-spacing:-0.5px; color: var(--text-main);">${existing ? 'Edit Template' : 'Create Template'}</h2>
+                        <div style="font-size:12px; color:var(--text-muted); font-weight:600;">Folder: <span style="color:var(--primary);">${folder ? folder.name : 'Unknown'}</span></div>
                     </div>
                 </div>
             </div>
-            <button class="close-btn" style="background:var(--bg-soft); width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center;" onclick="window._renderSnippetModal()">&times;</button>
+            <button class="close-btn" style="background:var(--bg-surface-2); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted);" onclick="window._renderSnippetModal()">&times;</button>
         </div>
         
-        <div style="padding:30px; background:var(--bg-main); max-height: 70vh; overflow-y: auto;">
-            <div style="margin-bottom:24px;">
-                <label style="font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase; display:block; margin-bottom:10px; letter-spacing:0.5px;">Snippet Title</label>
-                <input type="text" id="newSnippetTitle" placeholder="e.g. Follow-up regarding photos" class="modern-input" style="width:100%; height:48px; font-size:15px; border-radius:12px;" value="${existing ? existing.title : ''}">
+        <div style="padding:40px; background:var(--bg-surface); max-height: 75vh; overflow-y: auto;">
+            <div style="margin-bottom:32px;">
+                <label style="font-size:11px; font-weight:800; color:var(--text-light); text-transform:uppercase; display:block; margin-bottom:12px; letter-spacing:1px;">TEMPLATE NAME</label>
+                <input type="text" id="newSnippetTitle" placeholder="e.g. Initial Outreach Message" class="modern-input" style="width:100%; height:52px; font-size:16px; font-weight: 500; border-radius:14px; background: var(--bg-surface-2); border: 2px solid transparent; transition: all 0.2s;" value="${existing ? existing.title : ''}" onfocus="this.style.borderColor='var(--primary)'; this.style.background='var(--bg-surface)';" onblur="this.style.borderColor='transparent'; this.style.background='var(--bg-surface-2)';">
             </div>
             
-            <div style="margin-bottom:20px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <label style="font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Message Template</label>
-                    <div style="display:flex; gap:8px;">
-                        <span onclick="window._insertVarIntoSnippet('{{first_name}}')" style="cursor:pointer; background:var(--bg-soft); color:var(--primary); font-size:10px; font-weight:800; padding:4px 10px; border-radius:10px; border:1px solid var(--border-light);">+ Name</span>
-                        <span onclick="window._insertVarIntoSnippet('{{case_id}}')" style="cursor:pointer; background:var(--bg-soft); color:var(--primary); font-size:10px; font-weight:800; padding:4px 10px; border-radius:10px; border:1px solid var(--border-light);">+ ID</span>
+            <div style="margin-bottom:24px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                    <label style="font-size:11px; font-weight:800; color:var(--text-light); text-transform:uppercase; letter-spacing:1px;">MESSAGE CONTENT</label>
+                    <div style="display:flex; gap:10px;">
+                        <span onclick="window._insertVarIntoSnippet('{{first_name}}')" style="cursor:pointer; background:var(--bg-surface-2); color:var(--primary); font-size:11px; font-weight:800; padding:6px 14px; border-radius:12px; border:1px solid var(--border-light); transition: all 0.2s;" onmouseover="this.style.background='var(--primary-light)'" onmouseout="this.style.background='var(--bg-surface-2)'">+ Name</span>
                         <div style="position:relative;">
-                            <button type="button" class="btn-outline" style="padding:6px 14px; font-size:12px; height:28px; border-radius:10px; gap:6px; font-weight:700;" onclick="var d=document.getElementById('snippetVarDrop'); d.style.display=d.style.display==='none'?'block':'none';">
-                                More...
+                            <button type="button" class="btn-outline" style="padding:6px 16px; font-size:12px; height:32px; border-radius:12px; gap:8px; font-weight:800; background: var(--bg-surface-2); border: 1px solid var(--border-light); cursor: pointer;" onclick="var d=document.getElementById('snippetVarDrop'); d.style.display=d.style.display==='none'?'block':'none';">
+                                More Variables
                             </button>
-                            <div id="snippetVarDrop" style="display:none; position:absolute; right:0; top:100%; margin-top:8px; width:220px; background:var(--bg-main); border:1px solid var(--border-light); box-shadow:0 15px 35px rgba(0,0,0,0.2); border-radius:14px; z-index:1000; overflow:hidden; animation: slideUp 0.1s ease;">
-                                <div style="padding:10px 16px; font-size:10px; font-weight:800; color:var(--text-muted); background:var(--bg-soft); text-transform:uppercase; letter-spacing:0.5px;">Lead Data</div>
-                                <div onclick="window._insertVarIntoSnippet('{{full_name}}')" style="padding:10px 16px; font-size:13px; color:var(--text-main); cursor:pointer; border-bottom:1px solid var(--border-light); font-weight:600;" onmouseover="this.style.background='rgba(79, 70, 229, 0.05)'" onmouseout="this.style.background='transparent'">Full Name</div>
-                                <div onclick="window._insertVarIntoSnippet('{{solicitor_name}}')" style="padding:10px 16px; font-size:13px; color:var(--text-main); cursor:pointer; border-bottom:1px solid var(--border-light); font-weight:600;" onmouseover="this.style.background='rgba(79, 70, 229, 0.05)'" onmouseout="this.style.background='transparent'">Solicitor Name</div>
-                                <div onclick="window._insertVarIntoSnippet('{{phone}}')" style="padding:10px 16px; font-size:13px; color:var(--text-main); cursor:pointer; border-bottom:1px solid var(--border-light); font-weight:600;" onmouseover="this.style.background='rgba(79, 70, 229, 0.05)'" onmouseout="this.style.background='transparent'">Phone Number</div>
-                                
-                                <div style="padding:10px 16px; font-size:10px; font-weight:800; color:var(--text-muted); background:var(--bg-soft); text-transform:uppercase; letter-spacing:0.5px;">Your Profile</div>
-                                <div onclick="window._insertVarIntoSnippet('{{user_name}}')" style="padding:10px 16px; font-size:13px; color:var(--text-main); cursor:pointer; border-bottom:1px solid var(--border-light); font-weight:600;" onmouseover="this.style.background='rgba(79, 70, 229, 0.05)'" onmouseout="this.style.background='transparent'">My Full Name</div>
-                                <div onclick="window._insertVarIntoSnippet('{{user_email}}')" style="padding:10px 16px; font-size:13px; color:var(--text-main); cursor:pointer; border-bottom:1px solid var(--border-light); font-weight:600;" onmouseover="this.style.background='rgba(79, 70, 229, 0.05)'" onmouseout="this.style.background='transparent'">My Email</div>
-                                <div onclick="window._insertVarIntoSnippet('{{user_phone}}')" style="padding:10px 16px; font-size:13px; color:var(--text-main); cursor:pointer; font-weight:600;" onmouseover="this.style.background='rgba(79, 70, 229, 0.1)'" onmouseout="this.style.background='transparent'">My Phone</div>
+                            <div id="snippetVarDrop" style="display:none; position:absolute; right:0; top:100%; margin-top:10px; width:240px; background:var(--bg-surface); border:1px solid var(--border-light); box-shadow: 0 10px 30px rgba(0,0,0,0.2); border-radius:16px; z-index:1000; overflow:hidden;">
+                                <div style="padding:12px 16px; font-size:11px; font-weight:800; color:var(--text-light); background:var(--bg-surface-2); text-transform:uppercase; letter-spacing:1px;">Lead Data</div>
+                                <div onclick="window._insertVarIntoSnippet('{{full_name}}')" style="padding:12px 16px; font-size:14px; color:var(--text-main); cursor:pointer; border-bottom:1px solid var(--border-light); font-weight:600;" onmouseover="this.style.background='var(--primary-light)'" onmouseout="this.style.background='transparent'">Full Name</div>
+                                <div onclick="window._insertVarIntoSnippet('{{solicitor_name}}')" style="padding:12px 16px; font-size:14px; color:var(--text-main); cursor:pointer; border-bottom:1px solid var(--border-light); font-weight:600;" onmouseover="this.style.background='var(--primary-light)'" onmouseout="this.style.background='transparent'">Solicitor Name</div>
+                                <div onclick="window._insertVarIntoSnippet('{{phone}}')" style="padding:12px 16px; font-size:14px; color:var(--text-main); cursor:pointer; font-weight:600;" onmouseover="this.style.background='var(--primary-light)'" onmouseout="this.style.background='transparent'">Phone Number</div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <textarea id="newSnippetContent" class="modern-input" rows="6" placeholder="Type your message here..." style="width:100%; min-height:120px; padding:16px; font-size:15px; border-radius:14px; line-height:1.6; resize:none;">${existing ? existing.content : ''}</textarea>
-                <div style="display:flex; justify-content:flex-end; margin-top:6px; font-size:11px; font-weight:700; color:var(--text-muted);" id="snippetCharCount">0 characters</div>
+                <textarea id="newSnippetContent" class="modern-input" rows="8" placeholder="Type your message template here..." style="width:100%; min-height:160px; padding:20px; font-size:16px; border-radius:16px; line-height:1.6; resize:vertical; background: var(--bg-surface-2); border: 2px solid transparent; transition: all 0.2s;" onfocus="this.style.borderColor='var(--primary)'; this.style.background='var(--bg-surface)';" onblur="this.style.borderColor='transparent'; this.style.background='var(--bg-surface-2)';">${existing ? existing.content : ''}</textarea>
+                <div style="display:flex; justify-content:flex-end; margin-top:10px; font-size:12px; font-weight:700; color:var(--text-light);" id="snippetCharCount">0 characters</div>
             </div>
             
-            <div id="snippetPreviewBox" style="background:rgba(241, 245, 249, 0.5); border:1px solid var(--border-light); border-radius:16px; padding:20px; margin-bottom:24px; min-height:80px;">
-                <div style="font-size:10px; font-weight:900; color:var(--primary); text-transform:uppercase; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
-                    <span style="background:var(--primary); width:6px; height:6px; border-radius:50%; box-shadow: 0 0 10px var(--primary);"></span>
-                    Real-time Preview
+            <div id="snippetPreviewBox" style="background:var(--bg-surface-2); border:1px solid var(--border-light); border-radius:18px; padding:24px; margin-bottom:32px; min-height:100px; position: relative; overflow: hidden;">
+                <div style="font-size:11px; font-weight:900; color:var(--primary); text-transform:uppercase; margin-bottom:16px; display:flex; align-items:center; gap:10px; letter-spacing: 1px;">
+                    <span style="background:var(--primary); width:8px; height:8px; border-radius:50%; box-shadow: 0 0 10px var(--primary);"></span>
+                    LIVE PREVIEW
                 </div>
-                <div id="snippetPreviewContent" style="font-size:14px; color:var(--text-main); line-height:1.7; font-style:italic; opacity:0.7; white-space: pre-wrap;">${existing ? window._parseLiquidTags(existing.content) : 'Start typing to see the final message with variable data...'}</div>
+                <div id="snippetPreviewContent" style="font-size:15px; color:var(--text-main); line-height:1.8; font-style:italic; opacity:0.6; white-space: pre-wrap;">${existing ? window._parseLiquidTags(existing.content) : 'Variable tags will be automatically replaced with live data when sending...'}</div>
             </div>
-
+    
             <div style="display:flex; justify-content:flex-end; gap:16px; margin-top:10px;">
-                <button class="btn-premium ghost" style="padding:12px 24px; font-size:14px; font-weight:700;" onclick="window._renderSnippetModal()">Discard</button>
-                <button class="btn-premium primary" style="padding:12px 30px; font-size:14px; font-weight:700; background:var(--primary); box-shadow: 0 6px 20px rgba(79, 70, 229, 0.25); border:none;" onclick="window._saveNewSnippet('${editId || ''}')">${existing ? 'Update Snippet' : 'Create Snippet'}</button>
+                <button class="btn-hub-secondary" style="padding:14px 28px; height: auto; font-size:14px; font-weight:700; border-radius: 12px;" onclick="window._renderSnippetModal()">Discard</button>
+                <button class="btn-hub-primary" style="padding:14px 40px; height: auto; font-size:14px; font-weight:800; background:var(--primary); border-radius: 12px; box-shadow: 0 8px 24px rgba(13, 110, 253, 0.25); border:none;" onclick="window._saveNewSnippet('${editId || ''}')">${existing ? 'Save Changes' : 'Create Template'}</button>
             </div>
         </div>
     `;
@@ -4076,10 +4135,15 @@ if ("Notification" in window && Notification.permission !== "denied") {
 window.receiveLiveMessage = function(msg, senderName) {
     // 1. Alert Sound
     try {
-        var audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
-        audio.volume = 0.5; // Set volume to 50% for comfort
-        audio.play().catch(function(e) { console.log("Audio play blocked", e); });
-    } catch(e) {}
+        // Using a more stable direct MP3 link
+        var audio = new Audio('https://www.soundjay.com/communication/sounds/beep-07.mp3');
+        audio.volume = 0.4;
+        audio.play().catch(function(e) { 
+            console.warn("[CommHub] Notification sound play blocked or failed:", e.message);
+        });
+    } catch(e) {
+        console.warn("[CommHub] Audio object creation failed.");
+    }
 
     // 2. Desktop Notification
     if ("Notification" in window && Notification.permission === "granted") {
