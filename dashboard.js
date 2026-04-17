@@ -3222,45 +3222,24 @@ window._renderSnippetModal = function() {
     var snippetRowsHtml = folderSnippets.map(function(s) {
         var isSelected = s.id === window._selectedSnippetId;
         return `
-            <tr class="hub-row ${isSelected ? 'selected' : ''}" onclick="window._selectedSnippetId='${s.id}'; window._renderSnippetModal();">
+            <tr class="hub-row" onclick="window._selectedSnippetId='${s.id}'; window._renderSnippetModal();">
                 <td style="width:40px; text-align:center;"><input type="checkbox" onclick="event.stopPropagation()"></td>
                 <td class="hub-col-name"><div class="name-text">${s.title}</div></td>
-                <td class="hub-col-owner" style="width:140px;">Admin</td>
-                <td class="hub-col-date" style="width:140px;">Just now</td>
-                <td class="hub-col-actions" style="width:140px; text-align:right; position:relative;">
-                    <button class="hub-action-btn" onclick="event.stopPropagation(); var d=document.getElementById('menu-${s.id}'); d.style.display=d.style.display==='none'?'block':'none';">Actions ▾</button>
-                    <div id="menu-${s.id}" class="hub-dropdown">
-                        <div onclick="window._selectedSnippetId='${s.id}'; window._renderSnippetModal();">Preview Content</div>
-                        <div onclick="window._showCreateSnippet('${s.id}')">Edit Template</div>
-                        <div onclick="window._useSnippetInChat('${s.id}')">Insert into Chat</div>
-                        <div onclick="window._sendSnippetNow('${s.id}')" style="font-weight:700; color:#ff7a59;">Send SMS Now</div>
-                        <hr>
-                        <div onclick="window._deleteSnippet('${s.id}')" style="color:#ef4444;">Delete Permanently</div>
+                <td class="hub-col-owner" style="width:140px; text-align:left;">Admin</td>
+                <td class="hub-col-date" style="width:140px; text-align:left;">Just now</td>
+                <td class="hub-col-actions" style="width:120px; text-align:right;">
+                    <div style="position:relative; display:inline-block;">
+                        <button class="hub-action-btn" onclick="event.stopPropagation(); var d=document.getElementById('menu-${s.id}'); d.style.display=d.style.display==='none'?'block':'none';">Actions ▾</button>
+                        <div id="menu-${s.id}" class="hub-dropdown">
+                            <div onclick="window._showCreateSnippet('${s.id}')">Edit Template</div>
+                            <div onclick="window._useSnippetInChat('${s.id}')">Insert into Chat</div>
+                            <div onclick="window._sendSnippetNow('${s.id}')" style="font-weight:700; color:var(--primary);">Send SMS Now</div>
+                            <hr>
+                            <div onclick="window._deleteSnippet('${s.id}')" style="color:#ef4444;">Delete Permanently</div>
+                        </div>
                     </div>
                 </td>
             </tr>
-            ${isSelected ? `
-            <tr class="hub-preview-row">
-                <td colspan="5">
-                    <div class="hub-preview-panel">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-                            <div class="preview-header">Message Content</div>
-                            <div style="display:flex; gap:10px;">
-                                <button class="btn-text-only" style="background:#fff; border:1px solid #dfe3e8; padding:6px 12px; border-radius:4px; font-weight:700;" onclick="window._showCreateSnippet('${s.id}')">Edit</button>
-                                <button class="btn-hub-primary" style="padding:4px 12px; font-size:11px;" onclick="window._useSnippetInChat('${s.id}')">Use this Template</button>
-                            </div>
-                        </div>
-                        <div class="preview-content" style="max-height:150px; overflow-y:auto; background:#f5f8fa; border:1px solid #dfe3e8; border-radius:6px; padding:15px; font-size:13px; line-height:1.6; color:#33475b; white-space:pre-wrap;">${s.content}</div>
-                        
-                        <div class="preview-live-box" style="margin-top:16px;">
-                            <div class="preview-header" style="color:#059669; font-size:10px;">Live Lead Data Result</div>
-                            <div style="margin-top:8px; padding:12px; background:#fff; border:1px solid rgba(16, 185, 129, 0.2); border-radius:6px; font-size:13px; color:#059669; font-style:italic; white-space:pre-wrap;">
-                                ${window._parseLiquidTags ? window._parseLiquidTags(s.content) : s.content}
-                            </div>
-                        </div>
-                    </div>
-                </td>
-            </tr>` : ''}
         `;
     }).join('');
 
@@ -3281,7 +3260,12 @@ window._renderSnippetModal = function() {
         <div class="hub-main">
             <div class="hub-header">
                 <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:20px;">
-                    <h2 style="margin:0; font-size:22px; font-weight:800;">${activeFolder ? activeFolder.name : 'Templates'}</h2>
+                    <div style="display:flex; align-items:center; gap:16px;">
+                        <button class="hub-back-arrow" title="Back to Chat" onclick="document.getElementById('modalOverlay').style.display='none'">
+                            <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                        </button>
+                        <h2 style="margin:0; font-size:22px; font-weight:800;">${activeFolder ? activeFolder.name : 'Templates'}</h2>
+                    </div>
                     <div style="display:flex; gap:12px;">
                         <button class="btn-hub-secondary" onclick="window._addSnippetFolder()">New Folder</button>
                         <button class="btn-hub-primary" onclick="window._showCreateSnippet()">Create snippet</button>
