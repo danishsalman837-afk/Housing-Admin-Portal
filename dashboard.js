@@ -56,54 +56,54 @@ function getStatusColor(status) {
 }
 
 const leadViewOrder = [
-    'name', 'agentName', 'email', 'phone', 'dob', 'address', 'postcode',
+    'name', 'email', 'phone', 'dob', 'address', 'postcode',
     'tenantType', 'landlordName', 'livingDuration',
     'damp', 'dampLocation', 'dampRooms', 'dampSurface', 'dampDuration', 'dampCause', 'dampDamage', 'dampHealth',
     'leak', 'leakLocation', 'leakSource', 'leakStart', 'leakDamage', 'leakCracks', 'leakBelongings',
     'issues_electrics', 'issues_heating', 'issues_structural',
-    'alreadySubmitted',
-    'reported', 'reportCount', 'reportFirst', 'reportLast', 'reportResponse', 'reportAttempt', 'reportStatus',
-    'arrears', 'arrearsAmount', 'additionalNotes'
+    'alreadySubmitted', 'reported', 
+    'reportCount', 'reportFirst', 'reportLast', 'reportResponse', 'reportAttempt', 'reportStatus',
+    'arrears', 'arrearsAmount', 'additionalNotes', 'agentName'
 ];
 
 const leadFieldLabels = {
     name: 'Name',
-    email: 'Email Address',
-    phone: 'Phone Number',
-    dob: 'Date of Birth',
+    email: 'Email Address:',
+    phone: 'Phone Number:',
+    dob: 'Date of Birth (DOB):',
     address: 'Address',
     postcode: 'Postcode',
-    tenantType: 'Tenant Type',
-    landlordName: 'Name of Landlord',
-    livingDuration: 'Tenancy Duration',
-    damp: 'Damp or Mould?',
-    dampLocation: 'Damp/Mould Location',
-    dampRooms: 'Rooms Affected',
-    dampSurface: 'Affected Surfaces',
-    dampDuration: 'Issue Duration',
-    dampCause: 'Issue Cause',
-    dampDamage: 'Damaged Belongings (Damp)',
-    dampHealth: 'Health Problems',
-    leak: 'Leaks?',
-    leakLocation: 'Leak Location',
-    leakSource: 'Leak Source',
-    leakStart: 'Leak Start / Ongoing?',
-    leakDamage: 'Leak Damage',
-    leakCracks: 'Cracks/Structural Damage (Leaks)',
-    leakBelongings: 'Damaged Belongings (Leaks)',
-    issues_electrics: 'Faulty Electrics?',
-    issues_heating: 'Heating / Boiler Issues?',
-    issues_structural: 'Cracks or Structural Damages?',
-    reported: 'Reported >1 Month Ago?',
-    reportCount: 'Notification Count',
-    reportFirst: 'First Reported Date',
-    reportLast: 'Last Reported to Landlord',
-    reportResponse: 'Landlord Response',
-    reportAttempt: 'Repair Attempted?',
-    reportStatus: 'Issue Still Unresolved?',
-    arrears: 'Rental Arrears?',
-    arrearsAmount: 'Arrears Amount',
-    alreadySubmitted: 'Already Submitted Claim?',
+    tenantType: 'Are you a council tenant or a housing association tenant?',
+    landlordName: 'What is the name of your landlord?',
+    livingDuration: 'How long have you been living in the property?',
+    damp: 'Is there any damp or mould in the property?',
+    dampLocation: 'Where exactly is the damp or mould located?',
+    dampRooms: 'How many rooms are affected?',
+    dampSurface: 'Is it on the walls, ceiling, or floor?',
+    dampDuration: 'How long have you had this issue?',
+    dampCause: 'Do you know what caused it (leak, rain, pipe, roof)?',
+    dampDamage: 'Has it damaged any belongings (bed, sofa, clothes, etc.)?',
+    dampHealth: 'Has it caused any health problems (breathing, asthma, allergies, skin issues)?',
+    leak: 'Do you have any leaks in the property?',
+    leakLocation: 'Where is the leak coming from?',
+    leakSource: 'Is it from the roof, ceiling, pipe, bathroom, or kitchen?',
+    leakStart: 'When did the leak start? Is it still ongoing?',
+    leakDamage: 'Has it caused damage to walls, ceiling, or floor?',
+    leakCracks: 'Any cracks or structural damage?',
+    leakBelongings: 'Has it damaged your belongings?',
+    issues_electrics: 'Are there any Faulty Electrics in the property?',
+    issues_heating: 'Are there any Heating / Boiler Issues?',
+    issues_structural: 'Are there any Cracks or Structural Damages?',
+    alreadySubmitted: 'Have you already submitted a housing disrepair claim?',
+    reported: 'Have you reported all the disrepairs over a month ago and have no date for it to be fixed?',
+    reportCount: 'How many times have you notified your landlord? Was it through email, text, or calls?',
+    reportFirst: 'When did you first report the issue?',
+    reportLast: 'When did you last report to the landlord about the disrepair?',
+    reportResponse: 'Did the landlord or council respond?',
+    reportAttempt: 'Did they attempt any repairs?',
+    reportStatus: 'Is the issue still not resolved?',
+    arrears: 'Are you in rental arrears? (Must be less than £1000)',
+    arrearsAmount: 'If YES – confirm amount:',
     additionalNotes: 'Additional Notes',
     agentName: 'Agent Name'
 };
@@ -746,7 +746,7 @@ window.openViewModal = function (id, showOriginal = false) {
 
         const ignoreKeys = ['id', 'created_at', 'notes', 'assigned_company_id', 'assigned_solicitor_id', 'call_notes', 'agent_data', 'is_edited', 'timestamp', 'agent_name'];
         if (showOriginal) {
-            ignoreKeys.push('leadStatus', 'status', 'actual_status', 'source', 'unique_token', 'assigned_solicitor_id', 'assigned_company_id');
+            ignoreKeys.push('leadStatus', 'status', 'actual_status', 'source', 'unique_token');
         }
         const seenKeys = new Set(ignoreKeys);
         let dataHtml = '';
@@ -769,9 +769,9 @@ window.openViewModal = function (id, showOriginal = false) {
             }
 
             dataHtml += `
-                <div class="modal-field-item" style="margin-bottom:18px; border-bottom:1px solid var(--border-light); padding-bottom:8px;">
-                    <label style="font-size:10px; font-weight:700; color:#94A3B8; text-transform:uppercase; display:block; margin-bottom:4px; letter-spacing:0.5px;">${label}</label>
-                    <div style="font-size:14px; color:var(--text-main); font-weight:600; line-height:1.4; white-space:pre-wrap;">${displayVal || '--'}</div>
+                <div class="modal-field-item" style="margin-bottom:24px; padding-bottom:12px; border-bottom:1px solid #f1f5f9;">
+                    <label style="font-size:11px; font-weight:700; color:#64748B; text-transform:uppercase; display:block; margin-bottom:8px; letter-spacing:0.5px; opacity:0.8;">${label}</label>
+                    <div style="font-size:15px; color:#1E293B; font-weight:600; line-height:1.6; white-space:pre-wrap; background:#f8fafc; padding:12px 16px; border-radius:10px; border:1px solid #e2e8f0;">${displayVal || '--'}</div>
                 </div>`;
         };
 
@@ -817,9 +817,9 @@ window.openViewModal = function (id, showOriginal = false) {
                 <button class="close-btn" style="position:absolute; right:12px; top:12px; font-size:24px; background:var(--bg-surface-2); border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border-light); color:var(--text-muted); cursor:pointer;" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button>
             </div>
             
-            <div class="modal-scroll-area" style="max-height:65vh; overflow-y:auto; overflow-x:hidden; padding-right:12px; margin-top:10px;">
-                <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:0 24px;">
-                    ${dataHtml || '<p style="grid-column: span 2; padding: 40px; text-align:center; color:var(--text-muted);">No detailed data available for this record.</p>'}
+            <div class="modal-scroll-area" style="max-height:75vh; overflow-y:auto; overflow-x:hidden; padding:0 10px; margin-top:10px;">
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    ${dataHtml || '<p style="padding: 40px; text-align:center; color:var(--text-muted);">No detailed data available for this record.</p>'}
                     
                     <!-- 📎 PHOTO EVIDENCE -->
                     <div style="grid-column: span 2; margin-top: 24px; padding-top: 24px; border-top: 2px solid var(--border-light);">
@@ -827,13 +827,13 @@ window.openViewModal = function (id, showOriginal = false) {
                             <svg style="width:18px; height:18px; fill:var(--primary);" viewBox="0 0 24 24"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.93 1.57 3.5 3.5 3.5s3.5-1.57 3.5-3.5V5c0-2.21-1.79-4-4-4S9 2.79 9 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/></svg>
                             Photo Evidence
                         </h3>
-                        <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap:12px; margin-top: 10px;">
+                        <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap:16px; margin-top: 10px;">
                             ${(leadData.attachments || []).map(a => `
-                                <div class="evidence-card" style="background:var(--bg-surface-2); border:1px solid var(--border-light); border-radius:12px; padding:8px; transition:transform 0.2s; box-shadow:var(--shadow-sm);">
-                                    <a href="${a.url}" target="_blank" style="display:block; position:relative; padding-top:75%; overflow:hidden; border-radius:8px;">
+                                <div class="evidence-card" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:10px; transition:all 0.2s; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+                                    <a href="${a.url}" target="_blank" style="display:block; position:relative; padding-top:100%; overflow:hidden; border-radius:10px;">
                                         <img src="${a.url}" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover;">
                                     </a>
-                                    <div style="font-size:10px; color:var(--text-muted); margin-top:8px; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${a.name}</div>
+                                    <div style="font-size:11px; color:#64748B; font-weight:600; margin-top:10px; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${a.name}</div>
                                 </div>
                             `).join('')}
                             ${(!leadData.attachments || leadData.attachments.length === 0) ? '<div style="grid-column:1/-1; padding:20px; background:var(--bg-surface-2); border-radius:10px; text-align:center; color:var(--text-muted); font-style:italic; font-size:13px;">No pictures attached to this submission.</div>' : ''}
@@ -858,7 +858,7 @@ window.openEditLeadModal = function (id) {
     const s = submissionsData.find(x => String(x.id) === String(id));
     if (!s) return;
 
-    const ignoreKeys = ['id', 'created_at', 'notes', 'assigned_company_id', 'assigned_solicitor_id', 'call_notes'];
+    const ignoreKeys = ['id', 'created_at', 'notes', 'assigned_company_id', 'assigned_solicitor_id', 'call_notes', 'agent_name', 'attachments', 'timestamp', 'is_edited'];
     let html = '';
     const shownKeys = new Set();
 
