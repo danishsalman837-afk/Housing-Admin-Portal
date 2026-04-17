@@ -2429,17 +2429,46 @@ select.status-pill {
     font-size: 14px;
     outline: none;
     transition: all 0.2s;
+    background: #fff;
+}
+
+.hub-search input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+}
+
+.hub-search svg {
+    width: 18px !important;
+    height: 18px !important;
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    fill: #7c98b6;
+    pointer-events: none;
+    z-index: 10;
 }
 
 .hub-scroll-area {
     flex: 1;
     overflow-y: scroll;
-    padding-bottom: 100px; /* Space for action menus at bottom */
+    padding-bottom: 150px; /* Enhanced space for action menus */
+    position: relative;
 }
 
 .hub-table-wrapper {
     padding: 0 30px;
-    overflow: visible; /* CRITICAL: Prevents clipping of action menus */
+    overflow: visible !important; /* FORCED visibility for dropdowns */
+}
+
+.hub-table {
+    width: 100%;
+    background: #fff;
+    border: 1px solid #dfe3e8;
+    border-collapse: collapse;
+    border-radius: 4px;
+    table-layout: fixed;
+    overflow: visible;
 }
 
 .hub-table th {
@@ -2459,8 +2488,16 @@ select.status-pill {
     color: #33475b;
     border-bottom: 1px solid #f5f8fa;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+}
+
+.hub-col-name .name-text {
+    font-weight: 700;
+    color: var(--primary);
+    text-align: left; /* Ensure left alignment */
+}
+
+.hub-col-actions {
+    overflow: visible !important;
 }
 
 @media (max-width: 900px) {

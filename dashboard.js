@@ -3232,7 +3232,7 @@ window._renderSnippetModal = function() {
                 <td class="hub-col-name"><div class="name-text">${s.title}</div></td>
                 <td class="hub-col-owner" style="width:140px; text-align:left;">Admin</td>
                 <td class="hub-col-date" style="width:140px; text-align:left;">Just now</td>
-                <td class="hub-col-actions" style="width:120px; text-align:right;">
+                <td class="hub-col-actions" style="width:120px; text-align:right; overflow:visible;">
                     <div style="position:relative; display:inline-block;">
                         <button class="hub-action-btn" onclick="event.stopPropagation(); var d=document.getElementById('menu-${s.id}'); d.style.display=d.style.display==='none'?'block':'none';">Actions ▾</button>
                         <div id="menu-${s.id}" class="hub-dropdown">
@@ -3267,7 +3267,7 @@ window._renderSnippetModal = function() {
                 <div class="hub-header-top">
                     <div style="display:flex; align-items:center; gap:12px;">
                         <button class="hub-back-arrow" title="Back to Chat" onclick="document.getElementById('modalOverlay').style.display='none'">
-                            <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                            <svg style="width:20px; height:20px;" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
                         </button>
                         <h2 class="hub-title">${activeFolder ? activeFolder.name : 'Templates'}</h2>
                     </div>
@@ -3278,7 +3278,7 @@ window._renderSnippetModal = function() {
                 </div>
                 <div class="hub-controls">
                     <div class="hub-search">
-                        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                        <svg style="width:18px; height:18px; position:absolute; left:12px; top:50%; transform:translateY(-50%); fill:#7c98b6;" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
                         <input type="text" placeholder="Search template name or content..." oninput="window._snippetSearchTerm=this.value; window._renderSnippetModal();" value="${window._snippetSearchTerm || ''}">
                     </div>
                     <div class="hub-count">${folderSnippets.length} snippets listed</div>
