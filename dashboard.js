@@ -2199,7 +2199,7 @@ async function initUser() {
 
         // FETCH LATEST FROM SUPABASE (Priority)
         try {
-            const res = await fetch('/api/profile');
+            const res = await fetch(`/api/profile?id=${user.id}`);
             if (res.ok) {
                 const data = await res.json();
                 if (data.profile) {
@@ -2216,6 +2216,7 @@ async function initUser() {
         } catch (e) { console.warn("Sync failed", e); }
 
         // Update UI displays
+        const fullName = user.user_metadata?.full_name || user.user_metadata?.username || user.email.split('@')[0];
         const nameEl = document.getElementById('usernameDisplay');
         const emailEl = document.getElementById('userEmailDisplay');
         const roleEl = document.getElementById('userRoleDisplay');
