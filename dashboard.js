@@ -3167,6 +3167,19 @@ window._parseLiquidTags = function(template) {
     var phone = lead.phone || lead.mobile_number || 'N/A';
     var email = lead.email || 'N/A';
 
+    // Get Logged-in admin user details
+    var adminUser = null;
+    try {
+        var sess = JSON.parse(localStorage.getItem('admin_session') || '{}');
+        if (sess && sess.user) {
+            adminUser = {
+                name: sess.user.user_metadata?.full_name || sess.user.user_metadata?.username || sess.user.email.split('@')[0],
+                email: sess.user.email,
+                phone: sess.user.user_metadata?.phone || sess.user.phone || 'N/A'
+            };
+        }
+    } catch(e) {}
+
     return template
         .replace(/\{\{first_name\}\}/g, firstName)
         .replace(/\{\{last_name\}\}/g, lastName)
@@ -3176,6 +3189,9 @@ window._parseLiquidTags = function(template) {
         .replace(/\{\{solicitor_name\}\}/g, solicitorName)
         .replace(/\{\{phone\}\}/g, phone)
         .replace(/\{\{email\}\}/g, email)
+        .replace(/\{\{user_name\}\}/g, adminUser ? adminUser.name : 'Admin')
+        .replace(/\{\{user_email\}\}/g, adminUser ? adminUser.email : '')
+        .replace(/\{\{user_phone\}\}/g, adminUser ? adminUser.phone : '')
         .replace(/\{\{case_id\}\}/g, lead.id ? ('CASE-' + String(lead.id).substring(0, 6).toUpperCase()) : 'CASE-000');
 };
 
@@ -3247,7 +3263,9 @@ window._renderSnippetModal = function() {
     }).join('');
 
     var activeFolder = store.folders.find(function(f) { return f.id === activeId; });
-    var folderSnippets = store.snippets.filter(function(s) { return s.folderId === activeId; });
+    var folderSnippets = store.snippets.filter(function(s) { 
+        return (s.folder_id || s.folderId) === activeId; 
+    });
     // Search filtering
     var searchTerm = (window._snippetSearchTerm || '').toLowerCase();
     if (searchTerm) {
@@ -3329,7 +3347,18 @@ window._renderSnippetModal = function() {
                             </tr>
                         </thead>
                         <tbody>
-                            ${snippetRowsHtml || '<tr><td colspan="5" style="text-align:center; padding:120px; color:var(--text-muted);"><div style="font-size:40px; margin-bottom:12px;">📭</div>No snippets found.</td></tr>'}
+                            ${snippetRowsHtml || `
+                                <tr>
+                                    <td colspan="5" style="padding:160px; text-align:center;">
+                                        <div style="background:var(--surface-3); width:80px; height:80px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 24px;">
+                                            <svg style="width:40px; height:40px; fill:var(--label-4);" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
+                                        </div>
+                                        <h3 style="font-size:18px; font-weight:800; color:var(--label-1); margin-bottom:10px;">No templates here</h3>
+                                        <p style="font-size:14px; color:var(--label-3); max-width:280px; margin:0 auto 24px; line-height:1.6;">Create a snippet to save time on your frequent replies.</p>
+                                        <button class="btn-action" style="padding:10px 24px; background:var(--blue);" onclick="window._showCreateSnippet()">Create snippet</button>
+                                    </td>
+                                </tr>
+                            `}
                         </tbody>
                     </table>
                 </div>
@@ -3370,34 +3399,50 @@ window._addSnippetFolder = function() {
 window._showFolderModal = function(editId = null) {
     const folder = editId ? window._snippetStore.folders.find(f => f.id === editId) : null;
     const box = document.getElementById('modalBox');
-    
-    // Save current view state to restore later if needed
-    const prevContent = box.innerHTML;
-    const prevClass = box.className;
-    const prevStyle = box.style.cssText;
 
-    box.className = 'modal-box';
-    box.style.width = '400px';
+    box.className = 'modal-box snippet-hubspot-container';
     box.style.display = 'block';
+    box.style.width = '440px';
+    box.style.height = 'auto'; // Center height automatically
+    box.style.minHeight = 'unset';
+    box.style.maxHeight = 'fit-content';
+    box.style.borderRadius = '20px';
+    box.style.padding = '0';
+    box.style.overflow = 'hidden';
+    box.style.boxShadow = '0 20px 40px rgba(0,0,0,0.15), 0 10px 10px rgba(0,0,0,0.05)';
+    box.style.border = '1px solid var(--border)';
+    box.style.margin = 'auto'; // Ensure centering in flex overlay
     
     box.innerHTML = `
-        <div class="modal-header">
-            <h2>${editId ? 'Rename Folder' : 'New Folder'}</h2>
-            <button class="close-btn" onclick="window._renderSnippetModal()">&times;</button>
-        </div>
-        <div style="padding:24px;">
-            <div class="form-group">
-                <label>Folder Name</label>
-                <input type="text" id="folderNameInput" class="modern-input" value="${folder ? folder.name : ''}" placeholder="e.g. Follow-up Messages">
+        <div style="padding:24px 30px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; background:var(--surface-1);">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <div style="background:var(--blue-light); color:var(--blue); width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center;">
+                    <svg style="width:20px; height:20px; fill:currentColor;" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+                </div>
+                <h2 style="font-size:18px; font-weight:800; margin:0; letter-spacing:-0.5px; color:var(--label-1);">${editId ? 'Rename Folder' : 'New Folder'}</h2>
             </div>
-            <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
-                <button class="btn-outline" onclick="window._renderSnippetModal()">Cancel</button>
-                <button class="btn-action" onclick="window._processFolderSave('${editId || ''}')">Save Folder</button>
+            <button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'" style="font-size:24px; opacity:0.5; transition:0.2s; background:none; border:none; color:var(--label-1); cursor:pointer;">&times;</button>
+        </div>
+        <div style="padding:32px 30px; background:var(--surface-1);">
+            <div style="margin-bottom:24px;">
+                <label style="font-size:11px; font-weight:800; color:var(--label-3); text-transform:uppercase; letter-spacing:0.8px; display:block; margin-bottom:10px;">FOLDER NAME</label>
+                <input type="text" id="folderNameInput" class="modern-input" value="${folder ? folder.name : ''}" 
+                    placeholder="e.g. Legal Documents"
+                    style="width:100%; height:48px; padding:0 16px; border:2px solid var(--border); border-radius:12px; font-size:15px; font-weight:500; transition:all 0.2s; background:var(--surface-2); color:var(--label-1);"
+                    onfocus="this.style.borderColor='var(--blue)'; this.style.boxShadow='0 0 0 4px var(--blue-light)';"
+                    onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none';"
+                >
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:12px;">
+                <button class="btn-outline" style="padding:10px 20px; font-weight:700; border-radius:10px; border:1px solid var(--border); color:var(--label-2);" onclick="document.getElementById('modalOverlay').style.display='none'">Cancel</button>
+                <button class="btn-action" style="padding:10px 24px; font-weight:700; border-radius:10px; background:var(--blue); color:white; border:none; cursor:pointer;" onclick="window._processFolderSave('${editId || ''}')">
+                    ${editId ? 'Save Folder' : 'Create Folder'}
+                </button>
             </div>
         </div>
     `;
     document.getElementById('modalOverlay').style.display = 'flex';
-    document.getElementById('folderNameInput').focus();
+    setTimeout(() => document.getElementById('folderNameInput')?.focus(), 50);
 };
 
 window._processFolderSave = async function(editId) {
@@ -3435,33 +3480,51 @@ window._deleteSnippetFolder = function(folderId) {
 window._showDeleteConfirmModal = function(type, id, name) {
     const box = document.getElementById('modalBox');
     box.className = 'modal-box';
-    box.style.width = '400px';
     box.style.display = 'block';
+    box.style.width = '400px';
+    box.style.height = 'auto'; // Center height automatically
+    box.style.borderRadius = '24px';
+    box.style.padding = '0';
+    box.style.overflow = 'hidden';
+    box.style.boxShadow = '0 25px 50px rgba(0,0,0,0.2)';
+    box.style.border = 'none';
+    box.style.margin = 'auto'; // Center in flex
     
     box.innerHTML = `
-        <div class="modal-header">
-            <h2 style="color:var(--red);">Confirm Delete</h2>
-            <button class="close-btn" onclick="window._renderSnippetModal()">&times;</button>
-        </div>
-        <div style="padding:24px; text-align:center;">
-            <div style="background:var(--red-light); color:var(--red); width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
-                 <svg style="width:30px; height:30px; fill:currentColor;" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
-            </div>
-            <p style="font-size:15px; font-weight:600; color:var(--label-1);">Delete this ${type}?</p>
-            <p style="font-size:13px; color:var(--label-3); margin-top:8px;">Are you sure you want to delete "<strong>${name}</strong>"? This action cannot be undone.</p>
+        <div style="padding:40px 30px; text-align:center; background:var(--surface-1); position:relative;">
+            <button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'" style="position:absolute; right:20px; top:20px; font-size:20px; opacity:0.3; border:none; background:none; cursor:pointer; color:var(--label-1);">&times;</button>
             
-            <div style="display:flex; justify-content:center; gap:12px; margin-top:28px;">
-                <button class="btn-outline" onclick="window._renderSnippetModal()">Cancel</button>
-                <button class="btn-action" style="background:var(--red); box-shadow:0 4px 12px rgba(255,69,58,0.3);" onclick="window._processDelete('${type}', '${id}')">Delete Permanently</button>
+            <div style="background:var(--red-light); color:var(--red); width:80px; height:80px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 24px; animation: pulseRed 2s infinite;">
+                 <svg style="width:36px; height:36px; fill:currentColor;" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+            </div>
+            <h2 style="font-size:24px; font-weight:800; color:var(--label-1); margin-bottom:12px; letter-spacing:-0.5px;">Delete ${type}?</h2>
+            <p style="font-size:15px; color:var(--label-3); line-height:1.6; padding:0 20px;">
+                Are you sure you want to delete "<strong>${name}</strong>"? This action is permanent and cannot be undone.
+            </p>
+            
+            <div style="display:flex; flex-direction:column; gap:12px; margin-top:40px;">
+                <button class="btn-action" style="width:100%; height:52px; border-radius:14px; background:var(--red); box-shadow:0 8px 20px rgba(255,69,58,0.3); font-weight:800; font-size:15px; border:none; color:white; cursor:pointer;" onclick="window._processDelete('${type}', '${id}')">
+                    Delete Permanently
+                </button>
+                <button class="btn-outline" style="width:100%; height:52px; border-radius:14px; border:1px solid var(--border); background:var(--surface-1); color:var(--label-2); font-weight:700; font-size:15px; cursor:pointer;" onclick="document.getElementById('modalOverlay').style.display='none'">
+                    No, keep it
+                </button>
             </div>
         </div>
+        <style>
+            @keyframes pulseRed {
+                0% { box-shadow: 0 0 0 0 rgba(255, 69, 58, 0.4); }
+                70% { box-shadow: 0 0 0 15px rgba(255, 69, 58, 0); }
+                100% { box-shadow: 0 0 0 0 rgba(255, 69, 58, 0); }
+            }
+        </style>
     `;
     document.getElementById('modalOverlay').style.display = 'flex';
 };
 
 window._processDelete = async function(type, id) {
     if (type === 'folder') {
-        window._snippetStore.snippets = window._snippetStore.snippets.filter(s => s.folderId !== id);
+        window._snippetStore.snippets = window._snippetStore.snippets.filter(s => (s.folder_id || s.folderId) !== id);
         window._snippetStore.folders = window._snippetStore.folders.filter(f => f.id !== id);
         if (window._activeSnippetFolder === id) {
             window._activeSnippetFolder = window._snippetStore.folders[0]?.id || null;
@@ -3471,6 +3534,7 @@ window._processDelete = async function(type, id) {
         window._snippetStore.snippets = window._snippetStore.snippets.filter(s => s.id !== id);
         await _saveSnippetStore('snippet_delete', id);
     }
+    document.getElementById('modalOverlay').style.display = 'none';
     showNotification(`${type.charAt(0).toUpperCase() + type.slice(1)} deleted`, 'info');
     window._renderSnippetModal();
 };
@@ -3523,10 +3587,16 @@ window._showCreateSnippet = function(editId) {
                             <button type="button" class="btn-outline" style="padding:6px 14px; font-size:12px; height:28px; border-radius:10px; gap:6px; font-weight:700;" onclick="var d=document.getElementById('snippetVarDrop'); d.style.display=d.style.display==='none'?'block':'none';">
                                 More...
                             </button>
-                            <div id="snippetVarDrop" style="display:none; position:absolute; right:0; top:100%; margin-top:8px; width:220px; background:var(--bg-main); border:1px solid var(--border-light); box-shadow:0 15px 35px rgba(0,0,0,0.2); border-radius:14px; z-index:1000; overflow:hidden; animation: slideUp 0.2s ease;">
-                                <div onclick="window._insertVarIntoSnippet('{{full_name}}')" style="padding:12px 16px; font-size:13px; color:var(--text-main); cursor:pointer; border-bottom:1px solid var(--border-light); font-weight:600;" onmouseover="this.style.background='rgba(79, 70, 229, 0.05)'" onmouseout="this.style.background='transparent'">Full Name</div>
-                                <div onclick="window._insertVarIntoSnippet('{{solicitor_name}}')" style="padding:12px 16px; font-size:13px; color:var(--text-main); cursor:pointer; border-bottom:1px solid var(--border-light); font-weight:600;" onmouseover="this.style.background='rgba(79, 70, 229, 0.05)'" onmouseout="this.style.background='transparent'">Solicitor Name</div>
-                                <div onclick="window._insertVarIntoSnippet('{{phone}}')" style="padding:12px 16px; font-size:13px; color:var(--text-main); cursor:pointer; font-weight:600;" onmouseover="this.style.background='rgba(79, 70, 229, 0.1)'" onmouseout="this.style.background='transparent'">Phone Number</div>
+                            <div id="snippetVarDrop" style="display:none; position:absolute; right:0; top:100%; margin-top:8px; width:220px; background:var(--bg-main); border:1px solid var(--border-light); box-shadow:0 15px 35px rgba(0,0,0,0.2); border-radius:14px; z-index:1000; overflow:hidden; animation: slideUp 0.1s ease;">
+                                <div style="padding:10px 16px; font-size:10px; font-weight:800; color:var(--text-muted); background:var(--bg-soft); text-transform:uppercase; letter-spacing:0.5px;">Lead Data</div>
+                                <div onclick="window._insertVarIntoSnippet('{{full_name}}')" style="padding:10px 16px; font-size:13px; color:var(--text-main); cursor:pointer; border-bottom:1px solid var(--border-light); font-weight:600;" onmouseover="this.style.background='rgba(79, 70, 229, 0.05)'" onmouseout="this.style.background='transparent'">Full Name</div>
+                                <div onclick="window._insertVarIntoSnippet('{{solicitor_name}}')" style="padding:10px 16px; font-size:13px; color:var(--text-main); cursor:pointer; border-bottom:1px solid var(--border-light); font-weight:600;" onmouseover="this.style.background='rgba(79, 70, 229, 0.05)'" onmouseout="this.style.background='transparent'">Solicitor Name</div>
+                                <div onclick="window._insertVarIntoSnippet('{{phone}}')" style="padding:10px 16px; font-size:13px; color:var(--text-main); cursor:pointer; border-bottom:1px solid var(--border-light); font-weight:600;" onmouseover="this.style.background='rgba(79, 70, 229, 0.05)'" onmouseout="this.style.background='transparent'">Phone Number</div>
+                                
+                                <div style="padding:10px 16px; font-size:10px; font-weight:800; color:var(--text-muted); background:var(--bg-soft); text-transform:uppercase; letter-spacing:0.5px;">Your Profile</div>
+                                <div onclick="window._insertVarIntoSnippet('{{user_name}}')" style="padding:10px 16px; font-size:13px; color:var(--text-main); cursor:pointer; border-bottom:1px solid var(--border-light); font-weight:600;" onmouseover="this.style.background='rgba(79, 70, 229, 0.05)'" onmouseout="this.style.background='transparent'">My Full Name</div>
+                                <div onclick="window._insertVarIntoSnippet('{{user_email}}')" style="padding:10px 16px; font-size:13px; color:var(--text-main); cursor:pointer; border-bottom:1px solid var(--border-light); font-weight:600;" onmouseover="this.style.background='rgba(79, 70, 229, 0.05)'" onmouseout="this.style.background='transparent'">My Email</div>
+                                <div onclick="window._insertVarIntoSnippet('{{user_phone}}')" style="padding:10px 16px; font-size:13px; color:var(--text-main); cursor:pointer; font-weight:600;" onmouseover="this.style.background='rgba(79, 70, 229, 0.1)'" onmouseout="this.style.background='transparent'">My Phone</div>
                             </div>
                         </div>
                     </div>
