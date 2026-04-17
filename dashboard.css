@@ -552,6 +552,11 @@ body {
     animation: fadeIn 0.3s ease forwards;
 }
 
+#templatesView {
+    padding: 0 !important;
+    gap: 0 !important;
+}
+
 .view-container.active {
     display: flex;
     flex-direction: column;
@@ -3206,36 +3211,37 @@ select.status-pill {
 }
 
 /* Full page view adjustments */
-/* Full page view adjustments - PURE FLEXIBILITY */
+/* Full page view adjustments - TRUE FULL WINDOW FLOW */
 .snippet-hubspot-container.full-page {
-    height: auto !important;
+    height: calc(100vh - 64px) !important; /* Subtract topbar height */
     min-height: unset !important;
     overflow: visible !important;
-    border-radius: 20px;
-    background: var(--surface-1);
-    border: 1px solid var(--border);
-    box-shadow: none; /* Cleaner, less boxy */
+    border-radius: 0 !important;
+    background: var(--bg-surface);
+    border: none !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    display: flex !important;
+}
+
+.snippet-hubspot-container.full-page .hub-sidebar {
+    height: 100% !important;
+    border-top: none;
 }
 
 .snippet-hubspot-container.full-page .hub-main {
+    height: 100% !important;
     overflow: visible !important;
-    height: auto !important;
 }
 
 .snippet-hubspot-container.full-page .hub-scroll-area {
     overflow: visible !important;
-    flex: none !important;
+    flex: 1 !important;
     height: auto !important;
-    padding-bottom: 50px; /* Minimal padding needed now */
 }
 
-.snippet-hubspot-container.full-page .hub-table-wrapper {
-    overflow: visible !important;
-}
-
-.snippet-hubspot-container.full-page .hub-sidebar {
-    height: auto !important;
-    min-height: 400px;
+.snippet-hubspot-container.full-page .hub-header {
+    border-top: none;
 }
 
 @media (max-width: 1024px) {
