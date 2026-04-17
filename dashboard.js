@@ -3313,11 +3313,10 @@ window.insertSnippet = function(template) {
     if (input) {
         input.value = parsed;
         input.focus();
-        showNotification('Snippet injected with lead data', 'success');
-        
-        // Auto-check for any remaining tags
         if (parsed.includes('{{')) {
             showNotification('Note: Some variables could not be mapped.', 'warning');
+        } else {
+            showNotification('Snippet injected with lead data', 'success');
         }
         window.autoExpandCommInput(input);
     }
