@@ -2451,8 +2451,8 @@ select.status-pill {
 
 .hub-scroll-area {
     flex: 1;
-    overflow-y: scroll;
-    padding-bottom: 150px; /* Enhanced space for action menus */
+    overflow-y: auto;
+    padding-bottom: 180px; /* Even more space for action menus */
     position: relative;
 }
 
@@ -3199,12 +3199,23 @@ select.status-pill {
 
 /* Full page view adjustments */
 .snippet-hubspot-container.full-page {
-    height: calc(100vh - 120px);
-    overflow: hidden;
+    min-height: calc(100vh - 140px);
+    height: auto;
+    overflow: visible;
     border-radius: 20px;
     background: var(--surface-1);
     border: 1px solid var(--border);
     box-shadow: var(--shadow-sm);
+}
+
+.snippet-hubspot-container.full-page .hub-scroll-area {
+    overflow: visible;
+    flex: none;
+    height: auto;
+}
+
+.snippet-hubspot-container.full-page .hub-sidebar {
+    min-height: calc(100vh - 140px);
 }
 
 @media (max-width: 1024px) {
