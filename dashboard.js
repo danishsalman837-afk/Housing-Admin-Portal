@@ -3450,8 +3450,16 @@ window.toggleSnippetQuickPicker = function(e) {
     
     if (!isVisible) {
         picker.classList.add('active');
-        window.renderQuickPicker();
-        setTimeout(() => document.getElementById('qpSearch')?.focus(), 100);
+        // If store is empty (e.g. first open after refresh), load first then render
+        if (window._snippetStore.folders.length === 0) {
+            _loadSnippets().then(() => {
+                window.renderQuickPicker();
+                setTimeout(() => document.getElementById('qpSearch')?.focus(), 100);
+            });
+        } else {
+            window.renderQuickPicker();
+            setTimeout(() => document.getElementById('qpSearch')?.focus(), 100);
+        }
     } else {
         picker.classList.remove('active');
     }
@@ -4036,6 +4044,19 @@ window.initCommSockets = function() {
 };
 
 window.initCommSockets();
+
+// ═══════════════════════════════════════
+// PRELOAD SNIPPETS ON STARTUP
+// Ensures Quick Picker has data immediately after page refresh
+// ═══════════════════════════════════════
+document.addEventListener('DOMContentLoaded', function() {
+    _loadSnippets().then(function() {
+        // Auto-select first folder for the Template Library view
+        if (!window._activeSnippetFolder && window._snippetStore.folders.length > 0) {
+            window._activeSnippetFolder = window._snippetStore.folders[0].id;
+        }
+    });
+});
 
 // Global shortcuts
 document.addEventListener('keydown', (e) => {
