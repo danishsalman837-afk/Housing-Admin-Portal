@@ -56,13 +56,14 @@ function getStatusColor(status) {
 }
 
 const leadViewOrder = [
-    'name', 'email', 'phone', 'dob', 'address', 'postcode',
+    'name', 'agentName', 'email', 'phone', 'dob', 'address', 'postcode',
     'tenantType', 'landlordName', 'livingDuration',
     'damp', 'dampLocation', 'dampRooms', 'dampSurface', 'dampDuration', 'dampCause', 'dampDamage', 'dampHealth',
     'leak', 'leakLocation', 'leakSource', 'leakStart', 'leakDamage', 'leakCracks', 'leakBelongings',
     'issues_electrics', 'issues_heating', 'issues_structural',
+    'alreadySubmitted',
     'reported', 'reportCount', 'reportFirst', 'reportLast', 'reportResponse', 'reportAttempt', 'reportStatus',
-    'arrears', 'arrearsAmount', 'alreadySubmitted', 'additionalNotes', 'agentName'
+    'arrears', 'arrearsAmount', 'additionalNotes'
 ];
 
 const leadFieldLabels = {
@@ -739,11 +740,14 @@ window.openViewModal = function (id, showOriginal = false) {
             if (!leadData.id) leadData.id = s.id;
             if (!leadData.attachments) leadData.attachments = s.attachments || [];
             
-            const agentName = s.agent_name || s.agentName || (s.agent_data && (s.agent_data.agentName || s.agent_data.agent_name));
+            const agentName = s.agent_name || s.agentName || (s.agent_data && (s.agent_data.agentName || s.agent_data.agent_name || s.agent_data.dialler || s.agent_data.Dialler || s.agent_data.agent)) || s.dialler || s.Dialler || s.agent;
             if (agentName) titlePrefix += ` — Agent: ${agentName}`;
         }
 
-        const ignoreKeys = ['id', 'created_at', 'notes', 'assigned_company_id', 'assigned_solicitor_id', 'call_notes', 'agent_data', 'is_edited', 'timestamp'];
+        const ignoreKeys = ['id', 'created_at', 'notes', 'assigned_company_id', 'assigned_solicitor_id', 'call_notes', 'agent_data', 'is_edited', 'timestamp', 'agent_name'];
+        if (showOriginal) {
+            ignoreKeys.push('leadStatus', 'status', 'actual_status', 'source', 'unique_token', 'assigned_solicitor_id', 'assigned_company_id');
+        }
         const seenKeys = new Set(ignoreKeys);
         let dataHtml = '';
 

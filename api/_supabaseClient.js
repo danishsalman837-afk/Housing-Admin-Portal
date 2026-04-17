@@ -81,10 +81,10 @@ function normalizeLead(lead) {
   
   // Robust fallback for Agent Name
   if (!lead.agentName || lead.agentName === '--') {
+    const rootAgent = lead.agent_name || lead.agentName || lead.dialler || lead.Dialler || lead.agent;
     const backup = lead.agent_data;
-    if (backup) {
-      lead.agentName = backup.agentName || backup.agent_name || backup.dialler || backup.Dialler || lead.agentName;
-    }
+    const backupAgent = backup ? (backup.agentName || backup.agent_name || backup.dialler || backup.Dialler || backup.agent) : null;
+    lead.agentName = rootAgent || backupAgent || lead.agentName;
   }
 
   return lead;
