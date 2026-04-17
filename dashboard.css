@@ -3074,3 +3074,60 @@ select.status-pill {
 [data-theme="dark"] .action-tile:hover { border-color: rgba(59, 130, 246, 0.4); box-shadow: 0 12px 30px rgba(0,0,0,0.4); }
 [data-theme="dark"] .action-tile span { color: #f9fafb; }
 [data-theme="dark"] .action-tile svg { fill: #3b82f6; }
+
+/* Snippet Library — Folder Action Buttons */
+.f-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    opacity: 0;
+    transition: all 0.2s ease;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+.hub-folder-item:hover .f-actions { 
+    opacity: 1; 
+}
+.f-action-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface-1);
+    color: var(--label-3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 0;
+    flex-shrink: 0;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+.f-action-btn:hover {
+    background: var(--blue-light);
+    color: var(--blue);
+    border-color: var(--blue);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px var(--blue-light);
+}
+.f-action-btn.f-action-delete:hover {
+    background: var(--red-light);
+    color: var(--red);
+    border-color: var(--red);
+    box-shadow: 0 4px 8px var(--red-light);
+}
+
+[data-theme="dark"] .f-action-btn {
+    background: #2D3748;
+    border-color: rgba(255,255,255,0.1);
+}
+[data-theme="dark"] .f-action-btn:hover {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: #3b82f6;
+}
+[data-theme="dark"] .f-action-btn.f-action-delete:hover {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: #ef4444;
+}
+
