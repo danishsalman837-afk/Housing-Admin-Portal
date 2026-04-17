@@ -1556,38 +1556,33 @@
         #modalOverlay {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, .40);
+            background: rgba(0, 0, 0, 0.4);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             display: none;
             align-items: center;
             justify-content: center;
-            z-index: 1000;
+            z-index: 10000;
             padding: 20px;
             animation: overlayIn 0.2s var(--ease);
         }
 
         @keyframes overlayIn {
-            from {
-                background: rgba(0, 0, 0, 0);
-            }
-
-            to {
-                background: rgba(0, 0, 0, .40);
-            }
+            from { background: rgba(0, 0, 0, 0); }
+            to { background: rgba(0, 0, 0, .40); }
         }
 
         #modalBox {
-            background: rgba(255, 255, 255, 0.96);
+            background: var(--surface-1);
             backdrop-filter: blur(40px);
             -webkit-backdrop-filter: blur(40px);
             width: 100%;
             max-width: 760px;
-            border-radius: var(--r-xl);
-            padding: 28px 30px 30px;
+            border-radius: 20px;
+            padding: 30px;
             box-shadow: var(--shadow-xl), 0 0 0 1px rgba(255, 255, 255, .5) inset;
             max-height: 90vh;
-            overflow-y: auto;
+            overflow: auto;
             animation: modalIn 0.28s var(--ease-spring);
         }
 
@@ -2482,36 +2477,7 @@
             object-position: center;
         }
 
-        /* ═══════════════════════════════════════
-           MODAL SYSTEM (CENTERED)
-        ═══════════════════════════════════════ */
-        #modalOverlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            display: none;
-            align-items: center; /* Vertical Center */
-            justify-content: center; /* Horizontal Center */
-            z-index: 10000;
-            padding: 20px;
-        }
 
-        #modalBox {
-            background: var(--surface-1);
-            border-radius: 20px;
-            box-shadow: var(--shadow-xl);
-            display: none;
-            overflow: hidden;
-            max-width: 100%;
-            animation: modalScaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        @keyframes modalScaleIn {
-            from { opacity: 0; transform: scale(0.9) translateY(20px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
-        }
 
         /* QUICK PICKER DROP DOWN */
         .quick-picker-dropdown {

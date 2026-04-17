@@ -706,6 +706,7 @@ window.openViewModal = function (id, showOriginal = false) {
 
     // Show overlay immediately with loading state
     overlay.style.display = 'flex';
+    modalBox.style.display = 'block';
     modalBox.innerHTML = `
         <div style="padding:40px; text-align:center; color:var(--text-muted);">
             <div class="loading-spinner" style="margin-bottom:12px;"></div>
@@ -938,6 +939,7 @@ window.openEditLeadModal = function (id) {
            <button class="btn-outline" style="padding:10px 24px; font-weight:700;" onclick="document.getElementById('modalOverlay').style.display='none'">Cancel</button>
            <button class="btn-action" style="padding:10px 32px; font-weight:700; background:#10B981;" onclick="window.saveLeadEdits('${s.id}')">Apply Changes</button>
         </div>`;
+    document.getElementById('modalBox').style.display = 'block';
     document.getElementById('modalOverlay').style.display = 'flex';
 };
 
