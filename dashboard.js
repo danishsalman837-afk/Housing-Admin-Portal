@@ -479,6 +479,10 @@ window.toggleDropdown = function (e, id) {
 document.addEventListener('click', () => {
     document.querySelectorAll('.dropdown-menu').forEach(d => d.classList.remove('active'));
     document.querySelectorAll('.user-dropdown').forEach(d => d.classList.remove('active'));
+    document.querySelectorAll('.hub-dropdown').forEach(d => {
+        d.classList.remove('active');
+        d.style.display = 'none';
+    });
 });
 
 window.handleFieldUpdate = async function (id, fieldName, value) {
@@ -3234,13 +3238,13 @@ window._renderSnippetModal = function() {
                 <td class="hub-col-date" style="width:140px; text-align:left;">Just now</td>
                 <td class="hub-col-actions" style="width:120px; text-align:right; overflow:visible;">
                     <div style="position:relative; display:inline-block;">
-                        <button class="hub-action-btn" onclick="event.stopPropagation(); var d=document.getElementById('menu-${s.id}'); d.style.display=d.style.display==='none'?'block':'none';">Actions ▾</button>
+                        <button class="hub-action-btn" onclick="window._toggleSnippetMenu(event, '${s.id}')">Actions ▾</button>
                         <div id="menu-${s.id}" class="hub-dropdown">
-                            <div onclick="window._showCreateSnippet('${s.id}')">Edit Template</div>
-                            <div onclick="window._useSnippetInChat('${s.id}')">Insert into Chat</div>
-                            <div onclick="window._sendSnippetNow('${s.id}')" style="font-weight:700; color:var(--primary);">Send SMS Now</div>
+                            <div onclick="event.stopPropagation(); window._showCreateSnippet('${s.id}')">Edit Template</div>
+                            <div onclick="event.stopPropagation(); window._useSnippetInChat('${s.id}')">Insert into Chat</div>
+                            <div onclick="event.stopPropagation(); window._sendSnippetNow('${s.id}')" style="font-weight:700; color:var(--primary);">Send SMS Now</div>
                             <hr>
-                            <div onclick="window._deleteSnippet('${s.id}')" style="color:#ef4444;">Delete Permanently</div>
+                            <div onclick="event.stopPropagation(); window._deleteSnippet('${s.id}')" style="color:#ef4444;">Delete Permanently</div>
                         </div>
                     </div>
                 </td>
@@ -3305,6 +3309,25 @@ window._renderSnippetModal = function() {
         </div>
     `;
     document.getElementById('modalOverlay').style.display = 'flex';
+};
+
+window._toggleSnippetMenu = function(e, id) {
+    if (e) e.stopPropagation();
+    var menu = document.getElementById('menu-' + id);
+    if (!menu) return;
+    
+    var isVisible = menu.classList.contains('active');
+    
+    // Close all other hub-dropdowns
+    document.querySelectorAll('.hub-dropdown').forEach(function(m) {
+        m.style.display = 'none';
+        m.classList.remove('active');
+    });
+    
+    if (!isVisible) {
+        menu.style.display = 'block';
+        menu.classList.add('active');
+    }
 };
 
 window._selectSnippetFolder = function(folderId) {
