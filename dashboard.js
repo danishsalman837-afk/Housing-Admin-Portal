@@ -848,15 +848,6 @@ window.openViewModal = function (id, showOriginal = false) {
         `;
     }
 };
-">No pictures attached to this submission.</div>' : ''}
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-
-    overlay.style.display = 'flex';
-};
 
 window.openEditLeadModal = function (id) {
     const s = submissionsData.find(x => String(x.id) === String(id));
