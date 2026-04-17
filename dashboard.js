@@ -2876,22 +2876,45 @@ window.openSmsFromDialer = function () {
 /* ═══════════════════════════════════════
    SNIPPET DATA STORE (localStorage-backed)
 ═══════════════════════════════════════ */
-window._snippetStore = JSON.parse(localStorage.getItem('commSnippetStore') || 'null') || {
-    folders: [
-        { id: 'f1', name: 'Intro / Onboarding' },
-        { id: 'f2', name: 'Follow-up' },
-        { id: 'f3', name: 'Legal' }
-    ],
-    snippets: [
-        { id: 's1', folderId: 'f1', title: 'First Contact', content: 'Hi {{first_name}}, thanks for reaching out regarding your housing disrepair claim. We have received your inquiry and an agent will be in touch shortly.' },
-        { id: 's2', folderId: 'f1', title: 'Welcome Back', content: 'Hi {{first_name}}, welcome back. How can we help you today?' },
-        { id: 's3', folderId: 'f2', title: 'Photo Request', content: 'Hi {{first_name}}, could you please provide photos of the disrepair issue at your earliest convenience?' },
-        { id: 's4', folderId: 'f2', title: 'Status Update', content: 'Hi {{first_name}}, just a quick update — your claim is progressing well. Your solicitor {{solicitor}} will be in contact soon.' },
-        { id: 's5', folderId: 'f3', title: 'Solicitor Assigned', content: 'Hi {{first_name}}, your claim has been assigned to {{solicitor}}. They will contact you within 24-48 hours to discuss next steps.' }
-    ]
-};
-function _saveSnippetStore() {
+window._snippetStore = { folders: [], snippets: [] };
+
+async function _saveSnippetStore(type, data) {
+    if (!window.supabase) {
+        localStorage.setItem('commSnippetStore', JSON.stringify(window._snippetStore));
+        return;
+    }
+
+    try {
+        if (type === 'folder_add') {
+            await supabase.from('snippet_folders').insert(data);
+        } else if (type === 'folder_edit') {
+            await supabase.from('snippet_folders').update({ name: data.name }).eq('id', data.id);
+        } else if (type === 'folder_delete') {
+            await supabase.from('snippet_folders').delete().eq('id', data);
+        } else if (type === 'snippet_add') {
+            await supabase.from('snippets').insert(data);
+        } else if (type === 'snippet_edit') {
+            await supabase.from('snippets').update({ title: data.title, content: data.content }).eq('id', data.id);
+        } else if (type === 'snippet_delete') {
+            await supabase.from('snippets').delete().eq('id', data);
+        }
+    } catch (err) {
+        console.error("Supabase sync failed:", err);
+    }
+    
     localStorage.setItem('commSnippetStore', JSON.stringify(window._snippetStore));
+}
+
+async function _loadSnippetsFromSupabase() {
+    if (!window.supabase) return;
+    try {
+        const { data: folders } = await supabase.from('snippet_folders').select('*').order('name');
+        const { data: snippets } = await supabase.from('snippets').select('*');
+        if (folders) window._snippetStore.folders = folders;
+        if (snippets) window._snippetStore.snippets = snippets;
+    } catch (err) {
+        console.error("Failed to load snippets:", err);
+    }
 }
 
 /* ═══════════════════════════════════════
@@ -3177,12 +3200,17 @@ window.insertSnippet = function(template) {
 ═══════════════════════════════════════ */
 window._activeSnippetFolder = null;
 
-window.openSnippetManager = function() {
+window._activeSnippetFolder = null;
+
+window.openSnippetManager = async function() {
     if (!activeChatLeadId) {
         showNotification('Select a lead first to use snippets', 'error');
         return;
     }
-    window._activeSnippetFolder = window._snippetStore.folders[0]?.id || null;
+    await _loadSnippetsFromSupabase();
+    if (!window._activeSnippetFolder) {
+        window._activeSnippetFolder = window._snippetStore.folders[0]?.id || null;
+    }
     window._renderSnippetModal();
 };
 
@@ -3336,51 +3364,114 @@ window._selectSnippetFolder = function(folderId) {
 };
 
 window._addSnippetFolder = function() {
-    var name = prompt('Folder name:');
-    if (!name || !name.trim()) return;
-    var newId = 'f' + Date.now();
-    window._snippetStore.folders.push({ id: newId, name: name.trim() });
-    window._activeSnippetFolder = newId; // Auto-select new folder
-    _saveSnippetStore();
+    window._showFolderModal();
+};
+
+window._showFolderModal = function(editId = null) {
+    const folder = editId ? window._snippetStore.folders.find(f => f.id === editId) : null;
+    const box = document.getElementById('modalBox');
+    
+    // Save current view state to restore later if needed
+    const prevContent = box.innerHTML;
+    const prevClass = box.className;
+    const prevStyle = box.style.cssText;
+
+    box.className = 'modal-box';
+    box.style.width = '400px';
+    box.style.display = 'block';
+    
+    box.innerHTML = `
+        <div class="modal-header">
+            <h2>${editId ? 'Rename Folder' : 'New Folder'}</h2>
+            <button class="close-btn" onclick="window._renderSnippetModal()">&times;</button>
+        </div>
+        <div style="padding:24px;">
+            <div class="form-group">
+                <label>Folder Name</label>
+                <input type="text" id="folderNameInput" class="modern-input" value="${folder ? folder.name : ''}" placeholder="e.g. Follow-up Messages">
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
+                <button class="btn-outline" onclick="window._renderSnippetModal()">Cancel</button>
+                <button class="btn-action" onclick="window._processFolderSave('${editId || ''}')">Save Folder</button>
+            </div>
+        </div>
+    `;
+    document.getElementById('modalOverlay').style.display = 'flex';
+    document.getElementById('folderNameInput').focus();
+};
+
+window._processFolderSave = async function(editId) {
+    const name = document.getElementById('folderNameInput').value.trim();
+    if (!name) return showNotification('Folder name is required', 'error');
+
+    if (editId) {
+        const folder = window._snippetStore.folders.find(f => f.id === editId);
+        if (folder) {
+            folder.name = name;
+            await _saveSnippetStore('folder_edit', { id: editId, name });
+            showNotification('Folder renamed', 'success');
+        }
+    } else {
+        const newFolder = { id: crypto.randomUUID(), name };
+        window._snippetStore.folders.push(newFolder);
+        window._activeSnippetFolder = newFolder.id;
+        await _saveSnippetStore('folder_add', newFolder);
+        showNotification('Folder created', 'success');
+    }
     window._renderSnippetModal();
 };
 
 window._editSnippetFolder = function(folderId) {
-    var folder = window._snippetStore.folders.find(function(f) { return f.id === folderId; });
-    if (!folder) return;
-    
-    var newName = prompt('Enter new name for folder:', folder.name);
-    if (newName && newName.trim()) {
-        folder.name = newName.trim();
-        _saveSnippetStore();
-        showNotification('Folder renamed', 'success');
-        window._renderSnippetModal();
-    }
+    window._showFolderModal(folderId);
 };
 
 window._deleteSnippetFolder = function(folderId) {
-    var folder = window._snippetStore.folders.find(function(f) { return f.id === folderId; });
+    const folder = window._snippetStore.folders.find(f => f.id === folderId);
     if (!folder) return;
     
-    if (!confirm('Are you sure you want to delete the folder "' + folder.name + '" and all snippets inside it?')) return;
+    window._showDeleteConfirmModal('folder', folder.id, folder.name);
+};
+
+window._showDeleteConfirmModal = function(type, id, name) {
+    const box = document.getElementById('modalBox');
+    box.className = 'modal-box';
+    box.style.width = '400px';
+    box.style.display = 'block';
     
-    // 1. Remove snippets in this folder
-    window._snippetStore.snippets = window._snippetStore.snippets.filter(function(s) { 
-        return s.folderId !== folderId; 
-    });
-    
-    // 2. Remove folder
-    window._snippetStore.folders = window._snippetStore.folders.filter(function(f) { 
-        return f.id !== folderId; 
-    });
-    
-    // 3. Reset active folder if it was the deleted one
-    if (window._activeSnippetFolder === folderId) {
-        window._activeSnippetFolder = window._snippetStore.folders.length > 0 ? window._snippetStore.folders[0].id : null;
+    box.innerHTML = `
+        <div class="modal-header">
+            <h2 style="color:var(--red);">Confirm Delete</h2>
+            <button class="close-btn" onclick="window._renderSnippetModal()">&times;</button>
+        </div>
+        <div style="padding:24px; text-align:center;">
+            <div style="background:var(--red-light); color:var(--red); width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+                 <svg style="width:30px; height:30px; fill:currentColor;" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+            </div>
+            <p style="font-size:15px; font-weight:600; color:var(--label-1);">Delete this ${type}?</p>
+            <p style="font-size:13px; color:var(--label-3); margin-top:8px;">Are you sure you want to delete "<strong>${name}</strong>"? This action cannot be undone.</p>
+            
+            <div style="display:flex; justify-content:center; gap:12px; margin-top:28px;">
+                <button class="btn-outline" onclick="window._renderSnippetModal()">Cancel</button>
+                <button class="btn-action" style="background:var(--red); box-shadow:0 4px 12px rgba(255,69,58,0.3);" onclick="window._processDelete('${type}', '${id}')">Delete Permanently</button>
+            </div>
+        </div>
+    `;
+    document.getElementById('modalOverlay').style.display = 'flex';
+};
+
+window._processDelete = async function(type, id) {
+    if (type === 'folder') {
+        window._snippetStore.snippets = window._snippetStore.snippets.filter(s => s.folderId !== id);
+        window._snippetStore.folders = window._snippetStore.folders.filter(f => f.id !== id);
+        if (window._activeSnippetFolder === id) {
+            window._activeSnippetFolder = window._snippetStore.folders[0]?.id || null;
+        }
+        await _saveSnippetStore('folder_delete', id);
+    } else {
+        window._snippetStore.snippets = window._snippetStore.snippets.filter(s => s.id !== id);
+        await _saveSnippetStore('snippet_delete', id);
     }
-    
-    _saveSnippetStore();
-    showNotification('Folder deleted', 'info');
+    showNotification(`${type.charAt(0).toUpperCase() + type.slice(1)} deleted`, 'info');
     window._renderSnippetModal();
 };
 
@@ -3507,7 +3598,7 @@ window._insertVarIntoSnippet = function(variable) {
     ta.setSelectionRange(start + variable.length, start + variable.length);
 };
 
-window._saveNewSnippet = function(editId) {
+window._saveNewSnippet = async function(editId) {
     var title = document.getElementById('newSnippetTitle')?.value?.trim();
     var content = document.getElementById('newSnippetContent')?.value?.trim();
     if (!title || !content) { showNotification('Title and Content are required', 'error'); return; }
@@ -3518,6 +3609,7 @@ window._saveNewSnippet = function(editId) {
         if (snippet) {
             snippet.title = title;
             snippet.content = content;
+            await _saveSnippetStore('snippet_edit', snippet);
             showNotification('Snippet updated!', 'success');
         } else {
             showNotification('Error: Could not find snippet to update', 'error');
@@ -3525,24 +3617,24 @@ window._saveNewSnippet = function(editId) {
         }
     } else {
         // Create new
-        window._snippetStore.snippets.push({
+        const newSnippet = {
             id: 's' + Date.now(),
-            folderId: window._activeSnippetFolder,
+            folder_id: window._activeSnippetFolder,
             title: title,
             content: content
-        });
+        };
+        window._snippetStore.snippets.push(newSnippet);
+        await _saveSnippetStore('snippet_add', newSnippet);
         showNotification('Snippet created!', 'success');
     }
     
-    _saveSnippetStore();
     window._renderSnippetModal();
 };
 
 window._deleteSnippet = function(snippetId) {
-    window._snippetStore.snippets = window._snippetStore.snippets.filter(function(s) { return s.id !== snippetId; });
-    _saveSnippetStore();
-    showNotification('Snippet deleted', 'info');
-    window._renderSnippetModal();
+    const s = window._snippetStore.snippets.find(x => x.id === snippetId);
+    if (!s) return;
+    window._showDeleteConfirmModal('snippet', s.id, s.title);
 };
 
 window._useSnippetInChat = function(snippetId) {
