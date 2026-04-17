@@ -3054,6 +3054,10 @@ window.autoExpandCommInput = function(el) {
     el.style.height = (el.scrollHeight) + 'px';
 };
 
+window._getCurrentTime = function() {
+    return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
+
 window.sendCommSms = function() {
     const input = document.getElementById('commInputMessage');
     if (!input) return;
@@ -3097,11 +3101,12 @@ window.sendCommSms = function() {
 
     setTimeout(function() {
         var timeNode = bubble.querySelector('.msg-time');
-        if (timeNode) timeNode.innerHTML = 'Just now ' + singleCheck;
+        const now = window._getCurrentTime();
+        if (timeNode) timeNode.innerHTML = now + ' ' + singleCheck;
         showNotification('SMS sent successfully.', 'success');
         
         setTimeout(function() {
-            if (timeNode) timeNode.innerHTML = 'Just now ' + doubleCheck;
+            if (timeNode) timeNode.innerHTML = now + ' ' + doubleCheck;
             
             var typing = document.getElementById('commTyping');
             if (typing) {
@@ -3110,9 +3115,10 @@ window.sendCommSms = function() {
                 
                 setTimeout(function() {
                     typing.style.display = 'none';
+                    const replyTime = window._getCurrentTime();
                     var reply = document.createElement('div');
                     reply.className = 'msg-bubble inbound';
-                    reply.innerHTML = '<div class="msg-sender-label">Client</div>' + 'Okay, received. Thank you! <span class="msg-time">Just now</span>';
+                    reply.innerHTML = '<div class="msg-sender-label">Client</div>' + 'Okay, received. Thank you! <span class="msg-time">' + replyTime + '</span>';
                     msgContainer.appendChild(reply);
                     msgContainer.scrollTop = msgContainer.scrollHeight;
                     
@@ -4014,7 +4020,8 @@ window.receiveLiveMessage = function(msg, senderName) {
     if (msgContainer) {
         var reply = document.createElement('div');
         reply.className = 'msg-bubble inbound';
-        reply.innerHTML = '<div class="msg-sender-label">Client</div>' + msg + ' <span class="msg-time">Just now</span>';
+        const now = window._getCurrentTime();
+        reply.innerHTML = '<div class="msg-sender-label">Client</div>' + msg + ' <span class="msg-time">' + now + '</span>';
         msgContainer.appendChild(reply);
         msgContainer.scrollTop = msgContainer.scrollHeight;
     }
