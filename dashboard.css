@@ -2498,6 +2498,26 @@ select.status-pill {
 
 .hub-col-actions {
     overflow: visible !important;
+    position: relative;
+}
+
+.hub-dropdown {
+    display: none;
+    position: absolute;
+    right: 0;
+    bottom: 100%; /* Open UPWARDS as a default fallback to avoid bottom clipping */
+    margin-bottom: 5px;
+    background: #fff;
+    border: 1px solid #cbd6e2;
+    border-radius: 8px;
+    box-shadow: 0 -10px 25px rgba(0,0,0,0.15); /* Shadow adjusted for upward open */
+    z-index: 10000;
+    min-width: 200px;
+    text-align: left;
+}
+
+.hub-dropdown.active {
+    display: block;
 }
 
 @media (max-width: 900px) {
@@ -2533,19 +2553,7 @@ select.status-pill {
     cursor: pointer;
 }
 
-.hub-dropdown {
-    display: none;
-    position: absolute;
-    right: 0;
-    top: calc(100% + 5px);
-    background: #fff;
-    border: 1px solid #cbd6e2;
-    border-radius: 8px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-    z-index: 9999;
-    min-width: 200px;
-    text-align: left;
-}
+/* Handled above */
 
 .hub-dropdown div {
     padding: 12px 16px;
@@ -3198,24 +3206,36 @@ select.status-pill {
 }
 
 /* Full page view adjustments */
+/* Full page view adjustments - PURE FLEXIBILITY */
 .snippet-hubspot-container.full-page {
-    min-height: calc(100vh - 140px);
-    height: auto;
-    overflow: visible;
+    height: auto !important;
+    min-height: unset !important;
+    overflow: visible !important;
     border-radius: 20px;
     background: var(--surface-1);
     border: 1px solid var(--border);
-    box-shadow: var(--shadow-sm);
+    box-shadow: none; /* Cleaner, less boxy */
+}
+
+.snippet-hubspot-container.full-page .hub-main {
+    overflow: visible !important;
+    height: auto !important;
 }
 
 .snippet-hubspot-container.full-page .hub-scroll-area {
-    overflow: visible;
-    flex: none;
-    height: auto;
+    overflow: visible !important;
+    flex: none !important;
+    height: auto !important;
+    padding-bottom: 50px; /* Minimal padding needed now */
+}
+
+.snippet-hubspot-container.full-page .hub-table-wrapper {
+    overflow: visible !important;
 }
 
 .snippet-hubspot-container.full-page .hub-sidebar {
-    min-height: calc(100vh - 140px);
+    height: auto !important;
+    min-height: 400px;
 }
 
 @media (max-width: 1024px) {
