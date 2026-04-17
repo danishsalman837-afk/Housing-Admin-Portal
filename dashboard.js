@@ -121,6 +121,7 @@ window.switchView = function (view) {
         'leads': 'Lead Management',
         'whatsapp': 'Legacy WhatsApp',
         'comm': 'Communication Hub',
+        'templates': 'Template Library',
         'settings': 'Settings'
     };
 
@@ -152,8 +153,8 @@ window.switchView = function (view) {
         window.initWhatsAppView();
     } else if (view === 'comm') {
         if (typeof renderCommThreads === 'function') renderCommThreads();
-    } else if (view === 'settings') {
-        populateSettings();
+    } else if (view === 'templates') {
+        window.openSnippetManager(true);
     } else {
         renderFilteredLeads();
     }
@@ -3211,42 +3212,103 @@ window.insertSnippet = function(template) {
     }
 };
 
-/* ═══════════════════════════════════════
-   SNIPPET MANAGER MODAL (Full CRUD)
-═══════════════════════════════════════ */
 window._activeSnippetFolder = null;
+window._snippetStore = { folders: [], snippets: [] };
+window._snippetSearchTerm = '';
+window._selectedSnippetId = null;
 
-window._activeSnippetFolder = null;
+async function _loadSnippetsFromSupabase() {
+    try {
+        const { data: folders, error: fErr } = await supabase.from('snippet_folders').select('*').order('name');
+        const { data: snippets, error: sErr } = await supabase.from('snippets').select('*').order('title');
+        
+        if (fErr || sErr) throw fErr || sErr;
+        
+        window._snippetStore = {
+            folders: folders.map(f => ({ id: f.id, name: f.name })),
+            snippets: snippets.map(s => ({
+                id: s.id,
+                folder_id: s.folder_id,
+                title: s.title,
+                content: s.content
+            }))
+        };
+    } catch (e) {
+        console.error('Failed to load snippets:', e);
+        // Fallback or notification
+    }
+}
 
-window.openSnippetManager = async function() {
-    if (!activeChatLeadId) {
-        showNotification('Select a lead first to use snippets', 'error');
+async function _saveSnippetStore(action, payload) {
+    try {
+        if (action === 'folder_add') {
+            await supabase.from('snippet_folders').insert([{ id: payload.id, name: payload.name }]);
+        } else if (action === 'folder_edit') {
+            await supabase.from('snippet_folders').update({ name: payload.name }).eq('id', payload.id);
+        } else if (action === 'folder_delete') {
+            await supabase.from('snippets').delete().eq('folder_id', payload);
+            await supabase.from('snippet_folders').delete().eq('id', payload);
+        } else if (action === 'snippet_add') {
+            await supabase.from('snippets').insert([{
+                id: payload.id,
+                folder_id: payload.folder_id,
+                title: payload.title,
+                content: payload.content
+            }]);
+        } else if (action === 'snippet_edit') {
+            await supabase.from('snippets').update({
+                title: payload.title,
+                content: payload.content
+            }).eq('id', payload.id);
+        } else if (action === 'snippet_delete') {
+            await supabase.from('snippets').delete().eq('id', payload);
+        }
+    } catch (e) {
+        console.error('Supabase sync error:', e);
+        showNotification('Sync failed, changes may be local only', 'warning');
+    }
+}
+
+window.openSnippetManager = async function(isFullPageView = false) {
+    // If not in full page view mode (e.g. triggered from chat), we check for lead session if needed
+    if (!isFullPageView && !activeChatLeadId) {
+        showNotification('Select a lead first to use snippets within chat', 'error');
         return;
     }
     await _loadSnippetsFromSupabase();
     if (!window._activeSnippetFolder) {
         window._activeSnippetFolder = window._snippetStore.folders[0]?.id || null;
     }
-    window._renderSnippetModal();
+    window._renderSnippetModal(isFullPageView);
 };
 
-window._renderSnippetModal = function() {
-    var box = document.getElementById('modalBox');
-    var store = window._snippetStore;
-    var activeId = window._activeSnippetFolder;
-
-    box.className = 'modal-box snippet-hubspot-container';
-    box.style.padding = '0';
-    box.style.display = 'flex';
-    box.style.width = '95vw';
-    box.style.maxWidth = '1200px';
-    box.style.height = '85vh';
-    box.style.maxHeight = '900px';
-    box.style.overflow = 'hidden';
-    box.style.borderRadius = '16px';
-    box.style.border = 'none';
-    box.style.boxShadow = '0 25px 50px -12px rgba(0, 0, 0, 0.25)';
-    box.style.position = 'relative'; // Support for absolute children if needed at higher levels
+window._renderSnippetModal = function(isFullPageView = false) {
+    var box;
+    if (isFullPageView) {
+        box = document.getElementById('templatesMainContent');
+        if (!box) return;
+        box.className = 'snippet-hubspot-container full-page';
+        box.style.display = 'flex';
+        box.style.width = '100%';
+        box.style.height = 'calc(100vh - 120px)';
+        box.style.borderRadius = '20px';
+        box.style.background = 'var(--surface-1)';
+        box.style.border = '1px solid var(--border)';
+        box.style.boxShadow = 'var(--shadow-sm)';
+    } else {
+        box = document.getElementById('modalBox');
+        box.className = 'modal-box snippet-hubspot-container';
+        box.style.padding = '0';
+        box.style.display = 'flex';
+        box.style.width = '95vw';
+        box.style.maxWidth = '1200px';
+        box.style.height = '85vh';
+        box.style.maxHeight = '900px';
+        box.style.overflow = 'hidden';
+        box.style.borderRadius = '16px';
+        box.style.border = 'none';
+        box.style.boxShadow = '0 25px 50px -12px rgba(0, 0, 0, 0.25)';
+    }
 
     var folderListHtml = store.folders.map(function(f) {
         var isSelected = f.id === activeId;
@@ -3309,16 +3371,18 @@ window._renderSnippetModal = function() {
                 ${folderListHtml}
             </div>
             <div class="hub-sidebar-footer">
-                <button class="btn-hub-secondary" style="width:100%;" onclick="document.getElementById('modalOverlay').style.display='none'">Exit Library</button>
+                ${isFullPageView ? '' : `<button class="btn-hub-secondary" style="width:100%;" onclick="document.getElementById('modalOverlay').style.display='none'">Exit Library</button>`}
             </div>
         </div>
         <div class="hub-main">
             <div class="hub-header">
                 <div class="hub-header-top">
                     <div style="display:flex; align-items:center; gap:12px;">
+                        ${isFullPageView ? '' : `
                         <button class="hub-back-arrow" title="Back to Chat" onclick="document.getElementById('modalOverlay').style.display='none'">
                             <svg style="width:20px; height:20px;" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
                         </button>
+                        `}
                         <h2 class="hub-title">${activeFolder ? activeFolder.name : 'Templates'}</h2>
                     </div>
                     <div class="hub-header-actions">
@@ -3365,7 +3429,33 @@ window._renderSnippetModal = function() {
             </div>
         </div>
     `;
-    document.getElementById('modalOverlay').style.display = 'flex';
+    `;
+    if (isFullPageView) {
+        document.getElementById('modalOverlay').style.display = 'none';
+    } else {
+        document.getElementById('modalOverlay').style.display = 'flex';
+    }
+};
+
+/* ═══════════════════════════════════════
+   SNIPPET QUICK PICKER (Chat Context)
+═══════════════════════════════════════ */
+window._qpCurrentFolderId = null;
+
+window.toggleSnippetQuickPicker = function(e) {
+    if (e) e.stopPropagation();
+    const picker = document.getElementById('snippetQuickPicker');
+    if (!picker) return;
+    
+    const isVisible = picker.classList.contains('active');
+    
+    if (!isVisible) {
+        picker.classList.add('active');
+        window.renderQuickPicker();
+        setTimeout(() => document.getElementById('qpSearch')?.focus(), 100);
+    } else {
+        picker.classList.remove('active');
+    }
 };
 
 window._toggleSnippetMenu = function(e, id) {
@@ -3375,7 +3465,6 @@ window._toggleSnippetMenu = function(e, id) {
     
     var isVisible = menu.classList.contains('active');
     
-    // Close all other hub-dropdowns
     document.querySelectorAll('.hub-dropdown').forEach(function(m) {
         m.style.display = 'none';
         m.classList.remove('active');
@@ -3387,9 +3476,107 @@ window._toggleSnippetMenu = function(e, id) {
     }
 };
 
+window.renderQuickPicker = function() {
+    const qpBody = document.getElementById('qpBody');
+    if (!qpBody) return;
+    
+    const store = window._snippetStore;
+    const folderId = window._qpCurrentFolderId;
+    
+    let html = '';
+    
+    if (!folderId) {
+        // Show folders
+        html = store.folders.map(f => `
+            <div class="qp-folder" onclick="window.qpSelectFolder('${f.id}')">
+                <svg viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+                <span>${f.name}</span>
+            </div>
+        `).join('');
+        if (store.folders.length === 0) {
+            html = `<div style="padding:20px; text-align:center; color:var(--label-4); font-size:12px;">No folders created yet</div>`;
+        }
+    } else {
+        // Show snippets in folder
+        const folder = store.folders.find(f => f.id === folderId);
+        const folderSnippets = store.snippets.filter(s => (s.folder_id || s.folderId) === folderId);
+        
+        html += `
+            <div class="qp-back" onclick="window.qpSelectFolder(null)">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                Back to Folders
+            </div>
+            <div style="padding: 10px 12px; font-size: 11px; font-weight: 800; color: var(--label-4); text-transform: uppercase;">${folder?.name || 'Folder'}</div>
+        `;
+        
+        html += folderSnippets.map(s => `
+            <div class="qp-snippet" onclick="window.qpSelectSnippet('${s.id}')">
+                ${s.title}
+            </div>
+        `).join('');
+        
+        if (folderSnippets.length === 0) {
+            html += `<div style="padding: 20px; text-align: center; color: var(--label-4); font-size: 12px;">No snippets in this folder</div>`;
+        }
+    }
+    
+    qpBody.innerHTML = html;
+};
+
+window.qpSelectFolder = function(id) {
+    window._qpCurrentFolderId = id;
+    window.renderQuickPicker();
+};
+
+window.qpSelectSnippet = function(id) {
+    window._useSnippetInChat(id);
+    document.getElementById('snippetQuickPicker').classList.remove('active');
+};
+
+window.filterQuickPicker = function(query) {
+    const qpBody = document.getElementById('qpBody');
+    if (!query) {
+        window._qpCurrentFolderId = null; // Reset to folder view on empty search
+        return window.renderQuickPicker();
+    }
+    
+    const store = window._snippetStore;
+    const q = query.toLowerCase();
+    
+    // Search across ALL snippets, regardless of folder
+    const matches = store.snippets.filter(s => s.title.toLowerCase().includes(q) || s.content.toLowerCase().includes(q));
+    
+    let html = `<div style="padding: 10px 12px; font-size: 11px; font-weight: 800; color: var(--label-4); text-transform: uppercase;">Search Results (${matches.length})</div>`;
+    
+    html += matches.map(s => `
+        <div class="qp-snippet" onclick="window.qpSelectSnippet('${s.id}')">
+            ${s.title}
+        </div>
+    `).join('');
+    
+    if (matches.length === 0) {
+        html += `<div style="padding: 20px; text-align: center; color: var(--label-4); font-size: 12px;">No matches found</div>`;
+    }
+    
+    qpBody.innerHTML = html;
+};
+
+// Global click listener to close picker
+document.addEventListener('mousedown', (e) => {
+    const picker = document.getElementById('snippetQuickPicker');
+    const btn = document.getElementById('snippetPickerBtn');
+    if (picker && picker.classList.contains('active')) {
+        if (!picker.contains(e.target) && !btn.contains(e.target)) {
+            picker.classList.remove('active');
+        }
+    }
+});
+
 window._selectSnippetFolder = function(folderId) {
     window._activeSnippetFolder = folderId;
-    window._renderSnippetModal();
+    // Check if we are in full page view or modal
+    const isFullPage = document.getElementById('templatesView').classList.contains('active');
+    window._renderSnippetModal(isFullPage);
 };
 
 window._addSnippetFolder = function() {

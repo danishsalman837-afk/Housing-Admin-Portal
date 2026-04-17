@@ -2513,6 +2513,58 @@
             to { opacity: 1; transform: scale(1) translateY(0); }
         }
 
+        /* QUICK PICKER DROP DOWN */
+        .quick-picker-dropdown {
+            position: absolute;
+            bottom: calc(100% + 15px);
+            left: 0;
+            width: 320px;
+            max-height: 400px;
+            background: var(--surface-1);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: var(--shadow-xl);
+            display: none;
+            flex-direction: column;
+            z-index: 1000;
+            overflow: hidden;
+            animation: qpFadeIn 0.2s var(--ease);
+        }
+        @keyframes qpFadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .quick-picker-dropdown.active { display: flex; }
+
+        .qp-header { padding: 12px; border-bottom: 1px solid var(--border); }
+        .qp-header input { 
+            width: 100%; height: 36px; padding: 0 12px; 
+            border: 1px solid var(--border); border-radius: 8px; 
+            font-size: 13px; outline: none; background: var(--surface-2);
+        }
+        .qp-body { flex: 1; overflow-y: auto; padding: 8px; }
+
+        .qp-folder { 
+            padding: 10px 12px; border-radius: 8px; cursor: pointer;
+            display: flex; align-items: center; gap: 10px;
+            font-size: 13px; font-weight: 600; color: var(--label-2);
+            transition: 0.15s;
+        }
+        .qp-folder:hover { background: var(--surface-2); color: var(--blue); }
+        .qp-folder svg { width: 16px; height: 16px; opacity: 0.7; }
+
+        .qp-snippet {
+            padding: 10px 12px 10px 32px; border-radius: 8px; cursor: pointer;
+            font-size: 13px; color: var(--label-3); transition: 0.15s;
+        }
+        .qp-snippet:hover { background: var(--blue-light); color: var(--blue); }
+
+        .qp-back {
+            padding: 8px 12px; border-bottom: 1px solid var(--border);
+            cursor: pointer; font-size: 12px; font-weight: 700; color: var(--blue);
+            display: flex; align-items: center; gap: 6px;
+        }
+
         .avatar-edit-badge-fixed {
             position: absolute;
             bottom: 0px;
@@ -2972,12 +3024,20 @@
                 <span>Lead Management</span>
             </div>
             <div class="nav-item" id="nav-comm" onclick="switchView('comm')">
-                <div class="nav-icon" style="background:var(--primary); color:white;">
-                    <svg viewBox="0 0 24 24" style="fill:white;">
+                <div class="nav-icon">
+                    <svg viewBox="0 0 24 24">
                         <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
                     </svg>
                 </div>
                 <span>Communication Hub</span>
+            </div>
+            <div class="nav-item" id="nav-templates" onclick="switchView('templates')">
+                <div class="nav-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M14 17H4v2h10v-2zm6-8H4v2h16V9zM4 15h16v-2H4v2zM4 5v2h16V5H4z"/>
+                    </svg>
+                </div>
+                <span>Template Library</span>
             </div>
             <div class="nav-item" id="nav-settings" onclick="switchView('settings')">
                 <div class="nav-icon">
@@ -3549,10 +3609,19 @@
                         <input type="file" id="commAttachmentInput" style="display: none;" onchange="window.handleCommAttachment(event)">
                         <button class="icon-button input-action" title="Attach file" onclick="document.getElementById('commAttachmentInput').click()"><svg viewBox="0 0 24 24"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/></svg></button>
                         
-                        <div class="snippets-container">
-                            <button class="icon-button input-action" title="Snippet Manager" onclick="window.openSnippetManager()">
+                        <div class="snippets-container" style="position:relative;">
+                            <button class="icon-button input-action" id="snippetPickerBtn" title="Snippet Picker" onclick="window.toggleSnippetQuickPicker(event)">
                                 <svg viewBox="0 0 24 24"><path d="M14 17H4v2h10v-2zm6-8H4v2h16V9zM4 15h16v-2H4v2zM4 5v2h16V5H4z"/></svg>
                             </button>
+                            <!-- Quick Picker Dropdown -->
+                            <div id="snippetQuickPicker" class="quick-picker-dropdown">
+                                <div class="qp-header">
+                                    <input type="text" placeholder="Search snippets..." id="qpSearch" oninput="window.filterQuickPicker(this.value)">
+                                </div>
+                                <div class="qp-body" id="qpBody">
+                                    <!-- Rendered dynamically -->
+                                </div>
+                            </div>
                         </div>
 
                         <textarea id="commInputMessage" placeholder="Type an SMS message..." rows="1" onkeydown="window.handleCommKeydown(event)" oninput="window.autoExpandCommInput(this)"></textarea>
@@ -3682,6 +3751,13 @@
                     </div>
 
                 </div>
+            </div>
+        </div>
+
+        <!-- ─── TEMPLATES VIEW ─── -->
+        <div id="templatesView" class="view-container">
+            <div id="templatesMainContent">
+                <!-- Will be injected via window._renderSnippetModal() logic -->
             </div>
         </div>
 
