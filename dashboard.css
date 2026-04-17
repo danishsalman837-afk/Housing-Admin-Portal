@@ -2287,21 +2287,21 @@ select.status-pill {
 }
 
 .hub-sidebar {
-    width: 260px;
-    background: #ffffff;
-    border-right: 1px solid #dfe3e8;
+    width: 280px;
+    background: var(--bg-surface-2); /* Slightly darker for depth */
+    border-right: 1px solid var(--border-light);
     display: flex;
     flex-direction: column;
 }
 
 .hub-sidebar-header {
-    padding: 24px;
+    padding: 32px 24px;
     font-size: 16px;
     font-weight: 800;
     display: flex;
     align-items: center;
     gap: 12px;
-    border-bottom: 1px solid #dfe3e8;
+    border-bottom: 1px solid var(--border-light);
 }
 
 .hub-sidebar-scroll {
@@ -3247,16 +3247,34 @@ select.status-pill {
 
 /* Full page view adjustments */
 /* Full page view adjustments - TRUE FULL WINDOW FLOW */
+#templatesView.view-container {
+    background: var(--bg-main) !important; /* Slightly darker/different background for the "stage" */
+    padding: 32px 40px !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+    height: 100% !important;
+    overflow-y: auto !important;
+}
+
 .snippet-hubspot-container.full-page {
     height: auto !important;
-    min-height: calc(100vh - 64px) !important;
-    overflow: visible !important;
-    border-radius: 0 !important;
+    min-height: calc(100vh - 144px) !important; 
+    width: 100% !important;
+    max-width: 1480px !important;
     background: var(--bg-surface);
-    border: none !important;
-    box-shadow: none !important;
-    margin: 0 !important;
+    border-radius: 28px !important;
+    border: 1px solid var(--border-light) !important;
+    box-shadow: 0 40px 100px -20px rgba(0,0,0,0.1), 0 20px 40px -15px rgba(0,0,0,0.05) !important;
+    margin: 0 auto !important;
     display: flex !important;
+    overflow: hidden !important; 
+}
+
+/* Ensure the sidebar maintains the float look */
+.snippet-hubspot-container.full-page .hub-sidebar {
+    border-top-left-radius: 28px;
+    border-bottom-left-radius: 28px;
 }
 
 .snippet-hubspot-container.full-page .hub-sidebar {
@@ -3268,6 +3286,8 @@ select.status-pill {
 .snippet-hubspot-container.full-page .hub-main {
     height: auto !important;
     overflow: visible !important;
+    border-top-right-radius: 28px;
+    border-bottom-right-radius: 28px;
 }
 
 .snippet-hubspot-container.full-page .hub-scroll-area {
