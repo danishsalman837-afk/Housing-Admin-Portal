@@ -3223,55 +3223,42 @@ window._snippetStore = { folders: [], snippets: [] };
 window._snippetSearchTerm = '';
 window._selectedSnippetId = null;
 
-async function _loadSnippetsFromSupabase() {
+async function _loadSnippets() {
     try {
-        const { data: folders, error: fErr } = await supabase.from('snippet_folders').select('*').order('name');
-        const { data: snippets, error: sErr } = await supabase.from('snippets').select('*').order('title');
-        
-        if (fErr || sErr) throw fErr || sErr;
-        
-        window._snippetStore = {
-            folders: folders.map(f => ({ id: f.id, name: f.name })),
-            snippets: snippets.map(s => ({
-                id: s.id,
-                folder_id: s.folder_id,
-                title: s.title,
-                content: s.content
-            }))
-        };
+        const res = await fetch('/api/snippets');
+        if (!res.ok) throw new Error('API error');
+        const data = await res.json();
+        if (data && data.folders) {
+            window._snippetStore = data;
+        }
     } catch (e) {
-        console.error('Failed to load snippets:', e);
-        // Fallback or notification
+        console.error('Failed to load snippets from Supabase via API, falling back to local storage', e);
+        const stored = localStorage.getItem('snippetStore');
+        if (stored) {
+            window._snippetStore = JSON.parse(stored);
+        } else {
+            window._snippetStore = { 
+                folders: [{ id: 'f1', name: 'General Responses' }], 
+                snippets: [{ id: 's1', folder_id: 'f1', title: 'Initial Welcome', content: 'Hi {{first_name}},\n\nThank you for reaching out. We have received your inquiry regarding {{damp_location}}.\n\nBest,\n{{user_name}}' }] 
+            };
+        }
     }
 }
 
 async function _saveSnippetStore(action, payload) {
     try {
-        if (action === 'folder_add') {
-            await supabase.from('snippet_folders').insert([{ id: payload.id, name: payload.name }]);
-        } else if (action === 'folder_edit') {
-            await supabase.from('snippet_folders').update({ name: payload.name }).eq('id', payload.id);
-        } else if (action === 'folder_delete') {
-            await supabase.from('snippets').delete().eq('folder_id', payload);
-            await supabase.from('snippet_folders').delete().eq('id', payload);
-        } else if (action === 'snippet_add') {
-            await supabase.from('snippets').insert([{
-                id: payload.id,
-                folder_id: payload.folder_id,
-                title: payload.title,
-                content: payload.content
-            }]);
-        } else if (action === 'snippet_edit') {
-            await supabase.from('snippets').update({
-                title: payload.title,
-                content: payload.content
-            }).eq('id', payload.id);
-        } else if (action === 'snippet_delete') {
-            await supabase.from('snippets').delete().eq('id', payload);
-        }
+        const res = await fetch('/api/snippets', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action, payload })
+        });
+        if (!res.ok) throw new Error('Cloud sync failed');
+        // Always maintain local backup
+        localStorage.setItem('snippetStore', JSON.stringify(window._snippetStore));
     } catch (e) {
-        console.error('Supabase sync error:', e);
-        showNotification('Sync failed, changes may be local only', 'warning');
+        console.error('Storage sync error:', e);
+        showNotification('Cloud sync failed. Saved to local storage.', 'warning');
+        localStorage.setItem('snippetStore', JSON.stringify(window._snippetStore));
     }
 }
 
@@ -3281,7 +3268,7 @@ window.openSnippetManager = async function(isFullPageView = false) {
         showNotification('Select a lead first to use snippets within chat', 'error');
         return;
     }
-    await _loadSnippetsFromSupabase();
+    await _loadSnippets();
     if (!window._activeSnippetFolder) {
         window._activeSnippetFolder = window._snippetStore.folders[0]?.id || null;
     }
@@ -3289,6 +3276,8 @@ window.openSnippetManager = async function(isFullPageView = false) {
 };
 
 window._renderSnippetModal = function(isFullPageView = false) {
+    var store = window._snippetStore || { folders: [], snippets: [] };
+    var activeId = window._activeSnippetFolder;
     var box;
     if (isFullPageView) {
         box = document.getElementById('templatesMainContent');
@@ -3880,7 +3869,7 @@ window._saveNewSnippet = async function(editId) {
     } else {
         // Create new
         const newSnippet = {
-            id: 's' + Date.now(),
+            id: crypto.randomUUID(),
             folder_id: window._activeSnippetFolder,
             title: title,
             content: content
