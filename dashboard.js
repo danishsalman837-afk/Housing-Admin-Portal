@@ -3190,10 +3190,15 @@ window._renderSnippetModal = function() {
     box.className = 'modal-box snippet-hubspot-container';
     box.style.padding = '0';
     box.style.display = 'flex';
-    box.style.width = '1000px';
-    box.style.maxWidth = '95vw';
+    box.style.width = '95vw';
+    box.style.maxWidth = '1200px';
     box.style.height = '85vh';
+    box.style.maxHeight = '900px';
     box.style.overflow = 'hidden';
+    box.style.borderRadius = '16px';
+    box.style.border = 'none';
+    box.style.boxShadow = '0 25px 50px -12px rgba(0, 0, 0, 0.25)';
+    box.style.position = 'relative'; // Support for absolute children if needed at higher levels
 
     var folderListHtml = store.folders.map(function(f) {
         var isSelected = f.id === activeId;
@@ -3247,7 +3252,7 @@ window._renderSnippetModal = function() {
         <div class="hub-sidebar">
             <div class="hub-sidebar-header">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--primary)"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-                <span>Snippets Manager</span>
+                <span class="hub-sidebar-title">Snippets Manager</span>
             </div>
             <div class="hub-sidebar-scroll">
                 <div class="hub-section-label">FOLDERS <button onclick="window._addSnippetFolder()" class="add-f-btn">+</button></div>
@@ -3259,14 +3264,14 @@ window._renderSnippetModal = function() {
         </div>
         <div class="hub-main">
             <div class="hub-header">
-                <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:20px;">
-                    <div style="display:flex; align-items:center; gap:16px;">
+                <div class="hub-header-top">
+                    <div style="display:flex; align-items:center; gap:12px;">
                         <button class="hub-back-arrow" title="Back to Chat" onclick="document.getElementById('modalOverlay').style.display='none'">
                             <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
                         </button>
-                        <h2 style="margin:0; font-size:22px; font-weight:800;">${activeFolder ? activeFolder.name : 'Templates'}</h2>
+                        <h2 class="hub-title">${activeFolder ? activeFolder.name : 'Templates'}</h2>
                     </div>
-                    <div style="display:flex; gap:12px;">
+                    <div class="hub-header-actions">
                         <button class="btn-hub-secondary" onclick="window._addSnippetFolder()">New Folder</button>
                         <button class="btn-hub-primary" onclick="window._showCreateSnippet()">Create snippet</button>
                     </div>
@@ -3279,21 +3284,23 @@ window._renderSnippetModal = function() {
                     <div class="hub-count">${folderSnippets.length} snippets listed</div>
                 </div>
             </div>
-            <div class="hub-table-wrapper">
-                <table class="hub-table">
-                    <thead>
-                        <tr>
-                            <th style="width:40px;"><input type="checkbox"></th>
-                            <th>NAME</th>
-                            <th>CREATED BY</th>
-                            <th>DATE UPDATED</th>
-                            <th style="width:100px;"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${snippetRowsHtml || '<tr><td colspan="5" style="text-align:center; padding:120px; color:var(--text-muted);"><div style="font-size:40px; margin-bottom:12px;">📭</div>No snippets found.</td></tr>'}
-                    </tbody>
-                </table>
+            <div class="hub-scroll-area">
+                <div class="hub-table-wrapper">
+                    <table class="hub-table">
+                        <thead>
+                            <tr>
+                                <th style="width:50px; text-align:center;"><input type="checkbox"></th>
+                                <th style="text-align:left;">NAME</th>
+                                <th style="width:140px; text-align:left;">CREATED BY</th>
+                                <th style="width:160px; text-align:left;">DATE UPDATED</th>
+                                <th style="width:120px; text-align:right;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${snippetRowsHtml || '<tr><td colspan="5" style="text-align:center; padding:120px; color:var(--text-muted);"><div style="font-size:40px; margin-bottom:12px;">📭</div>No snippets found.</td></tr>'}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     `;
