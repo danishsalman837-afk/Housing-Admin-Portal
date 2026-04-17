@@ -799,11 +799,6 @@ window.openViewModal = function (id, showOriginal = false) {
             renderField(key, val);
         });
 
-        // 2. Catch remaining keys
-        Object.entries(leadData).forEach(([key, val]) => {
-            renderField(key, val);
-        });
-
         modalBox.innerHTML = `
             <div class="modal-header" style="position:sticky; top:0; background:var(--bg-surface); z-index:10; padding-bottom:20px; margin-bottom:20px; border-bottom:1px solid var(--border-light);">
                 <div style="flex:1;">
@@ -820,25 +815,6 @@ window.openViewModal = function (id, showOriginal = false) {
             <div class="modal-scroll-area" style="max-height:75vh; overflow-y:auto; overflow-x:hidden; padding:0 10px; margin-top:10px;">
                 <div style="display:flex; flex-direction:column; gap:8px;">
                     ${dataHtml || '<p style="padding: 40px; text-align:center; color:var(--text-muted);">No detailed data available for this record.</p>'}
-                    
-                    <!-- 📎 PHOTO EVIDENCE -->
-                    <div style="grid-column: span 2; margin-top: 24px; padding-top: 24px; border-top: 2px solid var(--border-light);">
-                        <h3 style="font-size:15px; font-weight:700; color:var(--text-main); display:flex; align-items:center; gap:8px; margin-bottom:16px;">
-                            <svg style="width:18px; height:18px; fill:var(--primary);" viewBox="0 0 24 24"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.93 1.57 3.5 3.5 3.5s3.5-1.57 3.5-3.5V5c0-2.21-1.79-4-4-4S9 2.79 9 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/></svg>
-                            Photo Evidence
-                        </h3>
-                        <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap:16px; margin-top: 10px;">
-                            ${(leadData.attachments || []).map(a => `
-                                <div class="evidence-card" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:10px; transition:all 0.2s; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
-                                    <a href="${a.url}" target="_blank" style="display:block; position:relative; padding-top:100%; overflow:hidden; border-radius:10px;">
-                                        <img src="${a.url}" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover;">
-                                    </a>
-                                    <div style="font-size:11px; color:#64748B; font-weight:600; margin-top:10px; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${a.name}</div>
-                                </div>
-                            `).join('')}
-                            ${(!leadData.attachments || leadData.attachments.length === 0) ? '<div style="grid-column:1/-1; padding:20px; background:var(--bg-surface-2); border-radius:10px; text-align:center; color:var(--text-muted); font-style:italic; font-size:13px;">No pictures attached to this submission.</div>' : ''}
-                        </div>
-                    </div>
                 </div>
             </div>
         `;
@@ -909,35 +885,6 @@ window.openEditLeadModal = function (id) {
         </div>
         <div class="form-grid" id="editLeadForm" style="display:grid; grid-template-columns: repeat(2, 1fr); gap:16px; padding:0 8px; max-height:75vh; overflow-y:auto;">
             ${html}
-            
-            <!-- 📎 ATTACHMENTS SECTION -->
-            <div style="grid-column: span 2; margin-top: 24px; padding-top: 24px; border-top: 2px dashed var(--border); background: var(--surface-2); border-radius: 12px; padding: 20px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-                    <h3 style="font-size:15px; font-weight:700; color:var(--label-1); display:flex; align-items:center; gap:8px; margin:0;">
-                        <svg style="width:18px; height:18px; fill:var(--blue);" viewBox="0 0 24 24"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.93 1.57 3.5 3.5 3.5s3.5-1.57 3.5-3.5V5c0-2.21-1.79-4-4-4S9 2.79 9 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/></svg>
-                        Case Evidences & Pictures
-                    </h3>
-                    <div style="display:flex; align-items:center; gap:12px;">
-                        <div id="uploadStatus" style="font-size:12px; font-weight:600; color:var(--label-3);"></div>
-                        <input type="file" id="attachInput" style="display:none;" onchange="window.handleAttachmentUpload('${s.id}', this)" accept="image/*" multiple>
-                        <button class="btn-action" style="font-size:12px; padding:7px 14px; background:var(--blue-light); color:var(--blue); border:1px solid var(--blue-ring); box-shadow:none;" onclick="document.getElementById('attachInput').click()">+ Add Photos</button>
-                        <button class="btn-action" style="font-size:12px; padding:7px 14px; background:var(--green); color:white; border:none; box-shadow:var(--shadow-sm);" onclick="window.saveLeadEdits('${s.id}')">Save Pictures / Update</button>
-                    </div>
-                </div>
-                
-                <div id="attachmentList" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap:12px;">
-                    ${(s.attachments || []).map((a, i) => `
-                        <div class="attach-item" style="position:relative; background:var(--surface-1); border:1px solid var(--border); border-radius:10px; padding:8px; transition:all 0.2s ease; box-shadow:var(--shadow-xs);">
-                            <a href="${a.url}" target="_blank" style="display:block;">
-                                <img src="${a.url}" style="width:100%; height:90px; object-fit:cover; border-radius:6px; background:var(--surface-2);">
-                            </a>
-                            <div style="font-size:10px; color:var(--label-3); margin-top:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4px;">${a.name}</div>
-                            <button onclick="window.deleteAttachment('${s.id}', ${i})" style="position:absolute; top:-6px; right:-6px; background:var(--red); color:white; border:none; border-radius:50%; width:22px; height:22px; cursor:pointer; font-size:14px; font-weight:800; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(255,69,58,0.3);">&times;</button>
-                        </div>
-                    `).join('')}
-                    ${(!s.attachments || s.attachments.length === 0) ? '<p style="font-size:12px; color:var(--label-4); font-style:italic; grid-column:1/-1; text-align:center; padding:20px 0;">No pictures attached yet.</p>' : ''}
-                </div>
-            </div>
         </div>
         <div style="margin-top:32px; display:flex; justify-content:flex-end; gap:12px; padding:0 8px;">
            <button class="btn-outline" style="padding:10px 24px; font-weight:700;" onclick="document.getElementById('modalOverlay').style.display='none'">Cancel</button>
