@@ -694,147 +694,161 @@ function formatDob(val) {
 }
 
 window.openViewModal = function (id, showOriginal = false) {
-    console.log("[Modal] Requesting lead:", id, "showOriginal:", showOriginal);
+    console.log("[Modal] Attempting to open lead:", id, "Original View:", showOriginal);
     
-    // Ensure submissionsData exists and is an array
-    if (!Array.isArray(submissionsData)) {
-        console.error("[Modal] submissionsData is not an array");
+    const overlay = document.getElementById('modalOverlay');
+    const modalBox = document.getElementById('modalBox');
+
+    if (!overlay || !modalBox) {
+        console.error("[Modal] Required DOM elements overlay/modalBox missing!");
         return;
     }
 
-    const s = submissionsData.find(x => String(x.id) === String(id));
-    if (!s) {
-        console.error("[Modal] Lead not found for ID:", id);
-        alert("Lead not found. Please refresh the page.");
-        return;
-    }
+    // Show overlay immediately with loading state
+    overlay.style.display = 'flex';
+    modalBox.innerHTML = `
+        <div style="padding:40px; text-align:center; color:var(--text-muted);">
+            <div class="loading-spinner" style="margin-bottom:12px;"></div>
+            Loading Lead Details...
+        </div>
+    `;
 
-    let leadData = { ...s };
-    let titlePrefix = "Current Lead Profile";
+    try {
+        const s = submissionsData.find(x => String(x.id) === String(id));
+        if (!s) throw new Error("Lead record not found in memory.");
 
-    if (showOriginal) {
-        let backup = s.agent_data;
-        if (backup) {
-            try {
-                const parsed = typeof backup === 'string' ? JSON.parse(backup) : backup;
-                leadData = { ...parsed };
-                titlePrefix = "Original Agent Submission";
-            } catch (e) {
-                console.warn("[Modal] Failed to parse agent_data, using normalized data:", e);
-                titlePrefix = "Original Submission (Parse Error)";
+        let leadData = { ...s };
+        let titlePrefix = "Current Lead Profile";
+
+        if (showOriginal) {
+            let backup = s.agent_data;
+            if (backup) {
+                try {
+                    const parsed = typeof backup === 'string' ? JSON.parse(backup) : backup;
+                    leadData = { ...parsed };
+                    titlePrefix = "Original Agent Submission";
+                } catch (e) {
+                    console.warn("[Modal] Failed to parse agent_data:", e);
+                    titlePrefix = "Original Submission (Format Error)";
+                }
+            } else {
+                titlePrefix = "Original Submission (No Backup Found)";
             }
-        } else {
-            titlePrefix = "Original Submission (No Backup Found)";
-        }
-        
-        // Ensure ID and attachments are carried over if missing in backup
-        if (!leadData.id) leadData.id = s.id;
-        if (!leadData.attachments) leadData.attachments = s.attachments || [];
-        
-        const agentName = s.agent_name || s.agentName || (s.agent_data && (s.agent_data.agentName || s.agent_data.agent_name));
-        if (agentName) titlePrefix += ` — Agent: ${agentName}`;
-    }
-
-    const ignoreKeys = ['id', 'created_at', 'notes', 'assigned_company_id', 'assigned_solicitor_id', 'call_notes', 'agent_data', 'is_edited', 'timestamp'];
-    const seenKeys = new Set(ignoreKeys);
-    let dataHtml = '';
-
-    const renderField = (key, val, labelOverride = null) => {
-        if (val === undefined || val === null || val === '') return;
-        if (seenKeys.has(key)) return;
-        seenKeys.add(key);
-
-        let label = labelOverride || leadFieldLabels[key] || key.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ').trim();
-        label = label.charAt(0).toUpperCase() + label.slice(1);
-
-        let displayVal = val;
-        if (key.toLowerCase().includes('dob') || key.toLowerCase().includes('dateofbirth')) {
-            displayVal = formatDob(val);
-        }
-        if (typeof val === 'object' && val !== null) {
-            displayVal = JSON.stringify(val);
+            
+            if (!leadData.id) leadData.id = s.id;
+            if (!leadData.attachments) leadData.attachments = s.attachments || [];
+            
+            const agentName = s.agent_name || s.agentName || (s.agent_data && (s.agent_data.agentName || s.agent_data.agent_name));
+            if (agentName) titlePrefix += ` — Agent: ${agentName}`;
         }
 
-        dataHtml += `
-            <div class="modal-field-item" style="margin-bottom:18px; border-bottom:1px solid var(--border-light); padding-bottom:8px;">
-                <label style="font-size:10px; font-weight:700; color:#94A3B8; text-transform:uppercase; display:block; margin-bottom:4px; letter-spacing:0.5px;">${label}</label>
-                <div style="font-size:14px; color:var(--text-main); font-weight:600; line-height:1.4; white-space:pre-wrap;">${displayVal || '--'}</div>
-            </div>`;
-    };
+        const ignoreKeys = ['id', 'created_at', 'notes', 'assigned_company_id', 'assigned_solicitor_id', 'call_notes', 'agent_data', 'is_edited', 'timestamp'];
+        const seenKeys = new Set(ignoreKeys);
+        let dataHtml = '';
 
-    // 1. Show defined order first
-    leadViewOrder.forEach(key => {
-        let val = leadData[key];
-        
-        // Manual fallbacks for known field alternates
-        if (val === undefined || val === null || val === '') {
-            const fb = {
-                'dob': ['dateOfBirth', 'DOB', 'date_of_birth'],
-                'dateOfBirth': ['dob', 'DOB', 'date_of_birth'],
-                'tenancyDuration': ['livingDuration', 'tenancy_duration'],
-                'livingDuration': ['tenancyDuration', 'tenancy_duration'],
-                'agentName': ['agent_name', 'dialler', 'Dialler', 'agent'],
-                'phone': ['mobile_number', 'mobile', 'tel', 'phone_number'],
-                'mobile_number': ['phone', 'tel', 'phone_number'],
-                'name': ['full_name', 'fullName', 'first_name'],
-                'address': ['property_address', 'address1', 'full_address']
-            };
-            if (fb[key]) {
-                for (let f of fb[key]) {
-                    if (leadData[f]) { val = leadData[f]; break; }
+        const renderField = (key, val, labelOverride = null) => {
+            if (val === undefined || val === null || val === '') return;
+            if (seenKeys.has(key)) return;
+            seenKeys.add(key);
+
+            let label = labelOverride || leadFieldLabels[key] || key.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ').trim();
+            label = label.charAt(0).toUpperCase() + label.slice(1);
+
+            let displayVal = val;
+            const lowerKey = key.toLowerCase();
+            if (lowerKey.includes('dob') || lowerKey.includes('dateofbirth') || lowerKey.includes('date_of_birth')) {
+                displayVal = formatDob(val);
+            }
+            if (typeof val === 'object' && val !== null) {
+                displayVal = JSON.stringify(val);
+            }
+
+            dataHtml += `
+                <div class="modal-field-item" style="margin-bottom:18px; border-bottom:1px solid var(--border-light); padding-bottom:8px;">
+                    <label style="font-size:10px; font-weight:700; color:#94A3B8; text-transform:uppercase; display:block; margin-bottom:4px; letter-spacing:0.5px;">${label}</label>
+                    <div style="font-size:14px; color:var(--text-main); font-weight:600; line-height:1.4; white-space:pre-wrap;">${displayVal || '--'}</div>
+                </div>`;
+        };
+
+        // 1. Show defined order first
+        leadViewOrder.forEach(key => {
+            let val = leadData[key];
+            if (val === undefined || val === null || val === '') {
+                const fb = {
+                    'dob': ['dateOfBirth', 'DOB', 'date_of_birth'],
+                    'dateOfBirth': ['dob', 'DOB', 'date_of_birth'],
+                    'tenancyDuration': ['livingDuration', 'tenancy_duration'],
+                    'livingDuration': ['tenancyDuration', 'tenancy_duration'],
+                    'agentName': ['agent_name', 'dialler', 'Dialler', 'agent'],
+                    'phone': ['mobile_number', 'mobile', 'tel', 'phone_number'],
+                    'mobile_number': ['phone', 'tel', 'phone_number'],
+                    'name': ['full_name', 'fullName', 'first_name'],
+                    'address': ['property_address', 'address1', 'full_address']
+                };
+                if (fb[key]) {
+                    for (let f of fb[key]) {
+                        if (leadData[f]) { val = leadData[f]; break; }
+                    }
                 }
             }
-        }
-        
-        renderField(key, val);
-    });
+            renderField(key, val);
+        });
 
-    // 2. Catch all remaining keys in leadData
-    Object.entries(leadData).forEach(([key, val]) => {
-        renderField(key, val);
-    });
+        // 2. Catch remaining keys
+        Object.entries(leadData).forEach(([key, val]) => {
+            renderField(key, val);
+        });
 
-    const modalBox = document.getElementById('modalBox');
-    const overlay = document.getElementById('modalOverlay');
-
-    if (!modalBox || !overlay) {
-        console.error("[Modal] DOM elements missing");
-        return;
+        modalBox.innerHTML = `
+            <div class="modal-header" style="position:sticky; top:0; background:var(--bg-surface); z-index:10; padding-bottom:20px; margin-bottom:20px; border-bottom:1px solid var(--border-light);">
+                <div style="flex:1;">
+                    <div style="font-size:11px; font-weight:700; color:var(--primary); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">${titlePrefix}</div>
+                    <h2 style="font-size:20px; font-weight:800; letter-spacing:-0.5px; margin:0;">${leadData.name || leadData.first_name || 'Lead Details'}</h2>
+                </div>
+                <div style="text-align:right; margin-right:40px;">
+                    <span style="font-size:10px; font-weight:700; color:#94A3B8; text-transform:uppercase; display:block; margin-bottom:2px;">Ref ID</span>
+                    <span style="font-size:12px; color:var(--text-main); font-weight:700;">#${s.id}</span>
+                </div>
+                <button class="close-btn" style="position:absolute; right:12px; top:12px; font-size:24px; background:var(--bg-surface-2); border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border-light); color:var(--text-muted); cursor:pointer;" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button>
+            </div>
+            
+            <div class="modal-scroll-area" style="max-height:65vh; overflow-y:auto; overflow-x:hidden; padding-right:12px; margin-top:10px;">
+                <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:0 24px;">
+                    ${dataHtml || '<p style="grid-column: span 2; padding: 40px; text-align:center; color:var(--text-muted);">No detailed data available for this record.</p>'}
+                    
+                    <!-- 📎 PHOTO EVIDENCE -->
+                    <div style="grid-column: span 2; margin-top: 24px; padding-top: 24px; border-top: 2px solid var(--border-light);">
+                        <h3 style="font-size:15px; font-weight:700; color:var(--text-main); display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+                            <svg style="width:18px; height:18px; fill:var(--primary);" viewBox="0 0 24 24"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.93 1.57 3.5 3.5 3.5s3.5-1.57 3.5-3.5V5c0-2.21-1.79-4-4-4S9 2.79 9 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/></svg>
+                            Photo Evidence
+                        </h3>
+                        <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap:12px; margin-top: 10px;">
+                            ${(leadData.attachments || []).map(a => `
+                                <div class="evidence-card" style="background:var(--bg-surface-2); border:1px solid var(--border-light); border-radius:12px; padding:8px; transition:transform 0.2s; box-shadow:var(--shadow-sm);">
+                                    <a href="${a.url}" target="_blank" style="display:block; position:relative; padding-top:75%; overflow:hidden; border-radius:8px;">
+                                        <img src="${a.url}" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover;">
+                                    </a>
+                                    <div style="font-size:10px; color:var(--text-muted); margin-top:8px; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${a.name}</div>
+                                </div>
+                            `).join('')}
+                            ${(!leadData.attachments || leadData.attachments.length === 0) ? '<div style="grid-column:1/-1; padding:20px; background:var(--bg-surface-2); border-radius:10px; text-align:center; color:var(--text-muted); font-style:italic; font-size:13px;">No pictures attached to this submission.</div>' : ''}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        console.error("[Modal] Fatal Error:", err);
+        modalBox.innerHTML = `
+            <div style="padding:40px; text-align:center;">
+                <h3 style="color:var(--danger); margin-bottom:12px;">Oops! Failed to load details</h3>
+                <p style="color:var(--text-muted); font-size:14px; margin-bottom:20px;">${err.message}</p>
+                <button class="btn-premium primary" onclick="document.getElementById('modalOverlay').style.display='none'">Close</button>
+            </div>
+        `;
     }
-
-    modalBox.innerHTML = `
-        <div class="modal-header" style="position:sticky; top:0; background:var(--bg-surface); z-index:10; padding-bottom:20px; margin-bottom:20px; border-bottom:1px solid var(--border-light);">
-            <div style="flex:1;">
-                <div style="font-size:11px; font-weight:700; color:var(--primary); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">${titlePrefix}</div>
-                <h2 style="font-size:20px; font-weight:800; letter-spacing:-0.5px; margin:0;">${leadData.name || leadData.first_name || 'Lead Details'}</h2>
-            </div>
-            <div style="text-align:right; margin-right:40px;">
-                <span style="font-size:10px; font-weight:700; color:#94A3B8; text-transform:uppercase; display:block; margin-bottom:2px;">Ref ID</span>
-                <span style="font-size:12px; color:var(--text-main); font-weight:700;">#${s.id}</span>
-            </div>
-            <button class="close-btn" style="position:absolute; right:10px; top:10px; font-size:28px; background:none; border:none; color:var(--text-muted); cursor:pointer;" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button>
-        </div>
-        
-        <div class="modal-scroll-area" style="max-height:75vh; overflow-y:auto; padding-right:10px;">
-            <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:x 24px;">
-                ${dataHtml || '<p style="grid-column: span 2; padding: 40px; text-align:center; color:var(--text-muted);">No detailed data available for this record.</p>'}
-                
-                <!-- 📎 PHOTO EVIDENCE -->
-                <div style="grid-column: span 2; margin-top: 24px; padding-top: 24px; border-top: 2px solid var(--border-light);">
-                    <h3 style="font-size:15px; font-weight:700; color:var(--text-main); display:flex; align-items:center; gap:8px; margin-bottom:16px;">
-                        <svg style="width:18px; height:18px; fill:var(--primary);" viewBox="0 0 24 24"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.93 1.57 3.5 3.5 3.5s3.5-1.57 3.5-3.5V5c0-2.21-1.79-4-4-4S9 2.79 9 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/></svg>
-                        Photo Evidence
-                    </h3>
-                    <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap:12px; margin-top: 10px;">
-                        ${(leadData.attachments || []).map(a => `
-                            <div class="evidence-card" style="background:var(--bg-surface-2); border:1px solid var(--border-light); border-radius:12px; padding:8px; transition:transform 0.2s;">
-                                <a href="${a.url}" target="_blank" style="display:block; position:relative; padding-top:75%; overflow:hidden; border-radius:8px;">
-                                    <img src="${a.url}" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover;">
-                                </a>
-                                <div style="font-size:10px; color:var(--text-muted); margin-top:8px; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${a.name}</div>
-                            </div>
-                        `).join('')}
-                        ${(!leadData.attachments || leadData.attachments.length === 0) ? '<div style="grid-column:1/-1; padding:20px; background:var(--bg-surface-2); border-radius:10px; text-align:center; color:var(--text-muted); font-style:italic; font-size:13px;">No pictures attached to this submission.</div>' : ''}
+};
+">No pictures attached to this submission.</div>' : ''}
                     </div>
                 </div>
             </div>
