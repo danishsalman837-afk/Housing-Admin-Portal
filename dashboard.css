@@ -2510,13 +2510,13 @@ select.status-pill {
     display: none;
     position: absolute;
     right: 0;
-    bottom: 100%; /* Open UPWARDS as a default fallback to avoid bottom clipping */
-    margin-bottom: 5px;
+    top: 100%; /* Switch back to DOWNWARDS to avoid header overlap */
+    margin-top: 5px;
     background: #fff;
     border: 1px solid #cbd6e2;
     border-radius: 8px;
-    box-shadow: 0 -10px 25px rgba(0,0,0,0.15); /* Shadow adjusted for upward open */
-    z-index: 10000;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    z-index: 99999 !important; /* Extremely high z-index */
     min-width: 200px;
     text-align: left;
 }
@@ -3213,8 +3213,8 @@ select.status-pill {
 /* Full page view adjustments */
 /* Full page view adjustments - TRUE FULL WINDOW FLOW */
 .snippet-hubspot-container.full-page {
-    height: calc(100vh - 64px) !important; /* Subtract topbar height */
-    min-height: unset !important;
+    height: auto !important;
+    min-height: calc(100vh - 64px) !important;
     overflow: visible !important;
     border-radius: 0 !important;
     background: var(--bg-surface);
@@ -3225,12 +3225,13 @@ select.status-pill {
 }
 
 .snippet-hubspot-container.full-page .hub-sidebar {
-    height: 100% !important;
+    height: auto !important;
+    min-height: calc(100vh - 64px) !important;
     border-top: none;
 }
 
 .snippet-hubspot-container.full-page .hub-main {
-    height: 100% !important;
+    height: auto !important;
     overflow: visible !important;
 }
 
@@ -3238,6 +3239,17 @@ select.status-pill {
     overflow: visible !important;
     flex: 1 !important;
     height: auto !important;
+    padding-bottom: 300px !important; /* Massive padding to ensure dropdowns always visible */
+}
+
+/* Force all table parts to allow overflow for dropdowns */
+.snippet-hubspot-container.full-page .hub-table-wrapper,
+.snippet-hubspot-container.full-page .hub-table,
+.snippet-hubspot-container.full-page .hub-table thead,
+.snippet-hubspot-container.full-page .hub-table tbody,
+.snippet-hubspot-container.full-page .hub-table tr,
+.snippet-hubspot-container.full-page .hub-table td {
+    overflow: visible !important;
 }
 
 .snippet-hubspot-container.full-page .hub-header {
