@@ -3435,7 +3435,6 @@ window._renderSnippetModal = function(isFullPageView = false) {
             </div>
         </div>
     `;
-    `;
     if (isFullPageView) {
         document.getElementById('modalOverlay').style.display = 'none';
     } else {
