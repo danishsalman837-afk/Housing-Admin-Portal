@@ -3315,8 +3315,6 @@ window.insertSnippet = function(template) {
         input.focus();
         if (parsed.includes('{{')) {
             showNotification('Note: Some variables could not be mapped.', 'warning');
-        } else {
-            showNotification('Snippet injected with lead data', 'success');
         }
         window.autoExpandCommInput(input);
     }
@@ -3433,7 +3431,6 @@ window._renderSnippetModal = function(customFullPageCheck) {
         const createdDate = s.created_at ? new Date(s.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recently';
         return `
             <tr class="hub-row" onclick="window._selectedSnippetId='${s.id}'; window._renderSnippetModal();" style="border-bottom: 1px solid var(--border-light); transition: background 0.2s;">
-                <td style="width:60px; text-align:center; padding: 20px 16px;"><input type="checkbox" onclick="event.stopPropagation()" style="width: 16px; height: 16px;"></td>
                 <td class="hub-col-name" style="padding: 20px 16px;">
                     <div style="display:flex; align-items:center; gap:12px;">
                         <div style="background: var(--bg-surface-2); color: var(--text-muted); width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
@@ -3454,19 +3451,6 @@ window._renderSnippetModal = function(customFullPageCheck) {
                                     Edit Template
                                 </div>
                             </div>
-                            <div onclick="event.stopPropagation(); window._useSnippetInChat('${s.id}')" style="padding:12px 16px; font-size:13px; font-weight:600; cursor:pointer;" onmouseover="this.style.background='var(--bg-surface-2)'" onmouseout="this.style.background='transparent'">
-                                <div style="display:flex; align-items:center; gap:10px;">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 1 1-7.6-14 8.38 8.38 0 0 1 3.8.9L21 3z"/></svg>
-                                    Insert into Chat
-                                </div>
-                            </div>
-                            <div onclick="event.stopPropagation(); window._sendSnippetNow('${s.id}')" style="padding:12px 16px; font-size:13px; font-weight:800; color:var(--primary); cursor:pointer;" onmouseover="this.style.background='var(--primary-light)'" onmouseout="this.style.background='transparent'">
-                                <div style="display:flex; align-items:center; gap:10px;">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polyline points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                                    Send SMS Now
-                                </div>
-                            </div>
-                            <hr style="margin:0; border:none; border-top:1px solid var(--border-light);">
                             <div onclick="event.stopPropagation(); window._deleteSnippet('${s.id}')" style="padding:12px 16px; font-size:13px; font-weight:600; color:#ef4444; cursor:pointer;" onmouseover="this.style.background='rgba(239, 68, 68, 0.05)'" onmouseout="this.style.background='transparent'">
                                 <div style="display:flex; align-items:center; gap:10px;">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
@@ -3529,7 +3513,6 @@ window._renderSnippetModal = function(customFullPageCheck) {
                     <table class="hub-table" style="width: 100%; border-collapse: collapse;">
                         <thead>
                             <tr style="background: var(--bg-surface-2);">
-                                <th style="width:60px; text-align:center; padding: 16px;"><input type="checkbox" style="width: 16px; height: 16px; border-radius: 4px;"></th>
                                 <th style="text-align:left; padding: 16px; font-size: 11px; font-weight: 800; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.8px;">NAME</th>
                                 <th style="width:160px; text-align:left; padding: 16px; font-size: 11px; font-weight: 800; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.8px;">CREATED BY</th>
                                 <th style="width:180px; text-align:left; padding: 16px; font-size: 11px; font-weight: 800; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.8px;">DATE UPDATED</th>
@@ -3539,7 +3522,7 @@ window._renderSnippetModal = function(customFullPageCheck) {
                         <tbody style="overflow: visible;">
                             ${snippetRowsHtml || `
                                 <tr>
-                                    <td colspan="5" style="padding:100px 40px; text-align:center;">
+                                    <td colspan="4" style="padding:100px 40px; text-align:center;">
                                         <div style="background: var(--primary-light); width:80px; height:80px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 24px;">
                                             <svg style="width:36px; height:36px; fill: var(--primary);" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
                                         </div>
