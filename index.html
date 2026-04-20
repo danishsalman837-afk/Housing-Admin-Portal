@@ -243,6 +243,33 @@
                 position: relative !important;
                 transform: translateX(0) !important;
                 width: var(--sidebar-w) !important;
+                transition: width 0.3s var(--ease), transform 0.3s var(--ease) !important;
+            }
+
+            #sidebar.collapsed {
+                width: 72px !important;
+            }
+
+            #sidebar.collapsed .logo-text,
+            #sidebar.collapsed .nav-item span,
+            #sidebar.collapsed .nav-section-label,
+            #sidebar.collapsed .sidebar-footer,
+            #sidebar.collapsed .user-info {
+                display: none !important;
+            }
+
+            #sidebar.collapsed .nav-item {
+                justify-content: center;
+                padding: 10px;
+            }
+
+            #sidebar.collapsed .logo-lockup {
+                justify-content: center;
+            }
+
+            #sidebar.collapsed .logo-icon {
+                width: 32px;
+                height: 32px;
             }
         }
 
@@ -1595,6 +1622,10 @@
                 border-right: none !important;
                 border-bottom: 1px solid var(--border);
             }
+            .hub-main {
+                display: block !important;
+                width: 100% !important;
+            }
 
             #settingsView .settings-main-grid {
                 flex-direction: column !important;
@@ -1605,6 +1636,22 @@
                 flex-direction: row !important;
                 overflow-x: auto !important;
             }
+        }
+
+        #mobileMenuToggle {
+            display: flex !important;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            color: var(--label-1);
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+
+        #mobileMenuToggle:hover {
+            transform: scale(1.1);
         }
 
         @media (max-width: 768px) {
@@ -3222,7 +3269,7 @@
         <!-- Sticky top bar -->
         <div class="topbar">
             <button id="mobileMenuToggle"
-                onclick="document.getElementById('sidebar').classList.toggle('mobile-active')">
+                onclick="window.toggleSidebar()">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
                     <line x1="3" y1="12" x2="21" y2="12"></line>

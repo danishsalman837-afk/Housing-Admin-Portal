@@ -1154,11 +1154,24 @@ select.status-pill {
         width: 100% !important;
         height: auto !important;
         border-right: none !important;
-        border-bottom: 1px solid var(--border-light);
+        border-bottom: 1px solid var(--border-light) !important;
     }
     
     .hub-main {
+        display: block !important;
         width: 100% !important;
+        flex: none !important; /* Reset flex to allow natural height */
+    }
+
+    .hub-scroll-area {
+        padding: 16px !important;
+        overflow-x: hidden !important;
+    }
+    
+    .table-responsive {
+        width: 100% !important;
+        overflow-x: auto !important;
+        display: block !important;
     }
 
     /* Settings Page Stacking */

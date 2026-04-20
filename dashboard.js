@@ -24,6 +24,19 @@ window.toggleTheme = function (e) {
     calculateDashboardStats();
 };
 
+window.toggleSidebar = function() {
+    const sidebar = document.getElementById('sidebar');
+    if (!sidebar) return;
+    
+    if (window.innerWidth > 1024) {
+        // Desktop: toggle collapsed state
+        sidebar.classList.toggle('collapsed');
+    } else {
+        // Mobile: toggle active state
+        sidebar.classList.toggle('mobile-active');
+    }
+};
+
 function syncThemeToggle() {
     const theme = localStorage.getItem('theme');
     const dropdownToggle = document.getElementById('dropdownThemeToggle');
