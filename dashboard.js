@@ -3115,7 +3115,7 @@ window.selectCommContact = function (leadId) {
 
     // Single-pane toggle for mobile
     const layout = document.querySelector('.comm-hub-layout');
-    if (layout) layout.classList.add('chat-active');
+    if (layout) layout.classList.add('active-chat');
 
     const avatarEl = document.getElementById('activeCommAvatar');
     const nameEl = document.getElementById('activeCommName');
@@ -3505,7 +3505,7 @@ window._renderSnippetModal = function (customFullPageCheck) {
             <div class="hub-header" style="padding: 32px 40px; border-bottom: 1px solid var(--border-light); background: var(--bg-surface);">
                 <div class="hub-header-top" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                     <div style="display:flex; align-items:center; gap:16px;">
-                        <button class="hub-folder-back" title="Back to Folders" onclick="document.querySelector('.snippet-hubspot-container').classList.remove('folder-selected')" style="display:none; background:none; border:none; color:var(--text-main); margin-right:8px; cursor:pointer;">
+                        <button class="hub-folder-back" title="Back to Folders" onclick="document.querySelector('.snippet-hubspot-container').classList.remove('active-folder')" style="display:none; background:none; border:none; color:var(--text-main); margin-right:8px; cursor:pointer;">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
                         </button>
                         ${isFullPageView ? '' : `
@@ -3596,7 +3596,7 @@ window._selectSnippetFolder = function (folderId) {
 
     // Single-pane toggle for mobile
     const container = document.querySelector('.snippet-hubspot-container');
-    if (container) container.classList.add('folder-selected');
+    if (container) container.classList.add('active-folder');
 
     // Check if we are in full page view or modal
     const isFullPage = document.getElementById('templatesView').classList.contains('active');

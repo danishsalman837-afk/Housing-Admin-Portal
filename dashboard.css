@@ -1130,33 +1130,29 @@ select.status-pill {
         position: relative;
     }
     
-    /* Single Pane Logic for Comm Hub */
     .comm-sidebar {
-        display: flex !important;
         width: 100% !important;
-        height: 100% !important;
-        border-right: none !important;
     }
     
     .comm-main {
         display: none !important;
     }
     
-    .comm-hub-layout.chat-active .comm-sidebar {
+    /* Single Pane Active State */
+    .comm-hub-layout.active-chat .comm-sidebar {
         display: none !important;
     }
     
-    .comm-hub-layout.chat-active .comm-main {
+    .comm-hub-layout.active-chat .comm-main {
         display: flex !important;
         width: 100% !important;
         height: 100% !important;
-        position: absolute;
-        top: 0; left: 0; right: 0; bottom: 0;
+        position: relative;
         z-index: 5;
         background: var(--bg-main);
     }
 
-    .comm-back-btn, .hub-folder-back {
+    .comm-back-btn {
         display: flex !important;
     }
 
@@ -1193,27 +1189,28 @@ select.status-pill {
         border: none !important;
     }
     
-    /* Single Pane Logic for Template Library */
     .hub-sidebar {
         display: block !important;
         width: 100% !important;
-        height: auto !important;
-        border-right: none !important;
-        border-bottom: 1px solid var(--border-light) !important;
     }
     
     .hub-main {
         display: none !important;
     }
     
-    .snippet-hubspot-container.folder-selected .hub-sidebar {
+    /* Single Pane Active State */
+    .snippet-hubspot-container.active-folder .hub-sidebar {
         display: none !important;
     }
     
-    .snippet-hubspot-container.folder-selected .hub-main {
+    .snippet-hubspot-container.active-folder .hub-main {
         display: block !important;
         width: 100% !important;
         flex: none !important;
+    }
+
+    .hub-folder-back {
+        display: flex !important;
     }
 
     .hub-scroll-area {
@@ -2616,7 +2613,7 @@ select.status-pill {
 
 .hub-scroll-area {
     flex: 1;
-    overflow-y: auto;
+    overflow: visible !important;
     padding-bottom: 200px;
     position: relative;
     padding-top: 4px;
@@ -2624,7 +2621,17 @@ select.status-pill {
 
 .hub-table-wrapper {
     padding: 0 30px;
-    overflow: visible !important; /* FORCED visibility for dropdowns */
+    overflow: visible !important;
+}
+
+.hub-table td {
+    overflow: visible !important;
+    position: relative;
+}
+
+.hub-dropdown {
+    z-index: 9999 !important;
+    position: absolute !important;
 }
 
 .hub-table {
@@ -3474,11 +3481,11 @@ select.status-pill {
 /* Ensure table doesn't overflow container */
 .hub-table-wrapper {
     width: 100%;
-    overflow-x: auto !important;
+    overflow: visible !important;
 }
 
 .hub-table {
-    min-width: 600px;
+    width: 100% !important;
 }
 
 /* Template Library Polishing */
