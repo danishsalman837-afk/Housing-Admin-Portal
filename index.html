@@ -1505,7 +1505,7 @@
         }
 
         .dropdown-menu {
-            position: absolute;
+            position: absolute !important;
             top: 100%;
             right: 0;
             margin-top: 8px;
@@ -1514,9 +1514,9 @@
             border: 1px solid var(--border);
             box-shadow: var(--shadow-lg);
             min-width: 180px;
-            z-index: 100;
+            z-index: 99999 !important;
             display: none;
-            overflow: hidden;
+            overflow: visible;
             animation: dropdownIn 0.2s var(--ease-spring);
         }
 
@@ -1599,43 +1599,7 @@
                 grid-template-columns: repeat(2, 1fr) !important;
             }
 
-            /* Module Stacking */
-            .comm-hub-layout {
-                flex-direction: column !important;
-            }
-            .comm-sidebar {
-                width: 100% !important;
-                height: 35vh !important;
-                border-right: none !important;
-                border-bottom: 1px solid var(--border);
-            }
-            .comm-main {
-                flex: 1 !important;
-            }
-
-            .snippet-hubspot-container {
-                flex-direction: column !important;
-            }
-            .hub-sidebar {
-                width: 100% !important;
-                height: auto !important;
-                border-right: none !important;
-                border-bottom: 1px solid var(--border);
-            }
-            .hub-main {
-                display: block !important;
-                width: 100% !important;
-            }
-
-            #settingsView .settings-main-grid {
-                flex-direction: column !important;
-            }
-            #settingsView .settings-sidebar {
-                position: static !important;
-                width: 100% !important;
-                flex-direction: row !important;
-                overflow-x: auto !important;
-            }
+            /* Module Stacking Cleaned Up (Handled by dashboard.css) */
         }
 
         #mobileMenuToggle {

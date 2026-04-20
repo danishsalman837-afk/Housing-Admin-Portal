@@ -577,9 +577,10 @@ body {
 }
 
 .page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
 }
 
 .page-title {
@@ -1099,7 +1100,7 @@ select.status-pill {
 ═══════════════════════════════════════ */
 
 /* Module-Specific Stacking Protocol (< 1024px) */
-@media (max-width: 1024px) {
+@media (max-width: 1023px) {
     /* Global Layout Overrides */
     .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
     .dashboard-grid { grid-template-columns: 1fr; }
@@ -1115,6 +1116,8 @@ select.status-pill {
         z-index: 10001 !important;
         transform: translateX(-100%) !important;
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        display: flex !important;
+        visibility: visible !important;
         box-shadow: 20px 0 50px rgba(0,0,0,0.1);
     }
     
@@ -1122,80 +1125,68 @@ select.status-pill {
         transform: translateX(0) !important;
     }
 
-    /* Communication Hub Stacking */
+    /* Communication Hub Fix - SINGLE PANE visibility */
     .comm-hub-layout {
-        flex-direction: column !important;
+        display: block !important;
         height: auto !important;
-        min-height: calc(100vh - 100px);
-        position: relative;
     }
     
-    .comm-sidebar {
+    .comm-main, .chat-welcome {
+        position: static !important;
+    }
+
+    /* If a chat is NOT selected */
+    .comm-hub-layout:not(.active-chat) .comm-sidebar {
+        display: block !important;
         width: 100% !important;
     }
-    
-    .comm-main {
+    .comm-hub-layout:not(.active-chat) .comm-main {
         display: none !important;
     }
     
-    /* Single Pane Active State */
+    /* If a chat IS selected */
     .comm-hub-layout.active-chat .comm-sidebar {
         display: none !important;
     }
-    
     .comm-hub-layout.active-chat .comm-main {
         display: flex !important;
         width: 100% !important;
-        height: 100% !important;
-        position: relative;
-        z-index: 5;
-        background: var(--bg-main);
     }
 
     .comm-back-btn {
         display: flex !important;
     }
 
-    .comm-sidebar-header {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 10px !important;
-        padding: 20px !important;
-    }
-    
-    .comm-filters {
-        justify-content: flex-start !important;
-        width: 100% !important;
-    }
-
-    .msg-bubble {
-        max-width: 85% !important;
-    }
-
-    /* Template Library Stacking */
-    #templatesView.view-container.active {
-        padding: 0 !important;
-        width: 100% !important;
-    }
-
+    /* Template Library Fix - SINGLE PANE visibility */
     .snippet-hubspot-container {
-        flex-direction: column !important;
-        width: 100vw !important;
+        display: block !important;
+        height: auto !important;
+        overflow: visible !important;
+        width: 100% !important;
         margin: 0 !important;
-        padding: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
         border-radius: 0 !important;
-        border: none !important;
     }
     
-    .hub-sidebar {
+    /* Initial state: Show folder list, hide snippets */
+    .snippet-hubspot-container:not(.active-folder) .hub-sidebar {
         display: block !important;
         width: 100% !important;
     }
-    
-    .hub-main {
+    .snippet-hubspot-container:not(.active-folder) .hub-main {
         display: none !important;
+    }
+    
+    /* When a folder is clicked: Show snippets, hide folder list */
+    .snippet-hubspot-container.active-folder .hub-sidebar {
+        display: none !important;
+    }
+    .snippet-hubspot-container.active-folder .hub-main {
+        display: flex !important;
+        width: 100% !important;
+    }
+
+    .hub-folder-back {
+        display: flex !important;
     }
     
     /* Single Pane Active State */
@@ -1213,9 +1204,14 @@ select.status-pill {
         display: flex !important;
     }
 
+    .hub-table-wrapper {
+        overflow-x: auto !important;
+        overflow-y: visible !important;
+    }
+
     .hub-scroll-area {
         padding: 16px !important;
-        overflow-x: hidden !important;
+        overflow-x: visible !important;
     }
     
     .table-responsive {
@@ -2619,19 +2615,8 @@ select.status-pill {
     padding-top: 4px;
 }
 
-.hub-table-wrapper {
-    padding: 0 30px;
+.hub-table-wrapper, .hub-table, .hub-table thead, .hub-table tbody, .hub-table tr, .hub-table td {
     overflow: visible !important;
-}
-
-.hub-table td {
-    overflow: visible !important;
-    position: relative;
-}
-
-.hub-dropdown {
-    z-index: 9999 !important;
-    position: absolute !important;
 }
 
 .hub-table {
@@ -2641,7 +2626,7 @@ select.status-pill {
     border-collapse: collapse;
     border-radius: 4px;
     table-layout: fixed;
-    overflow: visible;
+    overflow: visible !important;
 }
 
 .hub-table th {
@@ -2694,21 +2679,8 @@ select.status-pill {
     display: block;
 }
 
-@media (max-width: 900px) {
-    .snippet-hubspot-container {
-        flex-direction: column;
-        height: 95vh;
-    }
-    .hub-sidebar {
-        width: 100%;
-        height: auto;
-        max-height: 200px;
-        border-right: none;
-        border-bottom: 1px solid #dfe3e8;
-    }
-    .hub-search {
-        max-width: 100%;
-    }
+@media (max-width: 1023px) {
+    /* Handled by consolidated media query at the end or top */
 }
 
 .hub-row { cursor: pointer; transition: background 0.1s; border-bottom: 1px solid #f5f8fa; }
@@ -3350,34 +3322,7 @@ select.status-pill {
    RESPONSIVE OVERRIDES & POLISH
    ────────────────────────────────────────── */
 
-@media (max-width: 1024px) {
-    .snippet-hubspot-container {
-        flex-direction: column !important;
-        height: auto !important;
-        max-height: none !important;
-    }
-    
-    .hub-sidebar {
-        width: 100% !important;
-        height: auto !important;
-        border-right: none !important;
-        border-bottom: 1px solid var(--border);
-    }
-    
-    .hub-main {
-        width: 100% !important;
-    }
-
-    .hub-header-top {
-        flex-direction: column;
-        align-items: flex-start !important;
-    }
-
-    .hub-header-actions {
-        width: 100%;
-        justify-content: flex-start;
-    }
-}
+/* Consolidated Template Library Mobile Logic in main media query */
 
 @media (max-width: 768px) {
     .hub-table th:nth-child(3), 
@@ -3435,7 +3380,7 @@ select.status-pill {
     box-shadow: 0 40px 100px -20px rgba(0,0,0,0.1), 0 20px 40px -15px rgba(0,0,0,0.05) !important;
     margin: 0 auto !important;
     display: flex !important;
-    overflow: hidden !important; 
+    overflow: visible !important; 
 }
 
 /* Ensure the sidebar maintains the float look */
