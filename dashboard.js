@@ -3461,7 +3461,7 @@ window._renderSnippetModal = function (customFullPageCheck) {
                 <td class="hub-col-actions" style="width:120px; text-align:right; padding: 20px 16px; position:relative; overflow:visible;">
                     <div style="position:relative; display:inline-block;">
                         <button class="hub-action-btn" onclick="window._toggleSnippetMenu(event, '${s.id}')" style="background: var(--bg-surface-2); border: 1px solid var(--border-light); padding: 6px 14px; border-radius: 8px; font-weight: 700; font-size: 12px; color: var(--text-main); cursor: pointer; transition: all 0.2s;">Actions ▾</button>
-                        <div id="menu-${s.id}" class="hub-dropdown" style="display:none; position:absolute; right:0; top:100%; margin-top:8px; width:220px; background:var(--bg-surface); border:1px solid var(--border-light); box-shadow:0 15px 35px rgba(0,0,0,0.15); border-radius:14px; z-index:1000; overflow:hidden;">
+                        <div id="menu-${s.id}" class="hub-dropdown" style="display:none; position:absolute; right:0; top:100%; margin-top:8px; width:220px; background:var(--bg-surface); border:1px solid var(--border-light); box-shadow:0 15px 35px rgba(0,0,0,0.15); border-radius:14px; z-index:99999; overflow:visible;">
                             <div onclick="event.stopPropagation(); window._showCreateSnippet('${s.id}')" style="padding:12px 16px; font-size:13px; font-weight:600; cursor:pointer;" onmouseover="this.style.background='var(--bg-surface-2)'" onmouseout="this.style.background='transparent'">
                                 <div style="display:flex; align-items:center; gap:10px;">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -3528,8 +3528,8 @@ window._renderSnippetModal = function (customFullPageCheck) {
                     <div class="hub-count" style="font-size: 12px; font-weight: 600; color: var(--text-light); letter-spacing: 0.2px;">${folderSnippets.length} snippets listed</div>
                 </div>
             </div>
-            <div class="hub-scroll-area" style="padding: 24px 40px;">
-                <div class="table-responsive" style="background: var(--bg-surface); border-radius: 16px; border: 1px solid var(--border-light); overflow: hidden; box-shadow: var(--shadow-sm);">
+            <div class="hub-scroll-area" style="padding: 24px 40px; overflow: visible !important;">
+                <div class="table-responsive" style="background: var(--bg-surface); border-radius: 16px; border: 1px solid var(--border-light); overflow: visible !important; box-shadow: var(--shadow-sm);">
                     <table class="hub-table" style="width: 100%; border-collapse: collapse;">
                         <thead>
                             <tr style="background: var(--bg-surface-2);">

@@ -2615,7 +2615,7 @@ select.status-pill {
     padding-top: 4px;
 }
 
-.hub-table-wrapper, .hub-table, .hub-table thead, .hub-table tbody, .hub-table tr, .hub-table td {
+.hub-table-wrapper, .hub-table, .hub-table thead, .hub-table tbody, .hub-table tr, .hub-table td, .table-responsive {
     overflow: visible !important;
 }
 
