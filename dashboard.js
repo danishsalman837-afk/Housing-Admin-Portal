@@ -3323,7 +3323,7 @@ window.insertSnippet = function (template) {
 window._activeSnippetFolder = null;
 window._snippetStore = { folders: [], snippets: [] };
 window._snippetSearchTerm = '';
-window._selectedSnippetId = null;
+
 
 async function _loadSnippets() {
     try {
@@ -3430,7 +3430,7 @@ window._renderSnippetModal = function (customFullPageCheck) {
     var snippetRowsHtml = folderSnippets.map(function (s) {
         const createdDate = s.created_at ? new Date(s.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recently';
         return `
-            <tr class="hub-row" onclick="window._selectedSnippetId='${s.id}'; window._renderSnippetModal();" style="border-bottom: 1px solid var(--border-light); transition: background 0.2s;">
+            <tr class="hub-row" style="border-bottom: 1px solid var(--border-light); transition: background 0.2s;">
                 <td class="hub-col-name" style="padding: 20px 16px;">
                     <div style="display:flex; align-items:center; gap:12px;">
                         <div style="background: var(--bg-surface-2); color: var(--text-muted); width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
@@ -3549,31 +3549,7 @@ window._renderSnippetModal = function (customFullPageCheck) {
 /* ═══════════════════════════════════════
    SNIPPET QUICK PICKER (Chat Context)
 ═══════════════════════════════════════ */
-window._qpCurrentFolderId = null;
 
-window.toggleSnippetQuickPicker = function (e) {
-    if (e) e.stopPropagation();
-    const picker = document.getElementById('snippetQuickPicker');
-    if (!picker) return;
-
-    const isVisible = picker.classList.contains('active');
-
-    if (!isVisible) {
-        picker.classList.add('active');
-        // If store is empty (e.g. first open after refresh), load first then render
-        if (window._snippetStore.folders.length === 0) {
-            _loadSnippets().then(() => {
-                window.renderQuickPicker();
-                setTimeout(() => document.getElementById('qpSearch')?.focus(), 100);
-            });
-        } else {
-            window.renderQuickPicker();
-            setTimeout(() => document.getElementById('qpSearch')?.focus(), 100);
-        }
-    } else {
-        picker.classList.remove('active');
-    }
-};
 
 window._toggleSnippetMenu = function (e, id) {
     if (e) e.stopPropagation();
@@ -3593,101 +3569,7 @@ window._toggleSnippetMenu = function (e, id) {
     }
 };
 
-window.renderQuickPicker = function () {
-    const qpBody = document.getElementById('qpBody');
-    if (!qpBody) return;
 
-    const store = window._snippetStore;
-    const folderId = window._qpCurrentFolderId;
-
-    let html = '';
-
-    if (!folderId) {
-        // Show folders
-        html = store.folders.map(f => `
-            <div class="qp-folder" onclick="window.qpSelectFolder('${f.id}')">
-                <svg viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
-                <span>${f.name}</span>
-            </div>
-        `).join('');
-        if (store.folders.length === 0) {
-            html = `<div style="padding:20px; text-align:center; color:var(--label-4); font-size:12px;">No folders created yet</div>`;
-        }
-    } else {
-        // Show snippets in folder
-        const folder = store.folders.find(f => f.id === folderId);
-        const folderSnippets = store.snippets.filter(s => (s.folder_id || s.folderId) === folderId);
-
-        html += `
-            <div class="qp-back" onclick="window.qpSelectFolder(null)">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
-                Back to Folders
-            </div>
-            <div style="padding: 10px 12px; font-size: 11px; font-weight: 800; color: var(--label-4); text-transform: uppercase;">${folder?.name || 'Folder'}</div>
-        `;
-
-        html += folderSnippets.map(s => `
-            <div class="qp-snippet" onclick="window.qpSelectSnippet('${s.id}')">
-                ${s.title}
-            </div>
-        `).join('');
-
-        if (folderSnippets.length === 0) {
-            html += `<div style="padding: 20px; text-align: center; color: var(--label-4); font-size: 12px;">No snippets in this folder</div>`;
-        }
-    }
-
-    qpBody.innerHTML = html;
-};
-
-window.qpSelectFolder = function (id) {
-    window._qpCurrentFolderId = id;
-    window.renderQuickPicker();
-};
-
-window.qpSelectSnippet = function (id) {
-    window._useSnippetInChat(id);
-    document.getElementById('snippetQuickPicker').classList.remove('active');
-};
-
-window.filterQuickPicker = function (query) {
-    const qpBody = document.getElementById('qpBody');
-    if (!query) {
-        window._qpCurrentFolderId = null; // Reset to folder view on empty search
-        return window.renderQuickPicker();
-    }
-
-    const store = window._snippetStore;
-    const q = query.toLowerCase();
-
-    // Search across ALL snippets, regardless of folder
-    const matches = store.snippets.filter(s => s.title.toLowerCase().includes(q) || s.content.toLowerCase().includes(q));
-
-    let html = `<div style="padding: 10px 12px; font-size: 11px; font-weight: 800; color: var(--label-4); text-transform: uppercase;">Search Results (${matches.length})</div>`;
-
-    html += matches.map(s => `
-        <div class="qp-snippet" onclick="window.qpSelectSnippet('${s.id}')">
-            ${s.title}
-        </div>
-    `).join('');
-
-    if (matches.length === 0) {
-        html += `<div style="padding: 20px; text-align: center; color: var(--label-4); font-size: 12px;">No matches found</div>`;
-    }
-
-    qpBody.innerHTML = html;
-};
-
-// Global click listener to close picker
-document.addEventListener('mousedown', (e) => {
-    const picker = document.getElementById('snippetQuickPicker');
-    const btn = document.getElementById('snippetPickerBtn');
-    if (picker && picker.classList.contains('active')) {
-        if (!picker.contains(e.target) && !btn.contains(e.target)) {
-            picker.classList.remove('active');
-        }
-    }
-});
 
 window._selectSnippetFolder = function (folderId) {
     window._activeSnippetFolder = folderId;
@@ -3896,7 +3778,12 @@ window._showCreateSnippet = function (editId) {
                                 <div style="padding:12px 16px; font-size:11px; font-weight:800; color:var(--text-light); background:var(--bg-surface-2); text-transform:uppercase; letter-spacing:1px;">Lead Data</div>
                                 <div onclick="window._insertVarIntoSnippet('{{full_name}}')" style="padding:12px 16px; font-size:14px; color:var(--text-main); cursor:pointer; border-bottom:1px solid var(--border-light); font-weight:600;" onmouseover="this.style.background='var(--primary-light)'" onmouseout="this.style.background='transparent'">Full Name</div>
                                 <div onclick="window._insertVarIntoSnippet('{{solicitor_name}}')" style="padding:12px 16px; font-size:14px; color:var(--text-main); cursor:pointer; border-bottom:1px solid var(--border-light); font-weight:600;" onmouseover="this.style.background='var(--primary-light)'" onmouseout="this.style.background='transparent'">Solicitor Name</div>
-                                <div onclick="window._insertVarIntoSnippet('{{phone}}')" style="padding:12px 16px; font-size:14px; color:var(--text-main); cursor:pointer; font-weight:600;" onmouseover="this.style.background='var(--primary-light)'" onmouseout="this.style.background='transparent'">Phone Number</div>
+                                <div onclick="window._insertVarIntoSnippet('{{phone}}')" style="padding:12px 16px; font-size:14px; color:var(--text-main); cursor:pointer; border-bottom:1px solid var(--border-light); font-weight:600;" onmouseover="this.style.background='var(--primary-light)'" onmouseout="this.style.background='transparent'">Phone Number</div>
+                                
+                                <div style="padding:12px 16px; font-size:11px; font-weight:800; color:var(--text-light); background:var(--bg-surface-2); text-transform:uppercase; letter-spacing:1px;">Admin Details</div>
+                                <div onclick="window._insertVarIntoSnippet('{{user_name}}')" style="padding:12px 16px; font-size:14px; color:var(--text-main); cursor:pointer; border-bottom:1px solid var(--border-light); font-weight:600;" onmouseover="this.style.background='var(--primary-light)'" onmouseout="this.style.background='transparent'">Your Name</div>
+                                <div onclick="window._insertVarIntoSnippet('{{user_email}}')" style="padding:12px 16px; font-size:14px; color:var(--text-main); cursor:pointer; border-bottom:1px solid var(--border-light); font-weight:600;" onmouseover="this.style.background='var(--primary-light)'" onmouseout="this.style.background='transparent'">Your Email</div>
+                                <div onclick="window._insertVarIntoSnippet('{{user_phone}}')" style="padding:12px 16px; font-size:14px; color:var(--text-main); cursor:pointer; font-weight:600;" onmouseover="this.style.background='var(--primary-light)'" onmouseout="this.style.background='transparent'">Your Phone</div>
                             </div>
                         </div>
                     </div>
@@ -3956,17 +3843,7 @@ window._insertVarIntoSnippet = function (variable) {
     if (document.getElementById('snippetVarDrop')) document.getElementById('snippetVarDrop').style.display = 'none';
 };
 
-window._insertVarIntoSnippet = function (variable) {
-    var ta = document.getElementById('newSnippetContent');
-    if (!ta) return;
-    var start = ta.selectionStart;
-    var end = ta.selectionEnd;
-    var val = ta.value;
-    ta.value = val.substring(0, start) + variable + val.substring(end);
-    document.getElementById('snippetVarDrop').style.display = 'none';
-    ta.focus();
-    ta.setSelectionRange(start + variable.length, start + variable.length);
-};
+
 
 window._saveNewSnippet = async function (editId) {
     var title = document.getElementById('newSnippetTitle')?.value?.trim();
@@ -4012,24 +3889,7 @@ window._deleteSnippet = function (snippetId) {
     window._showDeleteConfirmModal('snippet', s.id, s.title);
 };
 
-window._useSnippetInChat = function (snippetId) {
-    var s = window._snippetStore.snippets.find(function (x) { return x.id === snippetId; });
-    if (!s) return;
-    document.getElementById('modalOverlay').style.display = 'none';
-    window.insertSnippet(s.content);
-};
 
-window._sendSnippetNow = function (snippetId) {
-    var s = window._snippetStore.snippets.find(function (x) { return x.id === snippetId; });
-    if (!s) return;
-    document.getElementById('modalOverlay').style.display = 'none';
-    var parsed = window._parseLiquidTags(s.content);
-    var input = document.getElementById('commInputMessage');
-    if (input) {
-        input.value = parsed;
-        window.sendCommSms();
-    }
-};
 
 /* ═══════════════════════════════════════
    EMOJI PICKER (Cursor-Aware Insertion)
