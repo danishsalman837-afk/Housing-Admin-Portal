@@ -3247,7 +3247,7 @@ select.status-pill {
 
 /* Full page view adjustments */
 /* Full page view adjustments - TRUE FULL WINDOW FLOW */
-#templatesView.view-container {
+#templatesView.view-container.active {
     background: var(--bg-main) !important; /* Slightly darker/different background for the "stage" */
     padding: 32px 40px !important;
     display: flex !important;
