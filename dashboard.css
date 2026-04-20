@@ -1127,8 +1127,10 @@ select.status-pill {
 
     /* Communication Hub Fix - SINGLE PANE visibility */
     .comm-hub-layout {
-        display: block !important;
+        display: flex !important;
+        flex-direction: column !important;
         height: auto !important;
+        min-height: calc(100vh - 180px) !important;
     }
     
     .comm-main, .chat-welcome {
@@ -1137,11 +1139,23 @@ select.status-pill {
 
     /* If a chat is NOT selected */
     .comm-hub-layout:not(.active-chat) .comm-sidebar {
-        display: block !important;
+        display: flex !important;
+        flex-direction: column !important;
         width: 100% !important;
+        height: 100% !important;
+        flex: 1 1 auto !important;
+        min-height: 60vh !important;
     }
+    
     .comm-hub-layout:not(.active-chat) .comm-main {
         display: none !important;
+    }
+
+    /* Internal List Fix */
+    .comm-list {
+        flex: 1 !important;
+        overflow-y: auto !important;
+        padding-bottom: 40px !important;
     }
     
     /* If a chat IS selected */
@@ -1151,6 +1165,8 @@ select.status-pill {
     .comm-hub-layout.active-chat .comm-main {
         display: flex !important;
         width: 100% !important;
+        height: 100% !important;
+        flex: 1 1 auto !important;
     }
 
     .comm-back-btn {
