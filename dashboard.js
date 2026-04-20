@@ -3509,7 +3509,7 @@ window._renderSnippetModal = function (customFullPageCheck) {
                 </div>
             </div>
             <div class="hub-scroll-area" style="padding: 24px 40px;">
-                <div class="hub-table-wrapper" style="background: var(--bg-surface); border-radius: 16px; border: 1px solid var(--border-light); overflow: hidden; box-shadow: var(--shadow-sm);">
+                <div class="table-responsive" style="background: var(--bg-surface); border-radius: 16px; border: 1px solid var(--border-light); overflow: hidden; box-shadow: var(--shadow-sm);">
                     <table class="hub-table" style="width: 100%; border-collapse: collapse;">
                         <thead>
                             <tr style="background: var(--bg-surface-2);">

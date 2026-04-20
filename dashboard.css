@@ -178,8 +178,16 @@
 ═══════════════════════════════════════ */
 *, *::before, *::after {
     margin: 0; padding: 0;
-    box-sizing: border-box;
+    box-sizing: border-box !important;
     -webkit-font-smoothing: antialiased;
+}
+
+html, body {
+    overflow-x: hidden !important;
+    width: 100% !important;
+    position: relative !important;
+    margin: 0;
+    padding: 0;
 }
 
 body {
@@ -808,8 +816,10 @@ body {
 
 /* Table Design */
 .table-responsive {
-    width: 100%;
-    overflow-x: auto;
+    width: 100% !important;
+    overflow-x: auto !important;
+    display: block !important;
+    -webkit-overflow-scrolling: touch;
 }
 
 table {
@@ -1085,28 +1095,112 @@ select.status-pill {
 }
 
 /* ═══════════════════════════════════════
-   SCROLLBAR & UTILS
-═══════════════════════════════════════/* SCROLLBAR & UTILS */
-::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-track { background: rgba(0,0,0,0.02); }
-::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 99px; border: 2px solid transparent; background-clip: content-box; }
-::-webkit-scrollbar-thumb:hover { background: var(--text-muted); border: 2px solid transparent; background-clip: content-box; }
+   RESPONSIVE ARCHITECTURE (STRICT)
+═══════════════════════════════════════ */
 
-/* Responsive adjustments */
+/* Module-Specific Stacking Protocol (< 1024px) */
 @media (max-width: 1024px) {
-    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    /* Global Layout Overrides */
+    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
     .dashboard-grid { grid-template-columns: 1fr; }
     .chart-card.col-span-2 { grid-column: span 1; }
+    
+    /* Navigation Overlay Logic */
+    #sidebar {
+        position: fixed !important;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 260px !important;
+        z-index: 10001 !important;
+        transform: translateX(-100%) !important;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 20px 0 50px rgba(0,0,0,0.1);
+    }
+    
+    #sidebar.mobile-active {
+        transform: translateX(0) !important;
+    }
+
+    /* Communication Hub Stacking */
+    .comm-hub-layout {
+        flex-direction: column !important;
+        height: auto !important;
+        min-height: calc(100vh - 100px);
+    }
+    
+    .comm-sidebar {
+        width: 100% !important;
+        height: 35vh !important;
+        border-right: none !important;
+        border-bottom: 1px solid var(--border-light);
+    }
+    
+    .comm-main {
+        flex: 1 !important;
+        height: 65vh !important;
+    }
+    
+    .msg-bubble {
+        max-width: 85% !important;
+    }
+
+    /* Template Library Stacking */
+    .snippet-hubspot-container {
+        flex-direction: column !important;
+    }
+    
+    .hub-sidebar {
+        width: 100% !important;
+        height: auto !important;
+        border-right: none !important;
+        border-bottom: 1px solid var(--border-light);
+    }
+    
+    .hub-main {
+        width: 100% !important;
+    }
+
+    /* Settings Page Stacking */
+    .settings-main-grid {
+        grid-template-columns: 1fr !important;
+        gap: 20px !important;
+    }
+    
+    .settings-sidebar {
+        position: static !important;
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: row !important;
+        overflow-x: auto !important;
+        padding-bottom: 8px;
+    }
+    
+    .settings-nav-item {
+        white-space: nowrap !important;
+        width: auto !important;
+    }
+    
+    .settings-form-group input,
+    .settings-form-group select,
+    .settings-form-group textarea {
+        width: 100% !important;
+    }
 }
 
 @media (max-width: 768px) {
-    :root { --sidebar-w: 0px; }
-    #sidebar { position: fixed; inset: 0; transform: translateX(-100%); width: 260px; z-index: 100; }
-    #sidebar.mobile-open { transform: translateX(0); }
+    .stats-grid { grid-template-columns: 1fr; }
     .topbar { padding: 0 16px; }
     .view-container { padding: 16px; }
-    .form-grid { grid-template-columns: 1fr; }
-    .form-group.full { grid-column: span 1; }
+    .form-grid { grid-template-columns: 1fr !important; }
+    .form-group.full { grid-column: span 1 !important; }
+    
+    /* Login/Sign-in Responsive */
+    .auth-card, .glass-card {
+        width: 92% !important;
+        max-width: 420px !important;
+        margin: 0 auto;
+    }
 }
 
 
