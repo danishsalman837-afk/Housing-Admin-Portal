@@ -3113,6 +3113,10 @@ window.selectCommContact = function (leadId) {
 
     activeChatLeadId = leadId;
 
+    // Single-pane toggle for mobile
+    const layout = document.querySelector('.comm-hub-layout');
+    if (layout) layout.classList.add('chat-active');
+
     const avatarEl = document.getElementById('activeCommAvatar');
     const nameEl = document.getElementById('activeCommName');
     const statusEl = document.getElementById('activeCommStatus');
@@ -3501,6 +3505,9 @@ window._renderSnippetModal = function (customFullPageCheck) {
             <div class="hub-header" style="padding: 32px 40px; border-bottom: 1px solid var(--border-light); background: var(--bg-surface);">
                 <div class="hub-header-top" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                     <div style="display:flex; align-items:center; gap:16px;">
+                        <button class="hub-folder-back" title="Back to Folders" onclick="document.querySelector('.snippet-hubspot-container').classList.remove('folder-selected')" style="display:none; background:none; border:none; color:var(--text-main); margin-right:8px; cursor:pointer;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                        </button>
                         ${isFullPageView ? '' : `
                         <button class="hub-back-arrow" title="Back to Chat" onclick="document.getElementById('modalOverlay').style.display='none'" style="background: var(--bg-surface-2); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;">
                             <svg style="width:20px; height:20px; fill: var(--text-muted);" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
@@ -3586,6 +3593,11 @@ window._toggleSnippetMenu = function (e, id) {
 
 window._selectSnippetFolder = function (folderId) {
     window._activeSnippetFolder = folderId;
+
+    // Single-pane toggle for mobile
+    const container = document.querySelector('.snippet-hubspot-container');
+    if (container) container.classList.add('folder-selected');
+
     // Check if we are in full page view or modal
     const isFullPage = document.getElementById('templatesView').classList.contains('active');
     window._renderSnippetModal(isFullPage);

@@ -247,7 +247,7 @@
             }
 
             #sidebar.collapsed {
-                width: 72px !important;
+                width: 70px !important;
             }
 
             #sidebar.collapsed .logo-text,
@@ -3785,6 +3785,9 @@
                 <div class="comm-main">
                     <div id="activeCommHeader" class="comm-main-header">
                         <div class="comm-header-user">
+                            <button class="comm-back-btn" onclick="document.querySelector('.comm-hub-layout').classList.remove('chat-active')" style="display:none; background:none; border:none; color:var(--text-main); margin-right:12px; cursor:pointer;">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                            </button>
                             <div class="comm-avatar" id="activeCommAvatar">?</div>
                             <div class="comm-header-info">
                                 <div class="comm-header-row">
