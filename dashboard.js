@@ -3941,6 +3941,68 @@ window.insertEmoji = function (emoji) {
 };
 
 /* ═══════════════════════════════════════
+   SNIPPET PICKER (Restored)
+═══════════════════════════════════════ */
+window.toggleSnippetPicker = function (event) {
+    var existing = document.getElementById('snippetFullPicker');
+    if (existing) {
+        existing.remove();
+        return;
+    }
+
+    var snippets = (window._snippetStore && window._snippetStore.snippets) || [];
+    if (snippets.length === 0) {
+        showNotification('No templates found. Go to Template Library to create one.', 'info');
+        return;
+    }
+
+    var picker = document.createElement('div');
+    picker.id = 'snippetFullPicker';
+    picker.className = 'snippets-menu'; // Using existing CSS class
+    picker.style.position = 'absolute';
+    picker.style.bottom = 'calc(100% + 12px)';
+    picker.style.left = '0';
+    picker.style.maxHeight = '300px';
+    picker.style.overflowY = 'auto';
+
+    var html = `
+        <div style="padding:12px 16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; background:var(--surface-2);">
+            <span style="font-size:12px; font-weight:800; text-transform:uppercase; color:var(--label-3);">Insert Template</span>
+            <button onclick="document.getElementById('snippetFullPicker').remove()" style="background:none; border:none; cursor:pointer; font-size:16px; color:var(--label-4);">&times;</button>
+        </div>
+    `;
+
+    snippets.forEach(function (s) {
+        var escapedContent = s.content.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        html += '<div class="snippet-item" onclick="window.insertSnippet(\'' + escapedContent + '\')">' + s.title + '</div>';
+    });
+
+    picker.innerHTML = html;
+    document.getElementById('commInputArea').appendChild(picker);
+};
+
+window.insertSnippet = function (text) {
+    var input = document.getElementById('commInputMessage');
+    if (input) {
+        var start = input.selectionStart || input.value.length;
+        var end = input.selectionEnd || input.value.length;
+        var before = input.value.substring(0, start);
+        var after = input.value.substring(end);
+        input.value = before + text + after;
+        input.focus();
+        var newPos = start + text.length;
+        input.setSelectionRange(newPos, newPos);
+        
+        // Trigger auto-expand if available
+        if (window.autoExpandCommInput) {
+            window.autoExpandCommInput(input);
+        }
+    }
+    var picker = document.getElementById('snippetFullPicker');
+    if (picker) picker.remove();
+};
+
+/* ═══════════════════════════════════════
    FILE ATTACHMENT
 ═══════════════════════════════════════ */
 window.handleCommAttachment = function (e) {
