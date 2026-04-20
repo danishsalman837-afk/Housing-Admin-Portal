@@ -61,7 +61,7 @@ const leadViewOrder = [
     'damp', 'dampLocation', 'dampRooms', 'dampSurface', 'dampDuration', 'dampCause', 'dampDamage', 'dampHealth',
     'leak', 'leakLocation', 'leakSource', 'leakStart', 'leakDamage', 'leakCracks', 'leakBelongings',
     'issues_electrics', 'issues_heating', 'issues_structural',
-    'alreadySubmitted', 'reported', 
+    'alreadySubmitted', 'reported',
     'reportCount', 'reportFirst', 'reportLast', 'reportResponse', 'reportAttempt', 'reportStatus',
     'arrears', 'arrearsAmount', 'additionalNotes', 'agentName'
 ];
@@ -110,7 +110,7 @@ const leadFieldLabels = {
 
 window.switchView = function (view) {
     console.log("Switching to view:", view);
-    
+
     // Toggle sidebar for mobile
     const sidebar = document.getElementById('sidebar');
     if (sidebar) sidebar.classList.remove('mobile-active');
@@ -696,7 +696,7 @@ function formatDob(val) {
 
 window.openViewModal = function (id, showOriginal = false) {
     console.log("[Modal] Attempting to open lead:", id, "Original View:", showOriginal);
-    
+
     const overlay = document.getElementById('modalOverlay');
     const modalBox = document.getElementById('modalBox');
 
@@ -736,10 +736,10 @@ window.openViewModal = function (id, showOriginal = false) {
             } else {
                 titlePrefix = "Original Submission (No Backup Found)";
             }
-            
+
             if (!leadData.id) leadData.id = s.id;
             if (!leadData.attachments) leadData.attachments = s.attachments || [];
-            
+
             const agentName = s.agent_name || s.agentName || (s.agent_data && (s.agent_data.agentName || s.agent_data.agent_name || s.agent_data.dialler || s.agent_data.Dialler || s.agent_data.agent)) || s.dialler || s.Dialler || s.agent;
             if (agentName) titlePrefix += ` — Agent: ${agentName}`;
         }
@@ -2166,7 +2166,7 @@ function initRealtimeSubscription() {
     }, 10000); // Poll every 10 seconds
 }
 
-window.showNotification = function(message, type = 'info') {
+window.showNotification = function (message, type = 'info') {
     let title = 'Notification';
     if (type === 'success') title = 'Success';
     else if (type === 'error' || type === 'danger') title = 'Error';
@@ -2237,7 +2237,7 @@ async function initUser() {
                     user.user_metadata.full_name = data.profile.username || data.profile.full_name;
                     user.user_metadata.username = data.profile.username;
                     user.user_metadata.avatar_url = data.profile.avatar_url;
-                    
+
                     session.user = user;
                     localStorage.setItem('admin_session', JSON.stringify(session));
                 }
@@ -2533,7 +2533,7 @@ window.saveProfileSettings = async function () {
 
         // Update local session
         session.user = result.user;
-        
+
         // Ensure metadata is consistent in the local session object
         if (!session.user.user_metadata) session.user.user_metadata = {};
         session.user.user_metadata.full_name = fullName;
@@ -2678,13 +2678,13 @@ window.selectChatContact = async function (leadId, name, phone) {
 
     const activeCommNameEl = document.getElementById('activeCommName');
     if (activeCommNameEl) activeCommNameEl.innerText = name;
-    
+
     const activeCommStatusEl = document.getElementById('activeCommStatus');
     if (activeCommStatusEl) activeCommStatusEl.innerText = phone || 'online';
-    
+
     const activeCommAvatarEl = document.getElementById('activeCommAvatar');
     if (activeCommAvatarEl) activeCommAvatarEl.innerText = name.charAt(0);
-    
+
     const commInputAreaEl = document.getElementById('commInputArea');
     if (commInputAreaEl) commInputAreaEl.style.display = 'flex';
 
@@ -2723,7 +2723,7 @@ function renderMessages() {
         const side = m.direction === 'inbound' ? 'inbound' : 'outbound';
         const sender = m.direction === 'inbound' ? 'Client' : 'You (Admin)';
         const checkmarks = m.direction === 'outbound' ? (m.status === 'read' ? ' <span style="color:#34B7F1;">✓✓</span>' : ' ✓') : '';
-        
+
         return `
             <div class="msg-bubble ${side}">
                 <div class="msg-sender-label">${sender}</div>
@@ -2832,10 +2832,10 @@ window.toggleDialer = function (number = null) {
         const input = document.getElementById('dialerInput');
         if (input) {
             // Clean the input (it might contain "No Phone" or "Select Lead")
-            const cleanNum = (number && !number.includes(':') && !number.toLowerCase().includes('lead') && !number.toLowerCase().includes('phone')) 
-                ? number.trim() 
+            const cleanNum = (number && !number.includes(':') && !number.toLowerCase().includes('lead') && !number.toLowerCase().includes('phone'))
+                ? number.trim()
                 : '';
-            
+
             if (cleanNum) {
                 input.value = cleanNum;
                 onDialerInputChange();
@@ -2877,16 +2877,16 @@ window.onDialerInputChange = function () {
     const input = document.getElementById('dialerInput');
     if (!input) return;
     const number = input.value.trim();
-    const nameDisplay  = document.getElementById('dialerLeadName');
+    const nameDisplay = document.getElementById('dialerLeadName');
     const statusDisplay = document.getElementById('dialerLeadStatus');
-    const statusDot    = document.getElementById('dialerStatusDot');
-    const avatarEl     = document.getElementById('dialerAvatar');
+    const statusDot = document.getElementById('dialerStatusDot');
+    const avatarEl = document.getElementById('dialerAvatar');
 
     if (!number) {
-        if (nameDisplay)  { nameDisplay.innerText = 'Ready to Dial'; nameDisplay.style.color = ''; }
-        if (statusDisplay)  statusDisplay.innerText = 'Not in CRM';
-        if (statusDot)      statusDot.style.background = 'var(--text-muted)';
-        if (avatarEl)       avatarEl.innerText = '?';
+        if (nameDisplay) { nameDisplay.innerText = 'Ready to Dial'; nameDisplay.style.color = ''; }
+        if (statusDisplay) statusDisplay.innerText = 'Not in CRM';
+        if (statusDot) statusDot.style.background = 'var(--text-muted)';
+        if (avatarEl) avatarEl.innerText = '?';
         avatarEl.style.background = '';
         return;
     }
@@ -2900,11 +2900,11 @@ window.onDialerInputChange = function () {
     });
 
     if (matchedLead) {
-        const leadName   = matchedLead.name || matchedLead.first_name || 'Matched Lead';
+        const leadName = matchedLead.name || matchedLead.first_name || 'Matched Lead';
         const leadStatus = matchedLead.leadStatus || 'New Lead';
 
-        if (nameDisplay)  { nameDisplay.innerText = leadName; nameDisplay.style.color = 'var(--primary)'; }
-        if (statusDisplay)  statusDisplay.innerText = leadStatus;
+        if (nameDisplay) { nameDisplay.innerText = leadName; nameDisplay.style.color = 'var(--primary)'; }
+        if (statusDisplay) statusDisplay.innerText = leadStatus;
 
         // Colour the dot by status
         const dotColours = {
@@ -2923,10 +2923,10 @@ window.onDialerInputChange = function () {
             avatarEl.style.background = 'linear-gradient(135deg, var(--primary) 0%, #818CF8 100%)';
         }
     } else {
-        if (nameDisplay)  { nameDisplay.innerText = 'Unknown Number'; nameDisplay.style.color = ''; }
-        if (statusDisplay)  statusDisplay.innerText = 'Not in CRM';
-        if (statusDot)      statusDot.style.background = '#8E8E93';
-        if (avatarEl)     { avatarEl.innerText = '#'; avatarEl.style.background = ''; }
+        if (nameDisplay) { nameDisplay.innerText = 'Unknown Number'; nameDisplay.style.color = ''; }
+        if (statusDisplay) statusDisplay.innerText = 'Not in CRM';
+        if (statusDot) statusDot.style.background = '#8E8E93';
+        if (avatarEl) { avatarEl.innerText = '#'; avatarEl.style.background = ''; }
     }
 };
 
@@ -2934,7 +2934,7 @@ window.startCall = function () {
     const dInput = document.getElementById('dialerInput');
     const dName = document.getElementById('dialerLeadName');
     if (!dInput || !dName) return;
-    
+
     const number = dInput.value;
     const name = dName.innerText;
 
@@ -3004,7 +3004,7 @@ async function _saveSnippetStore(type, data) {
     } catch (err) {
         console.error("Supabase sync failed:", err);
     }
-    
+
     localStorage.setItem('commSnippetStore', JSON.stringify(window._snippetStore));
 }
 
@@ -3023,7 +3023,7 @@ async function _loadSnippetsFromSupabase() {
 /* ═══════════════════════════════════════
    THREAD LIST — Real Data
 ═══════════════════════════════════════ */
-window.renderCommThreads = function() {
+window.renderCommThreads = function () {
     const threadList = document.getElementById('commThreadList');
     if (!threadList) return;
 
@@ -3044,7 +3044,7 @@ window.renderCommThreads = function() {
         const leadName = lead.name || ((lead.first_name || '') + ' ' + (lead.last_name || '')).trim() || 'Unknown Lead';
         const lastMsg = lead.last_message || 'No messages yet';
         const phone = lead.phone || lead.mobile_number || '';
-        
+
         // Tag based on real status
         let tagHtml = '';
         const st = (lead.status || '').toLowerCase();
@@ -3071,7 +3071,7 @@ window.renderCommThreads = function() {
 /* ═══════════════════════════════════════
    SEARCH & FILTER
 ═══════════════════════════════════════ */
-window.filterCommThreads = function() {
+window.filterCommThreads = function () {
     const qNode = document.getElementById('commSearchInput');
     if (!qNode) return;
     const q = qNode.value.toLowerCase();
@@ -3083,7 +3083,7 @@ window.filterCommThreads = function() {
     });
 };
 
-window.setCommFilter = function(btn, filterType) {
+window.setCommFilter = function (btn, filterType) {
     document.querySelectorAll('.comm-filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     // For now surface all — extend when unread/needs_action data exists 
@@ -3094,7 +3094,7 @@ window.setCommFilter = function(btn, filterType) {
 /* ═══════════════════════════════════════
    SELECT CONTACT — Header + Messages
 ═══════════════════════════════════════ */
-window.selectCommContact = function(leadId) {
+window.selectCommContact = function (leadId) {
     const lead = submissionsData.find(l => String(l.id) === String(leadId));
     if (!lead) return;
 
@@ -3103,14 +3103,14 @@ window.selectCommContact = function(leadId) {
     const avatarEl = document.getElementById('activeCommAvatar');
     const nameEl = document.getElementById('activeCommName');
     const statusEl = document.getElementById('activeCommStatus');
-    
+
     const leadName = lead.name || ((lead.first_name || '') + ' ' + (lead.last_name || '')).trim() || 'Unnamed Lead';
     const leadPhone = lead.phone || lead.mobile_number || 'No Phone';
 
     if (avatarEl) avatarEl.innerText = leadName.charAt(0).toUpperCase();
     if (nameEl) nameEl.innerText = leadName;
     if (statusEl) statusEl.innerText = leadPhone;
-    
+
     // Show Input Area
     const inputArea = document.getElementById('commInputArea');
     if (inputArea) inputArea.style.display = 'flex';
@@ -3144,23 +3144,23 @@ window.selectCommContact = function(leadId) {
 /* ═══════════════════════════════════════
    SEND MESSAGE
 ═══════════════════════════════════════ */
-window.handleCommKeydown = function(e) {
+window.handleCommKeydown = function (e) {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         window.sendCommSms();
     }
 };
 
-window.autoExpandCommInput = function(el) {
+window.autoExpandCommInput = function (el) {
     el.style.height = 'auto';
     el.style.height = (el.scrollHeight) + 'px';
 };
 
-window._getCurrentTime = function() {
+window._getCurrentTime = function () {
     return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
 
-window.sendCommSms = function() {
+window.sendCommSms = function () {
     const input = document.getElementById('commInputMessage');
     if (!input) return;
     const msgTemplate = input.value.trim();
@@ -3171,51 +3171,51 @@ window.sendCommSms = function() {
 
     const msgContainer = document.getElementById('commMessages');
     if (!msgContainer) return;
-    
+
     const singleCheck = '<span class="msg-status-icon"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>';
     const doubleCheck = '<span class="msg-status-icon" title="Read"><svg viewBox="0 0 24 24"><path d="M18 7l-1.41-1.41-6.34 6.34 1.41 1.41L18 7zm4.24-1.41L11.66 16.17 7.48 12l-1.41 1.41L11.66 19l12-12-1.42-1.41zM.41 13.41L6 19l1.41-1.41L1.83 12 .41 13.41z"/></svg></span>';
-    
+
     const bubble = document.createElement('div');
     bubble.className = 'msg-bubble outbound';
-    
+
     const senderLabel = document.createElement('div');
     senderLabel.className = 'msg-sender-label';
     senderLabel.innerText = 'You (Admin)';
-    
+
     const msgText = document.createElement('div');
     msgText.innerText = msg; // innerText handles \n with pre-wrap perfectly and is safe
-    
+
     const timeLabel = document.createElement('span');
     timeLabel.className = 'msg-time';
     timeLabel.innerText = 'Sending...';
-    
+
     bubble.appendChild(senderLabel);
     bubble.appendChild(msgText);
     bubble.appendChild(timeLabel);
-    
+
     msgContainer.appendChild(bubble);
-    
+
     // Clear input
     input.value = '';
     input.style.height = 'auto'; // Reset height
     window.autoExpandCommInput(input);
     msgContainer.scrollTop = msgContainer.scrollHeight;
 
-    setTimeout(function() {
+    setTimeout(function () {
         var timeNode = bubble.querySelector('.msg-time');
         const now = window._getCurrentTime();
         if (timeNode) timeNode.innerHTML = now + ' ' + singleCheck;
         showNotification('SMS sent successfully.', 'success');
-        
-        setTimeout(function() {
+
+        setTimeout(function () {
             if (timeNode) timeNode.innerHTML = now + ' ' + doubleCheck;
-            
+
             var typing = document.getElementById('commTyping');
             if (typing) {
                 typing.style.display = 'block';
                 msgContainer.scrollTop = msgContainer.scrollHeight;
-                
-                setTimeout(function() {
+
+                setTimeout(function () {
                     typing.style.display = 'none';
                     const replyTime = window._getCurrentTime();
                     var reply = document.createElement('div');
@@ -3223,15 +3223,15 @@ window.sendCommSms = function() {
                     reply.innerHTML = '<div class="msg-sender-label">Client</div>' + 'Okay, received. Thank you! <span class="msg-time">' + replyTime + '</span>';
                     msgContainer.appendChild(reply);
                     msgContainer.scrollTop = msgContainer.scrollHeight;
-                    
+
                     try {
                         var audio = new Audio('https://notifications.google.com/sounds/v1/ui/message_notification.ogg');
                         // Fallback to mp3 if ogg fails or just catch the play error
                         audio.volume = 0.5;
-                        audio.play().catch(function(e) { 
-                            console.warn("[CommHub] Audio playback skipped:", e.message); 
+                        audio.play().catch(function (e) {
+                            console.warn("[CommHub] Audio playback skipped:", e.message);
                         });
-                    } catch(e) { }
+                    } catch (e) { }
                 }, 2500);
             }
         }, 3000);
@@ -3241,10 +3241,10 @@ window.sendCommSms = function() {
 /* ═══════════════════════════════════════
    LIQUID TAG PARSER (Regex Engine)
 ═══════════════════════════════════════ */
-window._parseLiquidTags = function(template) {
+window._parseLiquidTags = function (template) {
     if (!template) return '';
     if (!activeChatLeadId) return template;
-    var lead = submissionsData.find(function(l) { return String(l.id) === String(activeChatLeadId); });
+    var lead = submissionsData.find(function (l) { return String(l.id) === String(activeChatLeadId); });
     if (!lead) return template;
 
     // Enhanced name detection
@@ -3266,13 +3266,13 @@ window._parseLiquidTags = function(template) {
 
     var solicitorFirm = 'your solicitor';
     if (lead.assigned_company_id && companiesData.length > 0) {
-        var comp = companiesData.find(function(c) { return String(c.id) === String(lead.assigned_company_id); });
+        var comp = companiesData.find(function (c) { return String(c.id) === String(lead.assigned_company_id); });
         if (comp) solicitorFirm = comp.company_name || comp.name || 'your solicitor';
     }
 
     var solicitorName = solicitorFirm;
     if (lead.assigned_solicitor_id && membersData.length > 0) {
-        var member = membersData.find(function(m) { return String(m.id) === String(lead.assigned_solicitor_id); });
+        var member = membersData.find(function (m) { return String(m.id) === String(lead.assigned_solicitor_id); });
         if (member) solicitorName = member.name || solicitorFirm;
     }
 
@@ -3290,7 +3290,7 @@ window._parseLiquidTags = function(template) {
                 phone: sess.user.user_metadata?.phone || sess.user.phone || 'N/A'
             };
         }
-    } catch(e) {}
+    } catch (e) { }
 
     return template
         .replace(/\{\{first_name\}\}/g, firstName)
@@ -3307,7 +3307,7 @@ window._parseLiquidTags = function(template) {
         .replace(/\{\{case_id\}\}/g, lead.id ? ('CASE-' + String(lead.id).substring(0, 6).toUpperCase()) : 'CASE-000');
 };
 
-window.insertSnippet = function(template) {
+window.insertSnippet = function (template) {
     var parsed = window._parseLiquidTags(template);
     var input = document.getElementById('commInputMessage');
     if (input) {
@@ -3353,7 +3353,7 @@ async function _saveSnippetStore(action, payload) {
     }
 }
 
-window.openSnippetManager = async function(isFullPageView = false) {
+window.openSnippetManager = async function (isFullPageView = false) {
     // If not in full page view mode (e.g. triggered from chat), we check for lead session if needed
     if (!isFullPageView && !activeChatLeadId) {
         showNotification('Select a lead first to use snippets within chat', 'error');
@@ -3366,12 +3366,12 @@ window.openSnippetManager = async function(isFullPageView = false) {
     window._renderSnippetModal(isFullPageView);
 };
 
-window._renderSnippetModal = function(customFullPageCheck) {
+window._renderSnippetModal = function (customFullPageCheck) {
     // Auto-detect view state to prevent snapping back to modal layout dynamically
-    var isFullPageView = (typeof customFullPageCheck === 'boolean') 
-        ? customFullPageCheck 
+    var isFullPageView = (typeof customFullPageCheck === 'boolean')
+        ? customFullPageCheck
         : (document.getElementById('templatesView')?.classList.contains('active') || false);
-        
+
     var store = window._snippetStore || { folders: [], snippets: [] };
     var activeId = window._activeSnippetFolder;
     var box;
@@ -3397,7 +3397,7 @@ window._renderSnippetModal = function(customFullPageCheck) {
         box.style.boxShadow = '0 25px 50px -12px rgba(0, 0, 0, 0.25)';
     }
 
-    var folderListHtml = store.folders.map(function(f) {
+    var folderListHtml = store.folders.map(function (f) {
         var isSelected = f.id === activeId;
         var activeCls = isSelected ? 'active' : '';
         return `
@@ -3415,19 +3415,19 @@ window._renderSnippetModal = function(customFullPageCheck) {
             </div>`;
     }).join('');
 
-    var activeFolder = store.folders.find(function(f) { return f.id === activeId; });
-    var folderSnippets = store.snippets.filter(function(s) { 
-        return (s.folder_id || s.folderId) === activeId; 
+    var activeFolder = store.folders.find(function (f) { return f.id === activeId; });
+    var folderSnippets = store.snippets.filter(function (s) {
+        return (s.folder_id || s.folderId) === activeId;
     });
     // Search filtering
     var searchTerm = (window._snippetSearchTerm || '').toLowerCase();
     if (searchTerm) {
-        folderSnippets = folderSnippets.filter(function(s) { 
-            return s.title.toLowerCase().includes(searchTerm) || s.content.toLowerCase().includes(searchTerm); 
+        folderSnippets = folderSnippets.filter(function (s) {
+            return s.title.toLowerCase().includes(searchTerm) || s.content.toLowerCase().includes(searchTerm);
         });
     }
 
-    var snippetRowsHtml = folderSnippets.map(function(s) {
+    var snippetRowsHtml = folderSnippets.map(function (s) {
         const createdDate = s.created_at ? new Date(s.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recently';
         return `
             <tr class="hub-row" onclick="window._selectedSnippetId='${s.id}'; window._renderSnippetModal();" style="border-bottom: 1px solid var(--border-light); transition: background 0.2s;">
@@ -3551,13 +3551,13 @@ window._renderSnippetModal = function(customFullPageCheck) {
 ═══════════════════════════════════════ */
 window._qpCurrentFolderId = null;
 
-window.toggleSnippetQuickPicker = function(e) {
+window.toggleSnippetQuickPicker = function (e) {
     if (e) e.stopPropagation();
     const picker = document.getElementById('snippetQuickPicker');
     if (!picker) return;
-    
+
     const isVisible = picker.classList.contains('active');
-    
+
     if (!isVisible) {
         picker.classList.add('active');
         // If store is empty (e.g. first open after refresh), load first then render
@@ -3575,33 +3575,33 @@ window.toggleSnippetQuickPicker = function(e) {
     }
 };
 
-window._toggleSnippetMenu = function(e, id) {
+window._toggleSnippetMenu = function (e, id) {
     if (e) e.stopPropagation();
     var menu = document.getElementById('menu-' + id);
     if (!menu) return;
-    
+
     var isVisible = menu.classList.contains('active');
-    
-    document.querySelectorAll('.hub-dropdown').forEach(function(m) {
+
+    document.querySelectorAll('.hub-dropdown').forEach(function (m) {
         m.style.display = 'none';
         m.classList.remove('active');
     });
-    
+
     if (!isVisible) {
         menu.style.display = 'block';
         menu.classList.add('active');
     }
 };
 
-window.renderQuickPicker = function() {
+window.renderQuickPicker = function () {
     const qpBody = document.getElementById('qpBody');
     if (!qpBody) return;
-    
+
     const store = window._snippetStore;
     const folderId = window._qpCurrentFolderId;
-    
+
     let html = '';
-    
+
     if (!folderId) {
         // Show folders
         html = store.folders.map(f => `
@@ -3617,7 +3617,7 @@ window.renderQuickPicker = function() {
         // Show snippets in folder
         const folder = store.folders.find(f => f.id === folderId);
         const folderSnippets = store.snippets.filter(s => (s.folder_id || s.folderId) === folderId);
-        
+
         html += `
             <div class="qp-back" onclick="window.qpSelectFolder(null)">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
@@ -3625,56 +3625,56 @@ window.renderQuickPicker = function() {
             </div>
             <div style="padding: 10px 12px; font-size: 11px; font-weight: 800; color: var(--label-4); text-transform: uppercase;">${folder?.name || 'Folder'}</div>
         `;
-        
+
         html += folderSnippets.map(s => `
             <div class="qp-snippet" onclick="window.qpSelectSnippet('${s.id}')">
                 ${s.title}
             </div>
         `).join('');
-        
+
         if (folderSnippets.length === 0) {
             html += `<div style="padding: 20px; text-align: center; color: var(--label-4); font-size: 12px;">No snippets in this folder</div>`;
         }
     }
-    
+
     qpBody.innerHTML = html;
 };
 
-window.qpSelectFolder = function(id) {
+window.qpSelectFolder = function (id) {
     window._qpCurrentFolderId = id;
     window.renderQuickPicker();
 };
 
-window.qpSelectSnippet = function(id) {
+window.qpSelectSnippet = function (id) {
     window._useSnippetInChat(id);
     document.getElementById('snippetQuickPicker').classList.remove('active');
 };
 
-window.filterQuickPicker = function(query) {
+window.filterQuickPicker = function (query) {
     const qpBody = document.getElementById('qpBody');
     if (!query) {
         window._qpCurrentFolderId = null; // Reset to folder view on empty search
         return window.renderQuickPicker();
     }
-    
+
     const store = window._snippetStore;
     const q = query.toLowerCase();
-    
+
     // Search across ALL snippets, regardless of folder
     const matches = store.snippets.filter(s => s.title.toLowerCase().includes(q) || s.content.toLowerCase().includes(q));
-    
+
     let html = `<div style="padding: 10px 12px; font-size: 11px; font-weight: 800; color: var(--label-4); text-transform: uppercase;">Search Results (${matches.length})</div>`;
-    
+
     html += matches.map(s => `
         <div class="qp-snippet" onclick="window.qpSelectSnippet('${s.id}')">
             ${s.title}
         </div>
     `).join('');
-    
+
     if (matches.length === 0) {
         html += `<div style="padding: 20px; text-align: center; color: var(--label-4); font-size: 12px;">No matches found</div>`;
     }
-    
+
     qpBody.innerHTML = html;
 };
 
@@ -3689,18 +3689,18 @@ document.addEventListener('mousedown', (e) => {
     }
 });
 
-window._selectSnippetFolder = function(folderId) {
+window._selectSnippetFolder = function (folderId) {
     window._activeSnippetFolder = folderId;
     // Check if we are in full page view or modal
     const isFullPage = document.getElementById('templatesView').classList.contains('active');
     window._renderSnippetModal(isFullPage);
 };
 
-window._addSnippetFolder = function() {
+window._addSnippetFolder = function () {
     window._showFolderModal();
 };
 
-window._showFolderModal = function(editId = null) {
+window._showFolderModal = function (editId = null) {
     const folder = editId ? window._snippetStore.folders.find(f => f.id === editId) : null;
     const box = document.getElementById('modalBox');
 
@@ -3716,7 +3716,7 @@ window._showFolderModal = function(editId = null) {
     box.style.boxShadow = '0 20px 40px rgba(0,0,0,0.15), 0 10px 10px rgba(0,0,0,0.05)';
     box.style.border = '1px solid var(--border)';
     box.style.margin = 'auto'; // Ensure centering in flex overlay
-    
+
     box.innerHTML = `
         <div style="padding:24px 30px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; background:var(--surface-1);">
             <div style="display:flex; align-items:center; gap:12px;">
@@ -3749,7 +3749,7 @@ window._showFolderModal = function(editId = null) {
     setTimeout(() => document.getElementById('folderNameInput')?.focus(), 50);
 };
 
-window._processFolderSave = async function(editId) {
+window._processFolderSave = async function (editId) {
     const name = document.getElementById('folderNameInput').value.trim();
     if (!name) return showNotification('Folder name is required', 'error');
 
@@ -3770,18 +3770,18 @@ window._processFolderSave = async function(editId) {
     window._renderSnippetModal();
 };
 
-window._editSnippetFolder = function(folderId) {
+window._editSnippetFolder = function (folderId) {
     window._showFolderModal(folderId);
 };
 
-window._deleteSnippetFolder = function(folderId) {
+window._deleteSnippetFolder = function (folderId) {
     const folder = window._snippetStore.folders.find(f => f.id === folderId);
     if (!folder) return;
-    
+
     window._showDeleteConfirmModal('folder', folder.id, folder.name);
 };
 
-window._showDeleteConfirmModal = function(type, id, name) {
+window._showDeleteConfirmModal = function (type, id, name) {
     const box = document.getElementById('modalBox');
     box.className = 'modal-box';
     box.style.display = 'block';
@@ -3793,7 +3793,7 @@ window._showDeleteConfirmModal = function(type, id, name) {
     box.style.boxShadow = '0 25px 50px rgba(0,0,0,0.2)';
     box.style.border = 'none';
     box.style.margin = 'auto'; // Center in flex
-    
+
     box.innerHTML = `
         <div style="padding:40px 30px; text-align:center; background:var(--surface-1); position:relative;">
             <button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'" style="position:absolute; right:20px; top:20px; font-size:20px; opacity:0.3; border:none; background:none; cursor:pointer; color:var(--label-1);">&times;</button>
@@ -3826,7 +3826,7 @@ window._showDeleteConfirmModal = function(type, id, name) {
     document.getElementById('modalOverlay').style.display = 'flex';
 };
 
-window._processDelete = async function(type, id) {
+window._processDelete = async function (type, id) {
     if (type === 'folder') {
         window._snippetStore.snippets = window._snippetStore.snippets.filter(s => (s.folder_id || s.folderId) !== id);
         window._snippetStore.folders = window._snippetStore.folders.filter(f => f.id !== id);
@@ -3843,12 +3843,12 @@ window._processDelete = async function(type, id) {
     window._renderSnippetModal();
 };
 
-window._showCreateSnippet = function(editId) {
+window._showCreateSnippet = function (editId) {
     if (!window._activeSnippetFolder) { showNotification('Select a folder first', 'error'); return; }
     var folderId = window._activeSnippetFolder;
     var folder = window._snippetStore.folders.find(f => f.id === folderId);
-    
-    var existing = editId ? window._snippetStore.snippets.find(function(x) { return x.id === editId; }) : null;
+
+    var existing = editId ? window._snippetStore.snippets.find(function (x) { return x.id === editId; }) : null;
     var box = document.getElementById('modalBox');
     box.className = 'modal-box';
     box.style.display = 'block';
@@ -3924,7 +3924,7 @@ window._showCreateSnippet = function(editId) {
     var charCount = document.getElementById('snippetCharCount');
     var previewContent = document.getElementById('snippetPreviewContent');
 
-    ta.addEventListener('input', function() {
+    ta.addEventListener('input', function () {
         var val = this.value;
         charCount.innerText = val.length + ' characters';
         var parsed = window._parseLiquidTags(val);
@@ -3942,7 +3942,7 @@ window._showCreateSnippet = function(editId) {
     document.getElementById('modalOverlay').style.display = 'flex';
 };
 
-window._insertVarIntoSnippet = function(variable) {
+window._insertVarIntoSnippet = function (variable) {
     var ta = document.getElementById('newSnippetContent');
     if (!ta) return;
     var start = ta.selectionStart;
@@ -3956,7 +3956,7 @@ window._insertVarIntoSnippet = function(variable) {
     if (document.getElementById('snippetVarDrop')) document.getElementById('snippetVarDrop').style.display = 'none';
 };
 
-window._insertVarIntoSnippet = function(variable) {
+window._insertVarIntoSnippet = function (variable) {
     var ta = document.getElementById('newSnippetContent');
     if (!ta) return;
     var start = ta.selectionStart;
@@ -3968,14 +3968,14 @@ window._insertVarIntoSnippet = function(variable) {
     ta.setSelectionRange(start + variable.length, start + variable.length);
 };
 
-window._saveNewSnippet = async function(editId) {
+window._saveNewSnippet = async function (editId) {
     var title = document.getElementById('newSnippetTitle')?.value?.trim();
     var content = document.getElementById('newSnippetContent')?.value?.trim();
     if (!title || !content) { showNotification('Title and Content are required', 'error'); return; }
 
     if (editId && editId !== 'undefined' && editId !== '') {
         // Update existing
-        var snippet = window._snippetStore.snippets.find(function(s) { return s.id === editId; });
+        var snippet = window._snippetStore.snippets.find(function (s) { return s.id === editId; });
         if (snippet) {
             snippet.title = title;
             snippet.content = content;
@@ -3996,31 +3996,31 @@ window._saveNewSnippet = async function(editId) {
         window._snippetStore.snippets.push(newSnippet);
         await _saveSnippetStore('snippet_add', newSnippet);
         showNotification('Snippet created!', 'success');
-        
+
         // Ensure modal is closed after creation
         document.getElementById('modalOverlay').style.display = 'none';
         document.getElementById('modalBox').style.display = 'none';
     }
-    
+
     // Refresh the view immediately
     window._renderSnippetModal();
 };
 
-window._deleteSnippet = function(snippetId) {
+window._deleteSnippet = function (snippetId) {
     const s = window._snippetStore.snippets.find(x => x.id === snippetId);
     if (!s) return;
     window._showDeleteConfirmModal('snippet', s.id, s.title);
 };
 
-window._useSnippetInChat = function(snippetId) {
-    var s = window._snippetStore.snippets.find(function(x) { return x.id === snippetId; });
+window._useSnippetInChat = function (snippetId) {
+    var s = window._snippetStore.snippets.find(function (x) { return x.id === snippetId; });
     if (!s) return;
     document.getElementById('modalOverlay').style.display = 'none';
     window.insertSnippet(s.content);
 };
 
-window._sendSnippetNow = function(snippetId) {
-    var s = window._snippetStore.snippets.find(function(x) { return x.id === snippetId; });
+window._sendSnippetNow = function (snippetId) {
+    var s = window._snippetStore.snippets.find(function (x) { return x.id === snippetId; });
     if (!s) return;
     document.getElementById('modalOverlay').style.display = 'none';
     var parsed = window._parseLiquidTags(s.content);
@@ -4034,7 +4034,7 @@ window._sendSnippetNow = function(snippetId) {
 /* ═══════════════════════════════════════
    EMOJI PICKER (Cursor-Aware Insertion)
 ═══════════════════════════════════════ */
-window.toggleEmojiPicker = function() {
+window.toggleEmojiPicker = function () {
     var existing = document.getElementById('emojiFullPicker');
     if (existing) {
         existing.remove();
@@ -4044,12 +4044,12 @@ window.toggleEmojiPicker = function() {
     var picker = document.createElement('div');
     picker.id = 'emojiFullPicker';
     picker.className = 'emoji-full-picker';
-    
+
     var emojis = [
-        '😀','😃','😄','😁','😆','😅','😂','🤣','😊','😇','🙂','🙃','😉','😌','😍','🥰','😘','😗','😙','😚','😋','😛','😝','😜','🤪','🤨','🧐','🤓','😎','🤩','🥳','😏','😒','😞','😔','😟','😕','🙁','☹️','😣','😖','😫','😩','🥺','😢','😭','😤','😠','😡','🤬','🤯','😳','🥵','🥶','😱','😨','😰','😥','😓','🤗','🤔','🤭','🤫','🤥','😶','😐','😑','😬','🙄','😯','😦','😧','😮','😲','🥱','😴','🤤','😪','😵','🤐','🥴','🤢','🤮','🤧','😷','🤒','🤕','🤑','🤠','😈','👿','👹','👺','🤡','👻','💀','☠️','👽','👾','🤖','💩','😺','😸','😻','😼','😽','🙀','😿','😾','🙈','🙉','🙊','💋','💌','💘','💝','💖','💗','💓','💞','💕','💟','❣️','💔','❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💪','🤙','👋','🤚','🖐️','✋','🖖','👌','🤏','✌️','🤞','🤟','🤘','🤙','☝️','👆','👇','👈','👉','🙌','🙏','🤝','👏','👍','👎','👊','✊','🤛','🤜','✨','🔥','✅','❌','⚠️','💰','📍','📞','✉️'
+        '😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🤩', '🥳', '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😣', '😖', '😫', '😩', '🥺', '😢', '😭', '😤', '😠', '😡', '🤬', '🤯', '😳', '🥵', '🥶', '😱', '😨', '😰', '😥', '😓', '🤗', '🤔', '🤭', '🤫', '🤥', '😶', '😐', '😑', '😬', '🙄', '😯', '😦', '😧', '😮', '😲', '🥱', '😴', '🤤', '😪', '😵', '🤐', '🥴', '🤢', '🤮', '🤧', '😷', '🤒', '🤕', '🤑', '🤠', '😈', '👿', '👹', '👺', '🤡', '👻', '💀', '☠️', '👽', '👾', '🤖', '💩', '😺', '😸', '😻', '😼', '😽', '🙀', '😿', '😾', '🙈', '🙉', '🙊', '💋', '💌', '💘', '💝', '💖', '💗', '💓', '💞', '💕', '💟', '❣️', '💔', '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💪', '🤙', '👋', '🤚', '🖐️', '✋', '🖖', '👌', '🤏', '✌️', '🤞', '🤟', '🤘', '🤙', '☝️', '👆', '👇', '👈', '👉', '🙌', '🙏', '🤝', '👏', '👍', '👎', '👊', '✊', '🤛', '🤜', '✨', '🔥', '✅', '❌', '⚠️', '💰', '📍', '📞', '✉️'
     ];
 
-    var emojiHtml = emojis.map(function(e) {
+    var emojiHtml = emojis.map(function (e) {
         return '<div class="emoji-item" onclick="window.insertEmoji(\'' + e + '\')">' + e + '</div>';
     }).join('');
 
@@ -4064,7 +4064,7 @@ window.toggleEmojiPicker = function() {
     document.getElementById('commInputArea').appendChild(picker);
 };
 
-window.insertEmoji = function(emoji) {
+window.insertEmoji = function (emoji) {
     var input = document.getElementById('commInputMessage');
     if (input) {
         var start = input.selectionStart || input.value.length;
@@ -4083,7 +4083,7 @@ window.insertEmoji = function(emoji) {
 /* ═══════════════════════════════════════
    FILE ATTACHMENT
 ═══════════════════════════════════════ */
-window.handleCommAttachment = function(e) {
+window.handleCommAttachment = function (e) {
     if (e.target.files && e.target.files[0]) {
         var file = e.target.files[0];
         showNotification('Attachment added: ' + file.name, 'info');
@@ -4102,7 +4102,7 @@ window.handleCommAttachment = function(e) {
 /* ═══════════════════════════════════════
    SOLICITOR ASSIGNMENT FROM HEADER
 ═══════════════════════════════════════ */
-window.assignSolicitorFromComm = function(solId) {
+window.assignSolicitorFromComm = function (solId) {
     if (!activeChatLeadId || !solId) return;
     showNotification('Solicitor assignment updated.', 'success');
 };
@@ -4114,16 +4114,16 @@ if ("Notification" in window && Notification.permission !== "denied") {
     Notification.requestPermission();
 }
 
-window.receiveLiveMessage = function(msg, senderName) {
+window.receiveLiveMessage = function (msg, senderName) {
     // 1. Alert Sound
     try {
         // Using a more stable direct MP3 link
         var audio = new Audio('https://www.soundjay.com/communication/sounds/beep-07.mp3');
         audio.volume = 0.4;
-        audio.play().catch(function(e) { 
+        audio.play().catch(function (e) {
             console.warn("[CommHub] Notification sound play blocked or failed:", e.message);
         });
-    } catch(e) {
+    } catch (e) {
         console.warn("[CommHub] Audio object creation failed.");
     }
 
@@ -4144,10 +4144,10 @@ window.receiveLiveMessage = function(msg, senderName) {
     }
 };
 
-window.initCommSockets = function() {
+window.initCommSockets = function () {
     console.log('[CommHub] WebSocket listener active.');
     // Simulate incoming message 15s after a contact is selected
-    setTimeout(function() {
+    setTimeout(function () {
         if (activeChatLeadId) {
             window.receiveLiveMessage("Thanks, I've uploaded the documents. Please check.", "Client");
         }
@@ -4160,8 +4160,8 @@ window.initCommSockets();
 // PRELOAD SNIPPETS ON STARTUP
 // Ensures Quick Picker has data immediately after page refresh
 // ═══════════════════════════════════════
-document.addEventListener('DOMContentLoaded', function() {
-    _loadSnippets().then(function() {
+document.addEventListener('DOMContentLoaded', function () {
+    _loadSnippets().then(function () {
         // Auto-select first folder for the Template Library view
         if (!window._activeSnippetFolder && window._snippetStore.folders.length > 0) {
             window._activeSnippetFolder = window._snippetStore.folders[0].id;
