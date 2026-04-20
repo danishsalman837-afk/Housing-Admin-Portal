@@ -3310,17 +3310,6 @@ select.status-pill {
     border-top: none;
 }
 
-@media (max-width: 1024px) {
-    .snippet-hubspot-container.full-page {
-        height: auto;
-        overflow: visible;
-    }
-    
-    .hub-scroll-area {
-        height: auto;
-        min-height: 400px;
-    }
-}
 
 /* Ensure table doesn't overflow container */
 .hub-table-wrapper {
@@ -3330,28 +3319,6 @@ select.status-pill {
 
 .hub-table {
     min-width: 600px;
-}
-
-@media (max-width: 1200px) {
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 640px) {
-    .stats-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .view-container {
-        padding: 16px;
-    }
-    
-    .page-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
-    }
 }
 
 /* Template Library Polishing */
