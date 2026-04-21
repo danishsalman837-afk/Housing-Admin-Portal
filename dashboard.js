@@ -938,34 +938,51 @@ window.openEditLeadModal = function (id) {
             <div class="form-grid" id="editLeadForm" style="display:grid; grid-template-columns: repeat(2, 1fr); gap:20px; max-height:65vh; overflow-y:auto; padding-right:10px;">
                 ${html}
                 
-                <div style="grid-column: span 2; margin-top: 16px; padding: 24px; background: var(--bg-surface-2); border-radius: 20px; border: 1px solid var(--border-light);">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                        <h3 style="font-size:15px; font-weight:800; color:var(--text-main); display:flex; align-items:center; gap:10px; margin:0;">
-                            <div style="background:var(--primary-light); color:var(--primary); width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center;">
+                <div style="grid-column: span 2; margin-top: 24px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                        <h3 style="font-size:15px; font-weight:800; color:var(--label-1); display:flex; align-items:center; gap:10px; margin:0;">
+                            <div style="background:var(--blue-light); color:var(--blue); width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center;">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                             </div>
                             Attachments & Evidence
                         </h3>
-                        <div style="display:flex; align-items:center; gap:12px;">
-                            <div id="uploadStatus" style="font-size:12px; font-weight:700; color:var(--primary);"></div>
-                            <input type="file" id="attachInput" style="display:none;" onchange="window.handleAttachmentUpload('${s.id}', this)" accept="image/*" multiple>
-                            <button class="btn-hub-secondary" style="font-size:12px; height:36px; padding:0 16px; border-radius:10px;" onclick="document.getElementById('attachInput').click()">+ Upload Photos</button>
-                        </div>
                     </div>
+
+                    <!-- Modern Dropzone Component -->
+                    <div id="dropzoneContainer" class="dropzone-container" onclick="document.getElementById('attachInput').click()" 
+                         ondragover="event.preventDefault(); this.classList.add('drag-over');" 
+                         ondragleave="this.classList.remove('drag-over');" 
+                         ondrop="event.preventDefault(); this.classList.remove('drag-over'); window.handleAttachmentUpload('${s.id}', event.dataTransfer)">
+                        
+                        <div class="upload-icon-box">
+                            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        </div>
+                        <div class="dropzone-label">Drag & drop evidence files here</div>
+                        <div class="dropzone-helper">or click to browse. Supports JPG, PNG, PDF (Max 15MB)</div>
+                        
+                        <div style="display: flex; gap: 12px; justify-content: center; margin-top: 4px;">
+                            <button type="button" class="btn-attachment-secondary">+ Upload Photos</button>
+                            <button id="cancelUploadBtn" type="button" class="btn-attachment-cancel" style="display: none;" onclick="event.stopPropagation(); window._cancelUpload()">Cancel Upload</button>
+                        </div>
+                        
+                        <input type="file" id="attachInput" style="display:none;" onchange="window.handleAttachmentUpload('${s.id}', this)" accept="image/*,application/pdf" multiple>
+                    </div>
+
+                    <div id="uploadStatusLine" style="font-size:12px; font-weight:700; color:var(--blue); text-align:center; margin-bottom:16px; min-height:18px;"></div>
                     
-                    <div id="attachmentList" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap:16px;">
+                    <div id="attachmentList" class="thumbnail-grid">
                         ${(s.attachments || []).map((a, i) => `
-                            <div class="attach-item" style="position:relative; background:var(--bg-surface); border:1px solid var(--border-light); border-radius:12px; padding:8px; transition:all 0.2s ease;">
-                                <a href="${a.url}" target="_blank" style="display:block; border-radius:8px; overflow:hidden;">
-                                    <img src="${a.url}" style="width:100%; height:100px; object-fit:cover;">
+                            <div class="thumb-item">
+                                <a href="${a.url}" target="_blank">
+                                    <img src="${a.url}" class="thumb-image">
                                 </a>
-                                <div style="font-size:11px; color:var(--text-muted); font-weight:600; margin-top:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4px;">${a.name}</div>
-                                <button onclick="window.deleteAttachment('${s.id}', ${i})" style="position:absolute; top:-8px; right:-8px; background:#ef4444; color:white; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer; font-size:16px; font-weight:800; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 10px rgba(239,68,68,0.3);">&times;</button>
+                                <button class="remove-thumb-btn" onclick="window.deleteAttachment('${s.id}', ${i})" title="Remove File">&times;</button>
                             </div>
                         `).join('')}
-                        ${(!s.attachments || s.attachments.length === 0) ? '<p style="font-size:13px; color:var(--text-muted); font-style:italic; grid-column:1/-1; text-align:center; padding:30px 0; font-weight:600;">No pictures attached yet.</p>' : ''}
+                        ${(!s.attachments || s.attachments.length === 0) ? '<p style="font-size:13px; color:var(--label-4); font-style:italic; grid-column:1/-1; text-align:center; padding:30px 0; font-weight:600;">No pictures attached yet.</p>' : ''}
                     </div>
                 </div>
+
             </div>
             
             <div style="margin-top:32px; display:flex; justify-content:flex-end; gap:16px;">
@@ -1245,16 +1262,30 @@ window.saveLeadEdits = async function (id) {
 };
 
 // 📎 ATTACHMENT HANDLERS
+window._isUploadingCancelled = false;
+window._cancelUpload = function() {
+    window._isUploadingCancelled = true;
+};
+
 window.handleAttachmentUpload = async function (leadId, input) {
-    const files = Array.from(input.files);
+    const files = input.files ? Array.from(input.files) : (input.dataTransfer ? Array.from(input.dataTransfer.files) : []);
     if (!files || files.length === 0) return;
 
-    const statusEl = document.getElementById('uploadStatus');
+    window._isUploadingCancelled = false;
+    const statusEl = document.getElementById('uploadStatusLine');
+    const cancelBtn = document.getElementById('cancelUploadBtn');
+    
+    if (cancelBtn) cancelBtn.style.display = 'inline-flex';
     let failCount = 0;
 
     for (let i = 0; i < files.length; i++) {
+        if (window._isUploadingCancelled) {
+            showToast('Upload Cancelled', 'Remaining files were not uploaded.', 'warning');
+            break;
+        }
+
         let file = files[i];
-        if (statusEl) statusEl.innerText = `Processing ${i + 1}/${files.length}...`;
+        if (statusEl) statusEl.innerText = `Processing ${i + 1}/${files.length}: ${file.name}`;
 
         try {
             // 🚀 FAST COMPRESSION: Shrink images to bypass Vercel's 4.5MB limit and speed up uploads
@@ -1279,7 +1310,7 @@ window.handleAttachmentUpload = async function (leadId, input) {
                 });
             }
 
-            if (statusEl) statusEl.innerText = `Uploading ${i + 1}/${files.length}...`;
+            if (statusEl) statusEl.innerText = `Uploading ${i + 1}/${files.length}: ${file.name}`;
 
             const base64Promise = new Promise((resolve, reject) => {
                 const r = new FileReader();
@@ -1317,12 +1348,14 @@ window.handleAttachmentUpload = async function (leadId, input) {
         }
     }
 
+    if (cancelBtn) cancelBtn.style.display = 'none';
     if (statusEl) {
-        statusEl.innerText = failCount > 0 ? `Finished with ${failCount} errors` : 'All files uploaded';
+        statusEl.innerText = window._isUploadingCancelled ? 'Upload cancelled' : (failCount > 0 ? `Finished with ${failCount} errors` : 'All files uploaded');
     }
     setTimeout(() => { if (statusEl) statusEl.innerText = ''; }, 3000);
-    input.value = ''; // Clear only at the very end
+    if (input.value) input.value = ''; // Clear file input
 };
+
 
 window.deleteAttachment = async function (leadId, index) {
     // State Sync & Deletion Guardrails
@@ -1367,17 +1400,16 @@ function renderAttachmentList(leadId, attachments) {
     if (!listEl) return;
 
     if (!attachments || attachments.length === 0) {
-        listEl.innerHTML = '<p style="font-size:12px; color:var(--label-4); font-style:italic; grid-column:1/-1; text-align:center; padding:20px 0;">No pictures attached yet.</p>';
+        listEl.innerHTML = '<p style="font-size:13px; color:var(--label-4); font-style:italic; grid-column:1/-1; text-align:center; padding:30px 0; font-weight:600;">No pictures attached yet.</p>';
         return;
     }
 
     listEl.innerHTML = attachments.map((a, i) => `
-        <div class="attach-item" style="position:relative; background:var(--surface-1); border:1px solid var(--border); border-radius:10px; padding:8px; transition:all 0.2s ease; box-shadow:var(--shadow-xs);">
-            <a href="${a.url}" target="_blank" style="display:block;">
-                <img src="${a.url}" style="width:100%; height:90px; object-fit:cover; border-radius:6px; background:var(--surface-2);">
+        <div class="thumb-item">
+            <a href="${a.url}" target="_blank">
+                <img src="${a.url}" class="thumb-image">
             </a>
-            <div style="font-size:10px; color:var(--label-3); margin-top:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4px;">${a.name}</div>
-            <button onclick="window.deleteAttachment('${leadId}', ${i})" style="position:absolute; top:-6px; right:-6px; background:var(--red); color:white; border:none; border-radius:50%; width:22px; height:22px; cursor:pointer; font-size:14px; font-weight:800; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(255,69,58,0.3);">&times;</button>
+            <button class="remove-thumb-btn" onclick="window.deleteAttachment('${leadId}', ${i})" title="Remove File">&times;</button>
         </div>
     `).join('');
 }
