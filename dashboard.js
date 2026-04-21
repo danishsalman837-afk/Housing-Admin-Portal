@@ -946,6 +946,10 @@ window.openEditLeadModal = function (id) {
                             </div>
                             Attachments & Evidence
                         </h3>
+                        <button id="deleteAllBtn" onclick="window.deleteAllAttachments('${s.id}')" style="display: ${s.attachments && s.attachments.length > 0 ? 'flex' : 'none'}; background:none; border:none; color:var(--red); font-size:12px; font-weight:700; cursor:pointer; align-items:center; gap:6px; padding:6px 10px; border-radius:8px; transition:all 0.2s;" onmouseover="this.style.background='var(--red-light)'" onmouseout="this.style.background='transparent'">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            Delete Everything
+                        </button>
                     </div>
 
                     <!-- Modern Dropzone Component -->
@@ -1357,7 +1361,32 @@ window.handleAttachmentUpload = async function (leadId, input) {
 };
 
 
+window.deleteAllAttachments = async function (leadId) {
+    if (!confirm("Are you sure you want to permanently delete ALL pictures for this lead? This action cannot be undone.")) return;
+
+    try {
+        const res = await fetch('/api/attachments?action=delete-all', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ leadId })
+        });
+
+        if (!res.ok) throw new Error('Bulk delete failed');
+
+        const result = await res.json();
+        const lead = submissionsData.find(s => String(s.id) === String(leadId));
+        if (lead) lead.attachments = [];
+
+        renderAttachmentList(leadId, []);
+        showToast('Storage Cleared', 'All attachments have been removed.', 'success');
+    } catch (e) {
+        console.error(e);
+        showToast('Error', 'Failed to delete all attachments.', 'danger');
+    }
+};
+
 window.deleteAttachment = async function (leadId, index) {
+
     // State Sync & Deletion Guardrails
     const lead = submissionsData.find(s => String(s.id) === String(leadId));
     const attachments = (lead && lead.attachments) ? lead.attachments : [];
@@ -1397,9 +1426,15 @@ window.deleteAttachment = async function (leadId, index) {
 
 function renderAttachmentList(leadId, attachments) {
     const listEl = document.getElementById('attachmentList');
+    const deleteBtn = document.getElementById('deleteAllBtn');
     if (!listEl) return;
 
+    if (deleteBtn) {
+        deleteBtn.style.display = (attachments && attachments.length > 0) ? 'flex' : 'none';
+    }
+
     if (!attachments || attachments.length === 0) {
+
         listEl.innerHTML = '<p style="font-size:13px; color:var(--label-4); font-style:italic; grid-column:1/-1; text-align:center; padding:30px 0; font-weight:600;">No pictures attached yet.</p>';
         return;
     }

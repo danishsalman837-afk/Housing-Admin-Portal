@@ -69,7 +69,34 @@ module.exports = async function handler(req, res) {
       return res.status(200).json(updatedLead);
     }
 
+    // ═════════════════════════════════════════════════
+    // ACTION: DELETE ALL
+    // ═════════════════════════════════════════════════
+    if (action === 'delete-all') {
+      const { leadId } = req.body;
+      if (!leadId) return res.status(400).json({ error: "Missing Lead ID" });
+
+      const { data: lead, error: fetchError } = await supabase.from('submissions').select('attachments').eq('id', leadId).single();
+      if (fetchError) return res.status(500).json({ error: fetchError.message });
+
+      const attachments = Array.isArray(lead.attachments) ? lead.attachments : [];
+      if (attachments.length === 0) return res.status(200).json({ attachments: [] });
+
+      // Update DB to empty array
+      const { data: updatedLead, error: updateError } = await supabase.from('submissions').update({ attachments: [] }).eq('id', leadId).select().single();
+      if (updateError) return res.status(500).json({ error: updateError.message });
+
+      // Remove from Storage
+      const paths = attachments.filter(a => a.path).map(a => a.path);
+      if (paths.length > 0) {
+        await supabase.storage.from('leads').remove(paths);
+      }
+
+      return res.status(200).json(updatedLead);
+    }
+
     return res.status(400).json({ error: "Invalid action" });
+
 
   } catch (err) {
     console.error(err);
