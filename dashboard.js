@@ -1249,22 +1249,33 @@ window.handleAttachmentUpload = async function (leadId, input) {
     const files = input.files;
     if (!files || files.length === 0) return;
 
+    // 1. Client-Side Pre-Validation
+    for (let i = 0; i < files.length; i++) {
+        if (files[i].size > 4 * 1024 * 1024) {
+            showToast('File Too Large', `File [${files[i].name}] exceeds the 4MB limit.`, 'warning');
+            input.value = '';
+            return;
+        }
+    }
+
     const statusEl = document.getElementById('uploadStatus');
     const listEl = document.getElementById('attachmentList');
 
     for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        statusEl.innerText = `Uploading ${i + 1}/${files.length}...`;
+        if (statusEl) statusEl.innerText = `Uploading ${i + 1}/${files.length}...`;
 
         try {
             const reader = new FileReader();
-            const base64Promise = new Promise((resolve) => {
+            const base64Promise = new Promise((resolve, reject) => {
                 reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(new Error('FileReader error'));
                 reader.readAsDataURL(file);
             });
 
             const base64Content = await base64Promise;
 
+            // 2. Bulletproof Fetch Handling
             const res = await fetch('/api/upload', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1276,30 +1287,49 @@ window.handleAttachmentUpload = async function (leadId, input) {
                 })
             });
 
-            const result = await res.json();
-            if (!res.ok) throw new Error(result.error || 'Upload failed');
+            if (!res.ok) {
+                if (res.status === 413) throw new Error('File too large for server');
+                let errData;
+                try { errData = await res.json(); } catch (e) { }
+                throw new Error(errData?.error || `Server responded with ${res.status}`);
+            }
 
-            // Update local state
+            const result = await res.json();
+
+            // 3. Update local state
             const lead = submissionsData.find(s => String(s.id) === String(leadId));
             if (lead) lead.attachments = result.attachments;
 
-            // Re-render only the attachment section if modal is still open
             if (document.getElementById('attachmentList')) {
                 renderAttachmentList(leadId, result.attachments);
             }
 
         } catch (e) {
             console.error(e);
+            if (statusEl) statusEl.innerText = 'Upload failed';
             showToast('Upload Error', `Failed to upload ${file.name}: ${e.message}`, 'danger');
+            // Ensure input is cleared on failure to prevent stale state issues
+            input.value = '';
+            return; // Stop further uploads if one fails
         }
     }
 
-    statusEl.innerText = 'All files uploaded';
+    if (statusEl) statusEl.innerText = 'All files uploaded';
     setTimeout(() => { if (statusEl) statusEl.innerText = ''; }, 3000);
     input.value = '';
 };
 
 window.deleteAttachment = async function (leadId, index) {
+    // State Sync & Deletion Guardrails
+    const lead = submissionsData.find(s => String(s.id) === String(leadId));
+    const attachments = (lead && lead.attachments) ? lead.attachments : [];
+    
+    if (index < 0 || index >= attachments.length) {
+        console.error('Invalid index');
+        showToast('Error', 'Invalid attachment reference.', 'danger');
+        return;
+    }
+
     if (!confirm("Are you sure you want to delete this attachment?")) return;
 
     try {
@@ -1309,10 +1339,14 @@ window.deleteAttachment = async function (leadId, index) {
             body: JSON.stringify({ leadId, index })
         });
 
-        const result = await res.json();
-        if (!res.ok) throw new Error(result.error || 'Delete failed');
+        if (!res.ok) {
+            let errData;
+            try { errData = await res.json(); } catch (e) { }
+            throw new Error(errData?.error || 'Delete failed');
+        }
 
-        const lead = submissionsData.find(s => String(s.id) === String(leadId));
+        const result = await res.json();
+        
         if (lead) lead.attachments = result.attachments;
 
         renderAttachmentList(leadId, result.attachments);
@@ -3968,64 +4002,127 @@ window.insertEmoji = function (emoji) {
 /* ═══════════════════════════════════════
    SNIPPET PICKER (Restored)
 ═══════════════════════════════════════ */
-window.toggleSnippetPicker = function (event) {
+window.toggleSnippetPicker = function (event, folderId = null) {
+    if (event) event.stopPropagation();
     var existing = document.getElementById('snippetFullPicker');
-    if (existing) {
+    
+    // If opening from scratch and picker exists, close it
+    if (existing && folderId === null && event) {
         existing.remove();
         return;
     }
 
-    var snippets = (window._snippetStore && window._snippetStore.snippets) || [];
-    if (snippets.length === 0) {
+    var store = window._snippetStore || { folders: [], snippets: [] };
+    
+    // Ensure we have data
+    if (store.snippets.length === 0 && store.folders.length === 0) {
         showNotification('No templates found. Go to Template Library to create one.', 'info');
+        if (existing) existing.remove();
         return;
     }
 
-    var picker = document.createElement('div');
-    picker.id = 'snippetFullPicker';
-    picker.className = 'snippets-menu'; // Using existing CSS class
-    picker.style.position = 'absolute';
-    picker.style.bottom = 'calc(100% + 12px)';
-    picker.style.left = '0';
-    picker.style.maxHeight = '300px';
-    picker.style.overflowY = 'auto';
+    if (!existing) {
+        existing = document.createElement('div');
+        existing.id = 'snippetFullPicker';
+        existing.className = 'snippets-menu';
+        document.getElementById('commInputArea').appendChild(existing);
+    }
 
     var html = `
-        <div style="padding:12px 16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; background:var(--surface-2);">
-            <span style="font-size:12px; font-weight:800; text-transform:uppercase; color:var(--label-3);">Insert Template</span>
-            <button onclick="document.getElementById('snippetFullPicker').remove()" style="background:none; border:none; cursor:pointer; font-size:16px; color:var(--label-4);">&times;</button>
+        <div style="padding:12px 16px; border-bottom:1px solid var(--border-light); display:flex; justify-content:space-between; align-items:center; background:var(--bg-surface-2); position: sticky; top: 0; z-index: 10;">
+            <div style="display:flex; align-items:center; gap:8px;">
+                ${folderId ? `<button onclick="window.toggleSnippetPicker(null, null)" style="background:none; border:none; cursor:pointer; display:flex; align-items:center; color:var(--primary); padding:0; margin-right:4px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button>` : ''}
+                <span style="font-size:12px; font-weight:800; text-transform:uppercase; color:var(--text-muted); letter-spacing:0.5px;">${folderId ? store.folders.find(f => f.id === folderId)?.name : 'Insert Template'}</span>
+            </div>
+            <button onclick="document.getElementById('snippetFullPicker').remove()" style="background:none; border:none; cursor:pointer; font-size:20px; color:var(--text-muted); line-height:1;">&times;</button>
         </div>
+        <div style="max-height: 280px; overflow-y: auto;">
     `;
 
-    snippets.forEach(function (s) {
-        var escapedContent = s.content.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        html += '<div class="snippet-item" onclick="window.insertSnippet(\'' + escapedContent + '\')">' + s.title + '</div>';
-    });
+    if (folderId === null) {
+        // Show folders that actually have snippets
+        var usedFolders = store.folders.filter(f => store.snippets.some(s => (s.folder_id || s.folderId) === f.id));
+        usedFolders.forEach(function (f) {
+            html += `
+                <div class="snippet-item" onclick="window.toggleSnippetPicker(null, '${f.id}')" style="display:flex; justify-content:space-between; align-items:center; padding: 14px 16px;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--primary); opacity:0.8;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                        <span style="font-weight:600; font-size:14px;">${f.name}</span>
+                    </div>
+                </div>
+            `;
+        });
+        
+        // Show snippets with no folder
+        var noFolderSnippets = store.snippets.filter(s => !(s.folder_id || s.folderId));
+        noFolderSnippets.forEach(function (s) {
+            html += `
+                <div class="snippet-item" onclick="window.insertSnippetById('${s.id}')" style="padding: 14px 16px;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.5;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                         <span style="font-size:14px;">${s.title}</span>
+                    </div>
+                </div>`;
+        });
 
-    picker.innerHTML = html;
-    document.getElementById('commInputArea').appendChild(picker);
+        if (usedFolders.length === 0 && noFolderSnippets.length === 0) {
+            html += '<div style="padding:40px 20px; text-align:center; color:var(--text-muted); font-size:13px;">No templates found.</div>';
+        }
+    } else {
+        // Show snippets in specific folder
+        var folderSnippets = store.snippets.filter(s => (s.folder_id || s.folderId) === folderId);
+        folderSnippets.forEach(function (s) {
+            html += `
+                <div class="snippet-item" onclick="window.insertSnippetById('${s.id}')" style="padding: 14px 16px;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.5;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                         <span style="font-size:14px;">${s.title}</span>
+                    </div>
+                </div>`;
+        });
+        
+        if (folderSnippets.length === 0) {
+            html += '<div style="padding:40px 20px; text-align:center; color:var(--text-muted); font-size:13px;">This folder is empty.</div>';
+        }
+    }
+
+    html += `</div>`;
+    existing.innerHTML = html;
+};
+
+window.insertSnippetById = function (id) {
+    var s = (window._snippetStore.snippets || []).find(f => f.id === id);
+    if (!s) return;
+    window.insertSnippet(s.content);
 };
 
 window.insertSnippet = function (text) {
     var input = document.getElementById('commInputMessage');
     if (input) {
+        // Automatically parse variables before insertion
+        var parsed = window._parseLiquidTags(text);
+        
         var start = input.selectionStart || input.value.length;
         var end = input.selectionEnd || input.value.length;
         var before = input.value.substring(0, start);
         var after = input.value.substring(end);
-        input.value = before + text + after;
+        input.value = before + parsed + after;
         input.focus();
-        var newPos = start + text.length;
+        var newPos = start + parsed.length;
         input.setSelectionRange(newPos, newPos);
         
-        // Trigger auto-expand if available
         if (window.autoExpandCommInput) {
             window.autoExpandCommInput(input);
+        }
+
+        if (parsed.includes('{{')) {
+             showNotification('Note: Some variables could not be mapped.', 'warning');
         }
     }
     var picker = document.getElementById('snippetFullPicker');
     if (picker) picker.remove();
 };
+
 
 /* ═══════════════════════════════════════
    FILE ATTACHMENT
