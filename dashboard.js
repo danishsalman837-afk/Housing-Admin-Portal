@@ -1246,51 +1246,62 @@ window.saveLeadEdits = async function (id) {
 
 // 📎 ATTACHMENT HANDLERS
 window.handleAttachmentUpload = async function (leadId, input) {
-    const files = input.files;
+    const files = Array.from(input.files);
     if (!files || files.length === 0) return;
 
-    // Removed strict size blocking to allow "unlimited" uploads as requested.
-    // Note: Vercel still has a platform limit of ~4.5MB for single requests.
-
     const statusEl = document.getElementById('uploadStatus');
-    const listEl = document.getElementById('attachmentList');
+    let failCount = 0;
 
     for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        if (statusEl) statusEl.innerText = `Uploading ${i + 1}/${files.length}...`;
+        let file = files[i];
+        if (statusEl) statusEl.innerText = `Processing ${i + 1}/${files.length}...`;
 
         try {
-            const reader = new FileReader();
-            const base64Promise = new Promise((resolve, reject) => {
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = () => reject(new Error('FileReader error'));
-                reader.readAsDataURL(file);
-            });
+            // 🚀 FAST COMPRESSION: Shrink images to bypass Vercel's 4.5MB limit and speed up uploads
+            if (file.type.startsWith('image/')) {
+                file = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            let w = img.width, h = img.height;
+                            const MAX = 1800; // High enough for detail, small enough for speed
+                            if (w > h && w > MAX) { h *= MAX / w; w = MAX; }
+                            else if (h > MAX) { w *= MAX / h; h = MAX; }
+                            canvas.width = w; canvas.height = h;
+                            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                            canvas.toBlob(b => resolve(new File([b], file.name, { type: 'image/jpeg' })), 'image/jpeg', 0.85);
+                        };
+                        img.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
 
+            if (statusEl) statusEl.innerText = `Uploading ${i + 1}/${files.length}...`;
+
+            const base64Promise = new Promise((resolve, reject) => {
+                const r = new FileReader();
+                r.onload = () => resolve(r.result);
+                r.onerror = reject;
+                r.readAsDataURL(file);
+            });
             const base64Content = await base64Promise;
 
-            // 2. Bulletproof Fetch Handling
             const res = await fetch('/api/upload', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    leadId: leadId,
-                    name: file.name,
-                    type: file.type,
-                    content: base64Content
-                })
+                body: JSON.stringify({ leadId, name: file.name, type: file.type, content: base64Content })
             });
 
             if (!res.ok) {
                 if (res.status === 413) throw new Error('File too large for server');
-                let errData;
-                try { errData = await res.json(); } catch (e) { }
-                throw new Error(errData?.error || `Server responded with ${res.status}`);
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.error || 'Upload failed');
             }
 
             const result = await res.json();
-
-            // 3. Update local state
             const lead = submissionsData.find(s => String(s.id) === String(leadId));
             if (lead) lead.attachments = result.attachments;
 
@@ -1300,17 +1311,17 @@ window.handleAttachmentUpload = async function (leadId, input) {
 
         } catch (e) {
             console.error(e);
-            if (statusEl) statusEl.innerText = 'Upload failed';
-            showToast('Upload Error', `Failed to upload ${file.name}: ${e.message}`, 'danger');
-            // Ensure input is cleared on failure to prevent stale state issues
-            input.value = '';
-            return; // Stop further uploads if one fails
+            failCount++;
+            showToast('Upload Error', `Failed [${file.name}]: ${e.message}`, 'danger');
+            // Continue to next file instead of stopping
         }
     }
 
-    if (statusEl) statusEl.innerText = 'All files uploaded';
+    if (statusEl) {
+        statusEl.innerText = failCount > 0 ? `Finished with ${failCount} errors` : 'All files uploaded';
+    }
     setTimeout(() => { if (statusEl) statusEl.innerText = ''; }, 3000);
-    input.value = '';
+    input.value = ''; // Clear only at the very end
 };
 
 window.deleteAttachment = async function (leadId, index) {
