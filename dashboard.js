@@ -1249,14 +1249,8 @@ window.handleAttachmentUpload = async function (leadId, input) {
     const files = input.files;
     if (!files || files.length === 0) return;
 
-    // 1. Client-Side Pre-Validation
-    for (let i = 0; i < files.length; i++) {
-        if (files[i].size > 4 * 1024 * 1024) {
-            showToast('File Too Large', `File [${files[i].name}] exceeds the 4MB limit.`, 'warning');
-            input.value = '';
-            return;
-        }
-    }
+    // Removed strict size blocking to allow "unlimited" uploads as requested.
+    // Note: Vercel still has a platform limit of ~4.5MB for single requests.
 
     const statusEl = document.getElementById('uploadStatus');
     const listEl = document.getElementById('attachmentList');
