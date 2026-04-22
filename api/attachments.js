@@ -95,6 +95,57 @@ module.exports = async function handler(req, res) {
       return res.status(200).json(updatedLead);
     }
 
+    // ═════════════════════════════════════════════════
+    // ACTION: GET SIGNED URL (For Large Files)
+    // ═════════════════════════════════════════════════
+    if (action === 'get-signed-url') {
+      const { leadId, name, type } = req.body;
+      if (!leadId || !name || !type) return res.status(400).json({ error: "Missing required fields" });
+
+      const timestamp = Date.now();
+      const safeName = name.replace(/[^a-z0-9.]/gi, '_').toLowerCase();
+      const filePath = `lead_${leadId}/${timestamp}_${safeName}`;
+
+      const { data, error } = await supabase.storage
+        .from('leads')
+        .createSignedUploadUrl(filePath);
+
+      if (error) return res.status(500).json({ error: "Failed to create upload URL: " + error.message });
+
+      return res.status(200).json({ 
+        uploadUrl: data.signedUrl, 
+        token: data.token, 
+        path: filePath,
+        publicUrl: supabase.storage.from('leads').getPublicUrl(filePath).data.publicUrl
+      });
+    }
+
+    // ═════════════════════════════════════════════════
+    // ACTION: CONFIRM UPLOAD (Sync DB after direct upload)
+    // ═════════════════════════════════════════════════
+    if (action === 'confirm-upload') {
+        const { leadId, name, url, path, type, size } = req.body;
+        if (!leadId || !url || !path) return res.status(400).json({ error: "Missing required fields" });
+
+        const { data: lead, error: fetchError } = await supabase.from('submissions').select('attachments').eq('id', leadId).single();
+        if (fetchError) return res.status(500).json({ error: fetchError.message });
+
+        let attachments = Array.isArray(lead.attachments) ? lead.attachments : [];
+        attachments.push({ 
+            name, 
+            url, 
+            path, 
+            type, 
+            size: size || 0, 
+            uploadedAt: new Date().toISOString() 
+        });
+
+        const { data: updatedLead, error: updateError } = await supabase.from('submissions').update({ attachments }).eq('id', leadId).select().single();
+        if (updateError) return res.status(500).json({ error: updateError.message });
+
+        return res.status(200).json(updatedLead);
+    }
+
     return res.status(400).json({ error: "Invalid action" });
 
 

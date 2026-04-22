@@ -1352,27 +1352,42 @@ window.handleAttachmentUpload = async function (leadId, input) {
 
             if (statusEl) statusEl.innerText = `Uploading ${i + 1}/${files.length}: ${file.name}`;
 
-            const base64Promise = new Promise((resolve, reject) => {
-                const r = new FileReader();
-                r.onload = () => resolve(r.result);
-                r.onerror = reject;
-                r.readAsDataURL(file);
-            });
-            const base64Content = await base64Promise;
-
-            const res = await fetch('/api/upload', {
+            // 1. Get Signed URL for Direct Upload
+            const urlRes = await fetch('/api/attachments?action=get-signed-url', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ leadId, name: file.name, type: file.type, content: base64Content })
+                body: JSON.stringify({ leadId, name: file.name, type: file.type })
             });
 
-            if (!res.ok) {
-                if (res.status === 413) throw new Error('File too large for server');
-                const errData = await res.json().catch(() => ({}));
-                throw new Error(errData.error || 'Upload failed');
-            }
+            if (!urlRes.ok) throw new Error('Failed to prepare upload');
+            const { uploadUrl, path, publicUrl } = await urlRes.json();
 
-            const result = await res.json();
+            // 2. Direct Upload from Browser to Storage (Bypasses Vercel 4.5MB limit)
+            const uploadRes = await fetch(uploadUrl, {
+                method: 'PUT',
+                body: file, // Send binary file directly
+                headers: { 'Content-Type': file.type }
+            });
+
+            if (!uploadRes.ok) throw new Error('Direct upload failed');
+
+            // 3. Confirm Upload with DB
+            const confirmRes = await fetch('/api/attachments?action=confirm-upload', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    leadId, 
+                    name: file.name, 
+                    url: publicUrl, 
+                    path: path, 
+                    type: file.type, 
+                    size: file.size 
+                })
+            });
+
+            if (!confirmRes.ok) throw new Error('Failed to save attachment link');
+
+            const result = await confirmRes.json();
             const lead = submissionsData.find(s => String(s.id) === String(leadId));
             if (lead) lead.attachments = result.attachments;
 
