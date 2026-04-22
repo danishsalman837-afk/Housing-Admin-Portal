@@ -882,14 +882,15 @@
         function renderLeadData() {
             // Client Info
             const clientFields = [
-                { label: 'Full Name', value: leadData.name },
-                { label: 'Tenancy Type', value: leadData.tenantType },
-                { label: 'Landlord', value: leadData.landlordName, masked: !leadData.contactRevealed },
-                { label: 'Postcode', value: leadData.postcode, masked: !leadData.contactRevealed },
-                { label: 'Email', value: leadData.email, masked: !leadData.contactRevealed },
-                { label: 'Phone', value: leadData.phone, masked: !leadData.contactRevealed },
-                { label: 'Date of Birth', value: leadData.dob, masked: !leadData.contactRevealed },
+                { label: 'Name', value: leadData.name },
+                { label: 'Email Address:', value: leadData.email, masked: !leadData.contactRevealed },
+                { label: 'Phone Number:', value: leadData.phone, masked: !leadData.contactRevealed },
+                { label: 'Date of Birth (DOB):', value: leadData.dob, masked: !leadData.contactRevealed },
                 { label: 'Address', value: leadData.address, masked: !leadData.contactRevealed, full: true },
+                { label: 'Postcode', value: leadData.postcode, masked: !leadData.contactRevealed },
+                { label: 'Are you a council tenant or a housing association tenant?', value: leadData.tenantType },
+                { label: 'What is the name of your landlord?', value: leadData.landlordName, masked: !leadData.contactRevealed },
+                { label: 'How long have you been living in the property?', value: leadData.tenancyDuration },
             ];
             renderFieldGrid('clientInfoGrid', clientFields);
 
@@ -939,36 +940,39 @@
 
             // Disrepair Details
             const disrepairFields = [
-                { label: 'Damp or Mould?', value: leadData.damp },
-                { label: 'Damp Location', value: leadData.dampLocation },
-                { label: 'Rooms Affected', value: leadData.dampRooms },
-                { label: 'Affected Surface', value: leadData.dampSurface },
-                { label: 'Issue Duration', value: leadData.dampDuration },
-                { label: 'Issue Cause', value: leadData.dampCause },
-                { label: 'Damaged Belongings (Damp)', value: leadData.dampDamage },
-                { label: 'Health Problems', value: leadData.dampHealth },
-                { label: 'Leaks?', value: leadData.leak },
-                { label: 'Leak Location', value: leadData.leakLocation },
-                { label: 'Leak Source', value: leadData.leakSource },
-                { label: 'Leak Start/Ongoing', value: leadData.leakStart },
-                { label: 'Leak Damage', value: leadData.leakDamage },
-                { label: 'Cracks/Structural (Leaks)', value: leadData.leakCracks },
-                { label: 'Damaged Belongings (Leaks)', value: leadData.leakBelongings },
-                { label: 'Faulty Electrics?', value: leadData.issues_electrics },
-                { label: 'Heating/Boiler Issues?', value: leadData.issues_heating },
-                { label: 'Structural Damage?', value: leadData.issues_structural },
+                { label: 'Is there any damp or mould in the property?', value: leadData.damp },
+                { label: 'Where exactly is the damp or mould located?', value: leadData.dampLocation },
+                { label: 'How many rooms are affected?', value: leadData.dampRooms },
+                { label: 'Is it on the walls, ceiling, or floor?', value: leadData.dampSurface },
+                { label: 'How long have you had this issue?', value: leadData.dampDuration },
+                { label: 'Do you know what caused it (leak, rain, pipe, roof)?', value: leadData.dampCause },
+                { label: 'Has it damaged any belongings (bed, sofa, clothes, etc.)?', value: leadData.dampDamage },
+                { label: 'Has it caused any health problems (breathing, asthma, allergies, skin issues)?', value: leadData.dampHealth },
+                { label: 'Do you have any leaks in the property?', value: leadData.leak },
+                { label: 'Where is the leak coming from?', value: leadData.leakLocation },
+                { label: 'Is it from the roof, ceiling, pipe, bathroom, or kitchen?', value: leadData.leakSource },
+                { label: 'When did the leak start? Is it still ongoing?', value: leadData.leakStart },
+                { label: 'Has it caused damage to walls, ceiling, or floor?', value: leadData.leakDamage },
+                { label: 'Any cracks or structural damage?', value: leadData.leakCracks },
+                { label: 'Has it damaged your belongings?', value: leadData.leakBelongings },
+                { label: 'Are there any Faulty Electrics in the property?', value: leadData.issues_electrics },
+                { label: 'Are there any Heating / Boiler Issues?', value: leadData.issues_heating },
+                { label: 'Are there any Cracks or Structural Damages?', value: leadData.issues_structural },
+                { label: 'Have you already submitted a housing disrepair claim?', value: leadData.alreadySubmitted },
             ];
             renderFieldGrid('disrepairGrid', disrepairFields);
 
             // Reporting History
             const reportFields = [
-                { label: 'Reported >1 Month Ago?', value: leadData.reported },
-                { label: 'Times Reported', value: leadData.reportCount },
-                { label: 'First Reported', value: leadData.reportFirst },
-                { label: 'Last Reported', value: leadData.reportLast },
-                { label: 'Landlord Response', value: leadData.reportResponse },
-                { label: 'Repair Attempted?', value: leadData.reportAttempt },
-                { label: 'Issue Still Unresolved?', value: leadData.reportStatus },
+                { label: 'Have you reported all the disrepairs over a month ago and have no date for it to be fixed?', value: leadData.reported },
+                { label: 'How many times have you notified your landlord? Was it through email, text, or calls?', value: leadData.reportCount },
+                { label: 'When did you first report the issue?', value: leadData.reportFirst },
+                { label: 'When did you last report to the landlord about the disrepair?', value: leadData.reportLast },
+                { label: 'Did the landlord or council respond?', value: leadData.reportResponse },
+                { label: 'Did they attempt any repairs?', value: leadData.reportAttempt },
+                { label: 'Is the issue still not resolved?', value: leadData.reportStatus },
+                { label: 'Are you in rental arrears? (Must be less than £1000)', value: leadData.arrears },
+                { label: 'Additional Notes', value: leadData.additionalNotes, full: true },
             ];
             renderFieldGrid('reportingGrid', reportFields);
         }
