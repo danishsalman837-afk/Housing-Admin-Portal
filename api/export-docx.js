@@ -4,7 +4,8 @@ const {
   Document, Packer, Paragraph, TextRun,
   HeadingLevel, AlignmentType, BorderStyle,
   Table, TableRow, TableCell, WidthType,
-  ShadingType, convertInchesToTwip, ImageRun
+  ShadingType, convertInchesToTwip, ImageRun,
+  ExternalHyperlink
 } = docx;
 const axios = require("axios");
 
@@ -190,33 +191,69 @@ module.exports = async function handler(req, res) {
     // ── Section 8: Visual Evidence ──
     const attachments = Array.isArray(lead.attachments) ? lead.attachments : [];
     if (attachments.length > 0) {
-      children.push(spacer(160), sectionHeading("Section 8 — Photo Evidence"), spacer(80));
+      children.push(spacer(160), sectionHeading("Section 8 — Evidence & Attachments"), spacer(80));
       
       for (const attach of attachments) {
-        try {
-          const response = await axios.get(attach.url, { responseType: 'arraybuffer' });
-          const buffer = Buffer.from(response.data, 'binary');
-          
+        const ext = attach.url.split('.').pop().toLowerCase();
+        const isImg = ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext);
+        const isPdf = ext === 'pdf';
+        const isVid = ['mp4', 'mov', 'webm'].includes(ext);
+
+        if (isImg) {
+          try {
+            const response = await axios.get(attach.url, { responseType: 'arraybuffer' });
+            const buffer = Buffer.from(response.data, 'binary');
+            
+            children.push(
+              new Paragraph({
+                children: [
+                  new ImageRun({
+                    data: buffer,
+                    transformation: { width: 500, height: 350 },
+                  }),
+                ],
+                alignment: AlignmentType.CENTER,
+                spacing: { before: 200, after: 100 }
+              }),
+              new Paragraph({
+                children: [new TextRun({ text: `Photo: ${attach.name}`, size: 16, color: SLATE, italics: true })],
+                alignment: AlignmentType.CENTER,
+                spacing: { after: 400 }
+              })
+            );
+          } catch (e) {
+            children.push(new Paragraph({ text: `[Error loading image: ${attach.name}]`, spacing: { before: 100, after: 100 } }));
+          }
+        } else {
+          // For PDFs and Videos, provide a clear clickable link
+          const typeLabel = isPdf ? "PDF DOCUMENT" : (isVid ? "VIDEO EVIDENCE" : "FILE");
+          const icon = isPdf ? "📄" : (isVid ? "🎬" : "📎");
+
           children.push(
             new Paragraph({
               children: [
-                new ImageRun({
-                  data: buffer,
-                  transformation: { width: 500, height: 350 },
-                }),
+                new TextRun({ text: `${icon} ${typeLabel}: ${attach.name}`, bold: true, size: 22, color: DARK_BLUE }),
               ],
-              alignment: AlignmentType.CENTER,
-              spacing: { before: 200, after: 200 }
+              spacing: { before: 200, after: 100 }
             }),
             new Paragraph({
-              children: [new TextRun({ text: `File: ${attach.name}`, size: 16, color: SLATE, italics: true })],
-              alignment: AlignmentType.CENTER,
+              children: [
+                new ExternalHyperlink({
+                  children: [
+                    new TextRun({
+                      text: `  🔗 CLICK HERE TO VIEW / DOWNLOAD ${typeLabel}`,
+                      color: "0000FF",
+                      underline: {},
+                      bold: true,
+                      size: 20
+                    }),
+                  ],
+                  link: attach.url,
+                }),
+              ],
               spacing: { after: 400 }
             })
           );
-        } catch (e) {
-          console.error("Failed to include image:", attach.url, e.message);
-          children.push(new Paragraph({ text: `[Error loading image: ${attach.name}]`, spacing: { before: 100, after: 100 } }));
         }
       }
     }

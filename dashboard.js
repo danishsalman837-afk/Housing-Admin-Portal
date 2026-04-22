@@ -847,14 +847,32 @@ window.openViewModal = function (id, showOriginal = false) {
                             <span style="font-size:12px; font-weight:700; color:var(--text-muted); background:var(--bg-surface-2); padding:4px 12px; border-radius:20px;">${(leadData.attachments || []).length} Files</span>
                         </div>
                         <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:20px;">
-                            ${(leadData.attachments || []).map(a => `
-                                <div class="evidence-card" style="background:var(--bg-surface-2); border:1px solid var(--border-light); border-radius:16px; padding:8px; transition:transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 10px 20px rgba(0,0,0,0.05)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
-                                    <a href="${a.url}" target="_blank" style="display:block; position:relative; padding-top:100%; overflow:hidden; border-radius:12px; background:var(--bg-surface);">
-                                        <img src="${a.url}" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover;">
-                                    </a>
-                                    <div style="font-size:12px; color:var(--text-main); font-weight:600; margin-top:12px; padding:0 4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${a.name}</div>
-                                </div>
-                            `).join('')}
+                            ${(leadData.attachments || []).map(a => {
+                                const ext = (a.url || '').split('.').pop().toLowerCase();
+                                const isImg = ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext);
+                                const isPdf = ext === 'pdf';
+                                const isVid = ['mp4', 'mov', 'webm'].includes(ext);
+                                
+                                let previewHtml = '';
+                                if (isImg) {
+                                    previewHtml = `<img src="${a.url}" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover;">`;
+                                } else if (isPdf) {
+                                    previewHtml = `<div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#FFF1F1; color:#C53030; gap:8px;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg><span style="font-size:10px; font-weight:800;">PDF DOCUMENT</span></div>`;
+                                } else if (isVid) {
+                                    previewHtml = `<div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#F0F7FF; color:#0066CC; gap:8px;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line></svg><span style="font-size:10px; font-weight:800;">VIDEO</span></div>`;
+                                } else {
+                                    previewHtml = `<div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:#F8FAFC;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path></svg></div>`;
+                                }
+
+                                return `
+                                    <div class="evidence-card" style="background:var(--bg-surface-2); border:1px solid var(--border-light); border-radius:16px; padding:8px; transition:transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 10px 20px rgba(0,0,0,0.05)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                                        <a href="${a.url}" target="_blank" style="display:block; position:relative; padding-top:100%; overflow:hidden; border-radius:12px; background:var(--bg-surface);">
+                                            ${previewHtml}
+                                        </a>
+                                        <div style="font-size:12px; color:var(--text-main); font-weight:600; margin-top:12px; padding:0 4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${a.name}</div>
+                                    </div>
+                                `;
+                            }).join('')}
                             ${(!leadData.attachments || leadData.attachments.length === 0) ? `
                                 <div style="padding:40px; background:var(--bg-surface-2); border:1px dashed var(--border-light); border-radius:16px; text-align:center; color:var(--text-muted); font-size:14px; font-weight:600; grid-column:1/-1;">
                                     No photos have been uploaded for this client yet.
@@ -975,14 +993,32 @@ window.openEditLeadModal = function (id) {
                     <div id="uploadStatusLine" style="font-size:12px; font-weight:700; color:var(--blue); text-align:center; margin-bottom:16px; min-height:18px;"></div>
                     
                     <div id="attachmentList" class="thumbnail-grid">
-                        ${(s.attachments || []).map((a, i) => `
-                            <div class="thumb-item">
-                                <a href="${a.url}" target="_blank">
-                                    <img src="${a.url}" class="thumb-image">
-                                </a>
-                                <button class="remove-thumb-btn" onclick="window.deleteAttachment('${s.id}', ${i})" title="Remove File">&times;</button>
-                            </div>
-                        `).join('')}
+                        ${(s.attachments || []).map((a, i) => {
+                            const ext = (a.url || '').split('.').pop().toLowerCase();
+                            const isImg = ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext);
+                            const isPdf = ext === 'pdf';
+                            const isVid = ['mp4', 'mov', 'webm'].includes(ext);
+                            
+                            let thumbContent = '';
+                            if (isImg) {
+                                thumbContent = `<img src="${a.url}" class="thumb-image">`;
+                            } else if (isPdf) {
+                                thumbContent = `<div style="width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#FFF1F1; color:#C53030; font-size:9px; font-weight:800;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg>PDF</div>`;
+                            } else if (isVid) {
+                                thumbContent = `<div style="width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#F0F7FF; color:#0066CC; font-size:9px; font-weight:800;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect></svg>VIDEO</div>`;
+                            } else {
+                                thumbContent = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#F8FAFC;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path></svg></div>`;
+                            }
+
+                            return `
+                                <div class="thumb-item">
+                                    <a href="${a.url}" target="_blank" style="display:block; width:100%; height:100%; text-decoration:none;">
+                                        ${thumbContent}
+                                    </a>
+                                    <button class="remove-thumb-btn" onclick="window.deleteAttachment('${s.id}', ${i})" title="Remove File">&times;</button>
+                                </div>
+                            `;
+                        }).join('')}
                         ${(!s.attachments || s.attachments.length === 0) ? '<p style="font-size:13px; color:var(--label-4); font-style:italic; grid-column:1/-1; text-align:center; padding:30px 0; font-weight:600;">No pictures attached yet.</p>' : ''}
                     </div>
                 </div>
