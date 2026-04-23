@@ -176,6 +176,23 @@ window.switchView = function (view) {
     }
 };
 
+window.filterByStatus = function(status) {
+    console.log("Filtering leads by status:", status);
+    // 1. Switch to leads view
+    window.switchView('leads');
+    
+    // 2. Set the filter dropdown value
+    const statusSelect = document.getElementById('filterStatus');
+    if (statusSelect) {
+        statusSelect.value = status;
+        
+        // 3. Trigger the filtered render
+        if (typeof window.renderFilteredLeads === 'function') {
+            window.renderFilteredLeads();
+        }
+    }
+};
+
 function populateSettings() {
     const sessionStr = localStorage.getItem('admin_session');
     if (!sessionStr) return;

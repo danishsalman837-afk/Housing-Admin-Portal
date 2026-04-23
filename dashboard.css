@@ -606,6 +606,7 @@ body {
 }
 
 .stat-card {
+    cursor: pointer;
     background: var(--bg-surface);
     border: 1px solid var(--border-light);
     border-radius: var(--radius-lg);
