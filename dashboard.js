@@ -1618,7 +1618,7 @@ window.saveEditedNote = async function (leadId, noteIndex) {
     } catch (e) { console.error("Parse error", e); }
 
     if (notesArray[noteIndex]) {
-        notesArray[noteIndex].note = newText;
+        notesArray[noteIndex].note = newHtml;
         notesArray[noteIndex].updatedAt = new Date().toISOString();
         await updateNotesInDb(s, notesArray);
     }
