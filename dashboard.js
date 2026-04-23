@@ -1521,10 +1521,22 @@ window.openNotesModal = function (id) {
                     <button onclick="window.deleteNote('${id}', ${idx})" style="background:none; border:none; cursor:pointer; color:#EF4444; font-size:11px; font-weight:700; padding:0; text-transform:uppercase;">Delete</button>
                 </div>
             </div>
-            <div id="note-text-${idx}" style="font-size:13px; color:#111827; white-space:pre-wrap;">${n.note || (typeof n === 'string' ? n : JSON.stringify(n))}</div>
+            <div id="note-text-${idx}" style="font-size:13px; color:#111827; overflow-wrap:break-word; line-height:1.4;">${n.note || (typeof n === 'string' ? n : JSON.stringify(n))}</div>
         </div>
     `).join('');
     if (notesArray.length === 0) notesHtml = `<div style="font-size:13px; color:#9CA3AF; font-style:italic; padding:20px; text-align:center;">No internal notes yet.</div>`;
+
+    const toolbarHtml = `
+        <div class="rte-toolbar">
+            <button class="rte-btn" onclick="formatNote('bold')" title="Bold"><svg viewBox="0 0 24 24"><path d="M15.6 10.79c.97-.67 1.65-1.77 1.65-2.79 0-2.26-1.75-4-4-4H7v14h7.04c2.09 0 3.71-1.7 3.71-3.79 0-1.52-.86-2.82-2.15-3.42zM10 6.5h3c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-3v-3zm3.5 9H10v-3h3.5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5z"/></svg></button>
+            <button class="rte-btn" onclick="formatNote('italic')" title="Italic"><svg viewBox="0 0 24 24"><path d="M10 4v3h2.21l-3.42 8H6v3h8v-3h-2.21l3.42-8H18V4z"/></svg></button>
+            <button class="rte-btn" onclick="formatNote('underline')" title="Underline"><svg viewBox="0 0 24 24"><path d="M12 17c3.31 0 6-2.69 6-6V3h-2.5v8c0 1.93-1.57 3.5-3.5 3.5S8.5 12.93 8.5 11V3H6v8c0 3.31 2.69 6 6 6zm-7 2v2h14v-2H5z"/></svg></button>
+            <button class="rte-btn" onclick="formatNote('strikeThrough')" title="Strikethrough"><svg viewBox="0 0 24 24"><path d="M10 19h4v-3h-4v3zM5 4v3h5v3H5v3h5v3H5v3h14v-3h-4v-3h4v-3h-4V7h4V4H5z"/></svg></button>
+            <div class="rte-separator"></div>
+            <button class="rte-btn" onclick="formatNote('insertUnorderedList')" title="Bullet List"><svg viewBox="0 0 24 24"><path d="M4 10.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm0-6c-.83 0-1.5.67-1.5 1.5S3.17 7.5 4 7.5 5.5 6.83 5.5 6 4.83 4.5 4 4.5zm0 12c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zM7 19h14v-2H7v2zm0-6h14v-2H7v2zm0-8v2h14V5H7z"/></svg></button>
+            <button class="rte-btn" onclick="formatNote('insertOrderedList')" title="Numbered List"><svg viewBox="0 0 24 24"><path d="M2 17h2v.5H3v1h1v.5H2v1h3v-4H2v1zm1-9h1V4H2v1h1v3zm-1 3h1.8L2 13.1v.9h3v-1H3.2L5 10.9V10H2v1zm5-6v2h14V5H7zm0 14h14v-2H7v2zm0-6h14v-2H7v2z"/></svg></button>
+        </div>
+    `;
 
     document.getElementById('modalBox').innerHTML = `
         <div class="modal-header"><h2>Internal Notes: ${s.name || s.first_name || 'Client'}</h2><button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button></div>
@@ -1533,19 +1545,23 @@ window.openNotesModal = function (id) {
                 ${notesHtml}
             </div>
             <div>
-                <textarea id="newNoteEditor" placeholder="Type a new internal note..." style="width:100%; height:100px; padding:12px; border-radius:8px; border:1px solid #E2E8F0; outline:none; font-family:inherit; resize:vertical; background:#F8FAFC;"></textarea>
+                ${toolbarHtml}
+                <div id="newNoteEditor" class="rte-editor" contenteditable="true" placeholder="Type a new internal note..."></div>
                 <button class="btn-action" style="margin-top:12px; width:100%; justify-content:center;" onclick="window.saveNewNote('${s.id}')">Add Note</button>
             </div>
         </div>
     `;
+
     document.getElementById('modalOverlay').style.display = 'flex';
 };
 
 window.saveNewNote = async function (id) {
     const s = submissionsData.find(x => String(x.id) === String(id));
     if (!s) return;
-    const txt = document.getElementById('newNoteEditor').value.trim();
-    if (!txt) return showToast('Empty Note', "Please type a note first.", 'warning');
+    const editor = document.getElementById('newNoteEditor');
+    const txt = editor.innerHTML.trim();
+    if (!txt || txt === '<br>') return showToast('Empty Note', "Please type a note first.", 'warning');
+
 
     let notesArray = [];
     if (s.notes) {
@@ -1562,14 +1578,26 @@ window.editNote = function (leadId, noteIndex) {
     const textDiv = document.getElementById(`note-text-${noteIndex}`);
     if (!block || !textDiv) return;
 
-    const currentText = textDiv.innerText;
+    const currentHtml = textDiv.innerHTML;
+    
+    const toolbarHtml = `
+        <div class="rte-toolbar" style="margin-top:8px;">
+            <button class="rte-btn" onclick="formatNote('bold')" title="Bold"><svg viewBox="0 0 24 24"><path d="M15.6 10.79c.97-.67 1.65-1.77 1.65-2.79 0-2.26-1.75-4-4-4H7v14h7.04c2.09 0 3.71-1.7 3.71-3.79 0-1.52-.86-2.82-2.15-3.42zM10 6.5h3c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-3v-3zm3.5 9H10v-3h3.5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5z"/></svg></button>
+            <button class="rte-btn" onclick="formatNote('italic')" title="Italic"><svg viewBox="0 0 24 24"><path d="M10 4v3h2.21l-3.42 8H6v3h8v-3h-2.21l3.42-8H18V4z"/></svg></button>
+            <button class="rte-btn" onclick="formatNote('underline')" title="Underline"><svg viewBox="0 0 24 24"><path d="M12 17c3.31 0 6-2.69 6-6V3h-2.5v8c0 1.93-1.57 3.5-3.5 3.5S8.5 12.93 8.5 11V3H6v8c0 3.31 2.69 6 6 6zm-7 2v2h14v-2H5z"/></svg></button>
+            <button class="rte-btn" onclick="formatNote('strikeThrough')" title="Strikethrough"><svg viewBox="0 0 24 24"><path d="M10 19h4v-3h-4v3zM5 4v3h5v3H5v3h5v3H5v3h14v-3h-4v-3h4v-3h-4V7h4V4H5z"/></svg></button>
+        </div>
+    `;
+
     textDiv.innerHTML = `
-        <textarea id="editNoteEditor-${noteIndex}" style="width:100%; min-height:60px; padding:8px; border-radius:4px; border:1px solid #3B82F6; outline:none; font-family:inherit; resize:vertical; font-size:13px; margin-top:8px;">${currentText}</textarea>
+        ${toolbarHtml}
+        <div id="editNoteEditor-${noteIndex}" class="rte-editor" contenteditable="true" style="min-height:60px;">${currentHtml}</div>
         <div style="display:flex; gap:8px; margin-top:8px;">
             <button class="btn-action" style="padding:4px 12px; font-size:12px; background:#10B981;" onclick="window.saveEditedNote('${leadId}', ${noteIndex})">Save</button>
             <button class="btn-outline" style="padding:4px 12px; font-size:12px;" onclick="window.openNotesModal('${leadId}')">Cancel</button>
         </div>
     `;
+
     // Hide the original actions
     const actionRow = block.querySelector('div > div:last-child');
     if (actionRow) actionRow.style.display = 'none';
@@ -1579,8 +1607,10 @@ window.saveEditedNote = async function (leadId, noteIndex) {
     const s = submissionsData.find(x => String(x.id) === String(leadId));
     if (!s) return;
 
-    const newText = document.getElementById(`editNoteEditor-${noteIndex}`).value.trim();
-    if (!newText) return showToast('Empty Note', "Note cannot be empty.", 'warning');
+    const editor = document.getElementById(`editNoteEditor-${noteIndex}`);
+    const newHtml = editor.innerHTML.trim();
+    if (!newHtml || newHtml === '<br>') return showToast('Empty Note', "Note cannot be empty.", 'warning');
+
 
     let notesArray = [];
     try {
@@ -4343,4 +4373,12 @@ document.addEventListener('keydown', (e) => {
         toggleDialer();
     }
 });
+
+// ═══════════════════════════════════════
+// RICH TEXT EDITOR HELPERS
+// ═══════════════════════════════════════
+window.formatNote = function(cmd, val = null) {
+    document.execCommand(cmd, false, val);
+};
+
 
