@@ -171,26 +171,32 @@ window.switchView = function (view) {
         window.openSnippetManager(true);
     } else if (view === 'settings') {
         populateSettings();
+    } else if (view === 'leads') {
+        // Reset filters to default when clicking Lead Management from sidebar
+        const statusSelect = document.getElementById('filterStatus');
+        const closedCheck = document.getElementById('showClosedCheck');
+        if (statusSelect) statusSelect.value = 'All';
+        if (closedCheck) closedCheck.checked = false;
+        renderFilteredLeads();
     } else {
         renderFilteredLeads();
     }
 };
 
-window.filterByStatus = function(status) {
-    console.log("Filtering leads by status:", status);
+window.filterByStatus = function(status, showClosed = false) {
+    console.log("Filtering leads by status:", status, "Show Closed:", showClosed);
     // 1. Switch to leads view
     window.switchView('leads');
     
-    // 2. Set the filter dropdown value
+    // 2. Set the filter dropdown value and closed toggle
     const statusSelect = document.getElementById('filterStatus');
-    if (statusSelect) {
-        statusSelect.value = status;
-        
-        // 3. Trigger the filtered render
-        if (typeof window.renderFilteredLeads === 'function') {
-            window.renderFilteredLeads();
-        }
-    }
+    const closedCheck = document.getElementById('showClosedCheck');
+    
+    if (statusSelect) statusSelect.value = status;
+    if (closedCheck) closedCheck.checked = showClosed;
+    
+    // 3. Trigger the filtered render
+    window.renderFilteredLeads();
 };
 
 function populateSettings() {

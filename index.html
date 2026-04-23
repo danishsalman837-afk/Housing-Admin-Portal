@@ -3388,7 +3388,7 @@
 
             <!-- Stat cards row -->
             <div class="stats-row">
-                <div class="stat-card" onclick="window.switchView('leads')">
+                <div class="stat-card" onclick="window.filterByStatus('All', true)">
                     <div class="stat-icon blue">
                         <svg viewBox="0 0 24 24">
                             <path d="M19 3H5c-1.1 0-2 .9-2 2v14l4-4h12c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z" />
@@ -3397,7 +3397,7 @@
                     <div class="stat-value" id="dashboardTotal">0</div>
                     <div class="stat-label">Total Leads</div>
                 </div>
-                <div class="stat-card" onclick="window.filterByStatus('Accepted')">
+                <div class="stat-card" onclick="window.filterByStatus('Accepted', false)">
                     <div class="stat-icon green">
                         <svg viewBox="0 0 24 24">
                             <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
@@ -3406,7 +3406,7 @@
                     <div class="stat-value" id="dashboardAccepted">0</div>
                     <div class="stat-label">Accepted Leads</div>
                 </div>
-                <div class="stat-card" onclick="window.filterByStatus('Rejected')">
+                <div class="stat-card" onclick="window.filterByStatus('Rejected', false)">
                     <div class="stat-icon red">
                         <svg viewBox="0 0 24 24">
                             <path
@@ -3416,7 +3416,7 @@
                     <div class="stat-value" id="dashboardRejected">0</div>
                     <div class="stat-label">Rejected Leads</div>
                 </div>
-                <div class="stat-card" onclick="window.filterByStatus('Paid')">
+                <div class="stat-card" onclick="window.filterByStatus('Paid', false)">
                     <div class="stat-icon purple">
                         <svg viewBox="0 0 24 24">
                             <path
