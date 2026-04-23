@@ -162,6 +162,9 @@ window.switchView = function (view) {
     } else if (view === 'companies') {
         renderCompanies();
     } else if (view === 'activity') {
+        // Reset filters when clicking Solicitor Activity from sidebar
+        const saFilter = document.getElementById('filterActivityStatus');
+        if (saFilter) saFilter.value = 'All';
         renderFilteredActivity();
     } else if (view === 'whatsapp') {
         window.initWhatsAppView();
@@ -197,6 +200,20 @@ window.filterByStatus = function(status, showClosed = false) {
     
     // 3. Trigger the filtered render
     window.renderFilteredLeads();
+};
+
+window.filterActivityByStatus = function(status) {
+    console.log("Filtering activity by status:", status);
+    // 1. Switch to activity view
+    window.switchView('activity');
+    
+    // 2. Set the activity filter dropdown
+    const saFilter = document.getElementById('filterActivityStatus');
+    if (saFilter) {
+        saFilter.value = status;
+        // 3. Trigger the filtered render
+        window.renderFilteredActivity();
+    }
 };
 
 function populateSettings() {

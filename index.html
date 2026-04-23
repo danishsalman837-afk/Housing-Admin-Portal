@@ -3623,7 +3623,7 @@
             </div>
 
             <div class="stats-row">
-                <div class="stat-card">
+                <div class="stat-card" onclick="window.filterActivityByStatus('Allocated')">
                     <div class="stat-icon blue">
                         <svg viewBox="0 0 24 24">
                             <path d="M19 3H5c-1.1 0-2 .9-2 2v14l4-4h12c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z" />
@@ -3632,7 +3632,7 @@
                     <div class="stat-value" id="saAllocated">0</div>
                     <div class="stat-label">Newly Allocated</div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card" onclick="window.filterActivityByStatus('Sent')">
                     <div class="stat-icon orange">
                         <svg viewBox="0 0 24 24">
                             <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
@@ -3641,7 +3641,7 @@
                     <div class="stat-value" id="saSent">0</div>
                     <div class="stat-label">Links Sent</div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card" onclick="window.filterActivityByStatus('Accepted')">
                     <div class="stat-icon green">
                         <svg viewBox="0 0 24 24">
                             <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
@@ -3650,7 +3650,7 @@
                     <div class="stat-value" id="saAccepted">0</div>
                     <div class="stat-label">Accepted Leads</div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card" onclick="window.filterActivityByStatus('Rejected')">
                     <div class="stat-icon red">
                         <svg viewBox="0 0 24 24">
                             <path
