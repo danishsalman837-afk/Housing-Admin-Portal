@@ -1523,7 +1523,7 @@ window.openNotesModal = function (id) {
             </div>
             <div id="note-text-${idx}" style="font-size:13px; color:#111827; overflow-wrap:break-word; line-height:1.4;">${n.note || (typeof n === 'string' ? n : JSON.stringify(n))}</div>
         </div>
-    `).join('');
+    `).reverse().join('');
     if (notesArray.length === 0) notesHtml = `<div style="font-size:13px; color:#9CA3AF; font-style:italic; padding:20px; text-align:center;">No internal notes yet.</div>`;
 
     const toolbarHtml = `
