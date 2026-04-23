@@ -76,6 +76,7 @@ const leadViewOrder = [
     'issues_electrics', 'issues_heating', 'issues_structural',
     'alreadySubmitted', 'reported',
     'reportCount', 'reportFirst', 'reportLast', 'reportResponse', 'reportAttempt', 'reportStatus',
+    'tenancy_on_name', 'tenancy_type', 'is_name_on_joint', 'other_tenant_name', 'actual_tenant_fullname',
     'arrears', 'arrearsAmount', 'additionalNotes', 'agentName'
 ];
 
@@ -89,6 +90,11 @@ const leadFieldLabels = {
     tenantType: 'Are you a council tenant or a housing association tenant?',
     landlordName: 'What is the name of your landlord?',
     livingDuration: 'How long have you been living in the property?',
+    tenancy_on_name: 'Is the tenancy agreement in your name?',
+    tenancy_type: 'Is it a joint tenancy or an individual tenancy?',
+    is_name_on_joint: 'Is your name included on the joint agreement?',
+    other_tenant_name: 'Name of the other person:',
+    actual_tenant_fullname: 'Can you please confirm the full name of the tenant on the agreement:',
     damp: 'Is there any damp or mould in the property?',
     dampLocation: 'Where exactly is the damp or mould located?',
     dampRooms: 'How many rooms are affected?',
@@ -983,6 +989,31 @@ window.openEditLeadModal = function (id) {
     leadViewOrder.forEach(key => {
         if (ignoreKeys.includes(key)) return;
         shownKeys.add(key);
+
+        // Special handling for Tenancy Verification fields to allow grouping and conditional logic
+        if (['tenancy_on_name', 'tenancy_type', 'is_name_on_joint', 'other_tenant_name', 'actual_tenant_fullname'].includes(key)) {
+            // We'll handle these separately below or wrap them
+            if (key === 'tenancy_on_name') {
+                 html += `<div class="form-group" style="grid-column: span 2; background: var(--blue-light); padding: 15px; border-radius: 12px; border: 1px solid var(--blue); margin-bottom: 10px;">
+                            <label style="font-size:11px; font-weight:800; color:var(--blue); text-transform:uppercase; margin-bottom:8px; display:block;">Tenancy Verification</label>
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                                ${createFieldHtml('tenancy_on_name', s.tenancy_on_name)}
+                                <div id="edit_tenancy_type_wrapper" style="display: ${s.tenancy_on_name === 'No' ? 'block' : 'none'}">
+                                    ${createFieldHtml('tenancy_type', s.tenancy_type)}
+                                </div>
+                            </div>
+                            <div id="edit_joint_tenancy_wrapper" style="display: ${s.tenancy_on_name === 'No' && s.tenancy_type === 'Joint' ? 'grid' : 'none'}; grid-template-columns: 1fr 1fr; gap:15px; margin-top:15px; border-top:1px solid rgba(0,0,0,0.05); padding-top:15px;">
+                                ${createFieldHtml('is_name_on_joint', s.is_name_on_joint)}
+                                ${createFieldHtml('other_tenant_name', s.other_tenant_name)}
+                            </div>
+                            <div id="edit_individual_tenancy_wrapper" style="display: ${s.tenancy_on_name === 'No' && s.tenancy_type === 'Individual' ? 'block' : 'none'}; margin-top:15px; border-top:1px solid rgba(0,0,0,0.05); padding-top:15px;">
+                                ${createFieldHtml('actual_tenant_fullname', s.actual_tenant_fullname)}
+                            </div>
+                         </div>`;
+            }
+            return;
+        }
+
         html += createFieldHtml(key, s[key]);
     });
 
@@ -1075,6 +1106,32 @@ window.openEditLeadModal = function (id) {
 
     document.getElementById('modalBox').style.display = 'block';
     document.getElementById('modalOverlay').style.display = 'flex';
+
+    // Add Tenancy Logic Listeners
+    const editTenancyOnName = document.querySelector('.edit-inp[data-field="tenancy_on_name"]');
+    const editTenancyType = document.querySelector('.edit-inp[data-field="tenancy_type"]');
+    
+    if (editTenancyOnName) {
+        editTenancyOnName.addEventListener('change', (e) => {
+            const isNo = e.target.value === 'No';
+            document.getElementById('edit_tenancy_type_wrapper').style.display = isNo ? 'block' : 'none';
+            if (!isNo) {
+                document.getElementById('edit_joint_tenancy_wrapper').style.display = 'none';
+                document.getElementById('edit_individual_tenancy_wrapper').style.display = 'none';
+            } else {
+                // Refresh type logic
+                editTenancyType.dispatchEvent(new Event('change'));
+            }
+        });
+    }
+
+    if (editTenancyType) {
+        editTenancyType.addEventListener('change', (e) => {
+            const val = e.target.value;
+            document.getElementById('edit_joint_tenancy_wrapper').style.display = val === 'Joint' ? 'grid' : 'none';
+            document.getElementById('edit_individual_tenancy_wrapper').style.display = val === 'Individual' ? 'block' : 'none';
+        });
+    }
 };
 
 

@@ -244,6 +244,7 @@
 
       <label>How long have you been living in the property?</label>
       <textarea name="tenancyDuration" rows="1" required></textarea>
+
     </div>
 
     <!-- Damp / Mould -->
@@ -356,6 +357,42 @@
 
         <label>Is the issue still not resolved?</label>
         <textarea name="reportStatus" rows="1"></textarea>
+      </div>
+    </div>
+
+    <!-- Tenancy Verification Section -->
+    <div class="section">
+      <label>Is the tenancy agreement in your name?</label>
+      <select name="tenancy_on_name" id="tenancy_on_name" required>
+        <option value="">Select</option>
+        <option value="Yes">Yes</option>
+        <option value="No">No</option>
+      </select>
+
+      <div id="tenancyDetails" class="hidden" style="margin-top: 15px; padding: 15px; border-left: 3px solid #1a3a52; background-color: #f0f4f8; border-radius: 6px;">
+        <label>Is it a joint tenancy or an individual tenancy?</label>
+        <select name="tenancy_type" id="tenancy_type">
+          <option value="">Select</option>
+          <option value="Joint">Joint</option>
+          <option value="Individual">Individual</option>
+        </select>
+
+        <div id="jointTenancyDetails" class="hidden">
+          <label>Is your name included on the joint agreement?</label>
+          <select name="is_name_on_joint" id="is_name_on_joint">
+            <option value="">Select</option>
+            <option value="Yes">Yes</option>
+            <option value="No">No</option>
+          </select>
+
+          <label>Name of the other person:</label>
+          <input type="text" name="other_tenant_name" id="other_tenant_name">
+        </div>
+
+        <div id="individualTenancyDetails" class="hidden">
+          <label>Can you please confirm the full name of the tenant on the agreement:</label>
+          <input type="text" name="actual_tenant_fullname" id="actual_tenant_fullname">
+        </div>
       </div>
     </div>
 
@@ -553,6 +590,44 @@
     toggleDetails("leak", "leakDetails");
     toggleDetails("reported", "reportedDetails");
     toggleDetails("arrears", "arrearsDetails");
+
+    // Tenancy Verification Logic
+    const tenancyOnName = document.getElementById('tenancy_on_name');
+    const tenancyDetails = document.getElementById('tenancyDetails');
+    const tenancyType = document.getElementById('tenancy_type');
+    const jointDetails = document.getElementById('jointTenancyDetails');
+    const individualDetails = document.getElementById('individualTenancyDetails');
+
+    tenancyOnName.addEventListener('change', () => {
+      const isNo = tenancyOnName.value === 'No';
+      tenancyDetails.classList.toggle('hidden', !isNo);
+      
+      // Update required attributes
+      const fields = tenancyDetails.querySelectorAll('select, input');
+      if (!isNo) {
+        fields.forEach(f => { f.required = false; f.value = ''; });
+        jointDetails.classList.add('hidden');
+        individualDetails.classList.add('hidden');
+      } else {
+        tenancyType.required = true;
+      }
+    });
+
+    tenancyType.addEventListener('change', () => {
+      const val = tenancyType.value;
+      jointDetails.classList.toggle('hidden', val !== 'Joint');
+      individualDetails.classList.toggle('hidden', val !== 'Individual');
+
+      // Update required attributes for Joint
+      const jointFields = jointDetails.querySelectorAll('select, input');
+      jointFields.forEach(f => f.required = (val === 'Joint'));
+      if (val !== 'Joint') jointFields.forEach(f => f.value = '');
+
+      // Update required attributes for Individual
+      const individualFields = individualDetails.querySelectorAll('select, input');
+      individualFields.forEach(f => f.required = (val === 'Individual'));
+      if (val !== 'Individual') individualFields.forEach(f => f.value = '');
+    });
 
     // Auto-expanding textareas
     function autoExpand(element) {

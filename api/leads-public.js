@@ -26,7 +26,9 @@ module.exports = async function handler(req, res) {
         leakStart: 'leakStart', leakDamage: 'leakDamage', leakBelongings: 'leakBelongings', reportCount: 'reportCount',
         reportFirst: 'reportFirst', reportLast: 'reportLast', reportResponse: 'reportResponse', reportAttempt: 'reportAttempt',
         reportStatus: 'reportStatus', arrearsAmount: 'arrearsAmount', alreadySubmitted: 'alreadySubmitted', additionalNotes: 'additionalNotes',
-        agentName: 'agent_name', name: 'name', phone: 'phone'
+        agentName: 'agent_name', name: 'name', phone: 'phone',
+        tenancy_on_name: 'tenancy_on_name', tenancy_type: 'tenancy_type', is_name_on_joint: 'is_name_on_joint', 
+        other_tenant_name: 'other_tenant_name', actual_tenant_fullname: 'actual_tenant_fullname'
     };
     
     // Save a DEEP CLONE of the original raw data for the agent_data backup
