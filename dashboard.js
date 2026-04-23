@@ -853,7 +853,7 @@ window.openViewModal = function (id, showOriginal = false) {
         });
 
         modalBox.innerHTML = `
-            <div class="modal-header" style="position:sticky; top:0; background:rgba(255,255,255,0.85); backdrop-filter:blur(15px); z-index:100; padding:24px 32px; border-bottom:1px solid var(--border-light); display:flex; justify-content:space-between; align-items:center;">
+            <div class="modal-header" style="background:var(--bg-surface); padding:24px 32px; border-bottom:1px solid var(--border-light); display:flex; justify-content:space-between; align-items:center; border-top-left-radius:24px; border-top-right-radius:24px; flex-shrink:0;">
                 <div style="flex:1; padding-right:20px;">
                     <div style="font-size:11px; font-weight:800; color:var(--primary); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">${titlePrefix}</div>
                     <div style="display:flex; align-items:center; gap:12px;">
@@ -861,10 +861,10 @@ window.openViewModal = function (id, showOriginal = false) {
                         <span style="background:var(--bg-surface-2); color:var(--text-muted); padding:4px 10px; border-radius:8px; font-size:12px; font-weight:700;">#${s.id}</span>
                     </div>
                 </div>
-                <button class="close-btn" style="background:var(--bg-surface-2); border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:none; color:var(--text-muted); cursor:pointer; font-size:22px; transition:all 0.2s;" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button>
+                <button class="close-btn" style="background:var(--bg-surface-2); border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:none; color:var(--text-muted); cursor:pointer; font-size:22px;" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button>
             </div>
             
-            <div class="modal-scroll-area" style="max-height:80vh; overflow-y:auto; padding:32px; background: var(--bg-surface);">
+            <div style="flex:1; overflow-y:auto; padding:32px; background: var(--bg-surface);" id="modalScrollArea">
                 <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:24px;">
                     ${dataHtml || `
                         <div style="grid-column: 1/-1; padding: 60px 40px; text-align:center;">
@@ -921,6 +921,10 @@ window.openViewModal = function (id, showOriginal = false) {
                         </div>
                     </div>
                 </div>
+            </div>
+            
+            <div style="padding:20px 32px; border-top:1px solid var(--border-light); display:flex; justify-content:flex-end; flex-shrink:0; background:var(--bg-surface);">
+                <button class="btn-hub-secondary" style="padding:10px 32px; height:auto; font-size:14px; border-radius:10px; font-weight:700;" onclick="document.getElementById('modalOverlay').style.display='none'">Close</button>
             </div>
         `;
 
@@ -982,18 +986,17 @@ window.openEditLeadModal = function (id) {
         html += createFieldHtml(key, s[key]);
     });
 
-
-
     document.getElementById('modalBox').innerHTML = `
-        <div class="modal-header" style="background:rgba(255,255,255,0.85); backdrop-filter:blur(15px); padding:24px 32px; border-bottom:1px solid var(--border-light); display:flex; justify-content:space-between; align-items:center; border-top-left-radius:24px; border-top-right-radius:24px; position:sticky; top:0; z-index:100;">
+        <div class="modal-header" style="background:var(--bg-surface); padding:24px 32px; border-bottom:1px solid var(--border-light); display:flex; justify-content:space-between; align-items:center; border-top-left-radius:24px; border-top-right-radius:24px; flex-shrink:0;">
             <div>
                 <h2 style="font-size:20px; font-weight:800; letter-spacing:-0.5px; margin:0; color:var(--text-main);">Edit Lead Profile</h2>
                 <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-top:4px;">Lead ID: <span style="color:var(--primary);">#${s.id}</span></div>
             </div>
             <button class="close-btn" style="background:var(--bg-surface-2); border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:none; color:var(--text-muted); cursor:pointer; font-size:22px;" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button>
         </div>
-        <div style="background:var(--bg-surface); padding:32px;">
-            <div class="form-grid" id="editLeadForm" style="display:grid; grid-template-columns: repeat(2, 1fr); gap:20px; max-height:65vh; overflow-y:auto; padding-right:10px;">
+        
+        <div style="flex:1; overflow-y:auto; padding:32px;" id="modalScrollArea">
+            <div class="form-grid" id="editLeadForm" style="display:grid; grid-template-columns: repeat(2, 1fr); gap:20px;">
                 ${html}
                 
                 <div style="grid-column: span 2; margin-top: 24px;">
@@ -1062,13 +1065,12 @@ window.openEditLeadModal = function (id) {
                         ${(!s.attachments || s.attachments.length === 0) ? '<p style="font-size:13px; color:var(--label-4); font-style:italic; grid-column:1/-1; text-align:center; padding:30px 0; font-weight:600;">No pictures attached yet.</p>' : ''}
                     </div>
                 </div>
-
             </div>
-            
-            <div style="margin-top:32px; display:flex; justify-content:flex-end; gap:16px;">
-               <button class="btn-hub-secondary" style="padding:12px 28px; height:auto; font-size:14px; border-radius:12px; font-weight:700;" onclick="document.getElementById('modalOverlay').style.display='none'">Cancel</button>
-               <button class="btn-hub-primary" style="padding:12px 40px; height:auto; font-size:14px; border-radius:12px; font-weight:800; background:#10B981; border:none; box-shadow: 0 8px 20px rgba(16, 185, 129, 0.2);" onclick="window.saveLeadEdits('${s.id}')">Apply Changes</button>
-            </div>
+        </div>
+        
+        <div style="padding:20px 32px; border-top:1px solid var(--border-light); display:flex; justify-content:flex-end; gap:16px; flex-shrink:0; background:var(--bg-surface);">
+           <button class="btn-hub-secondary" style="padding:10px 24px; height:auto; font-size:14px; border-radius:10px; font-weight:700;" onclick="document.getElementById('modalOverlay').style.display='none'">Cancel</button>
+           <button class="btn-hub-primary" style="padding:10px 32px; height:auto; font-size:14px; border-radius:10px; font-weight:800; background:#10B981; border:none; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);" onclick="window.saveLeadEdits('${s.id}')">Apply Changes</button>
         </div>`;
 
     document.getElementById('modalBox').style.display = 'block';
