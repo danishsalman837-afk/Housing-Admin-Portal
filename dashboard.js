@@ -191,7 +191,7 @@ window.switchView = function (view) {
     } else if (view === 'performance') {
         const detailSec = document.getElementById('agentDetailSection');
         if (detailSec) detailSec.style.display = 'none';
-        const summaryPanel = document.querySelector('#performanceView > .panel');
+        const summaryPanel = document.getElementById('performanceSummaryPanel');
         if (summaryPanel) summaryPanel.style.display = 'block';
         window.calculateAgentPerformance();
     } else if (view === 'leads') {
@@ -431,33 +431,10 @@ window.viewAgentDetails = function (agentName) {
     agentLeads.forEach((lead, idx) => {
         const tr = document.createElement('tr');
         
-        // Find solicitor notes if rejected
-        let notes = '--';
-        const ls = (lead.leadStatus || '').toLowerCase().trim();
-        if (ls === 'rejected' || ls === 'closed') {
-            const activity = activityData.find(a => String(a.lead_id) === String(lead.id) && a.status === 'Rejected');
-            if (activity && activity.rejection_reason) {
-                const noteId = `note-${lead.id}-${idx}`;
-                notes = `
-                    <div style="display:flex; flex-direction:column; gap:8px;">
-                        <button class="btn-outline" style="font-size:11px; padding:4px 10px; border-radius:6px; width:fit-content;" 
-                            onclick="document.getElementById('${noteId}').style.display = document.getElementById('${noteId}').style.display === 'none' ? 'block' : 'none'">
-                            View Reason
-                        </button>
-                        <div id="${noteId}" style="display:none; background:var(--red-light); color:var(--red); padding:10px; border-radius:8px; font-size:12px; font-weight:600; line-height:1.4; border:1px solid rgba(255,69,58,0.2); animation: fadeIn 0.3s ease;">
-                            ${activity.rejection_reason}
-                        </div>
-                    </div>`;
-            } else if (lead.additionalNotes) {
-                notes = `<span style="font-size:12px; opacity:0.7;">Internal: ${lead.additionalNotes}</span>`;
-            }
-        }
-
         tr.innerHTML = `
             <td><strong>${lead.name || lead.first_name || '---'}</strong></td>
             <td><span class="status-pill" data-color="${getStatusColor(lead.leadStatus)}">${lead.leadStatus}</span></td>
             <td style="font-size:12px; color:var(--label-3);">${new Date(lead.timestamp).toLocaleDateString()}</td>
-            <td style="max-width:300px;">${notes}</td>
             <td>
                 <button class="act-btn view" onclick="window.openViewModal('${lead.id}', false)">View Lead</button>
             </td>
@@ -467,8 +444,7 @@ window.viewAgentDetails = function (agentName) {
 
     const detailSec = document.getElementById('agentDetailSection');
     detailSec.style.display = 'block';
-    // Hide the summary table to make it feel like a "new page"
-    const summaryPanel = document.querySelector('#performanceView > .panel');
+    const summaryPanel = document.getElementById('performanceSummaryPanel');
     if (summaryPanel) summaryPanel.style.display = 'none';
     
     detailSec.scrollIntoView({ behavior: 'smooth' });

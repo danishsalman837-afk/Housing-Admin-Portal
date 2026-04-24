@@ -3878,7 +3878,7 @@
                 </div>
             </div>
 
-            <div class="panel">
+            <div class="panel" id="performanceSummaryPanel">
                 <div class="table-responsive">
                     <table id="performanceTable">
                         <thead>
@@ -3905,7 +3905,7 @@
                             Details for Agent</h2>
                     </div>
                     <button class="btn-outline"
-                        onclick="document.getElementById('agentDetailSection').style.display='none'">
+                        onclick="document.getElementById('agentDetailSection').style.display='none'; document.getElementById('performanceSummaryPanel').style.display='block';">
                         Close Details
                     </button>
                 </div>
@@ -3917,7 +3917,6 @@
                                     <th>Client Name</th>
                                     <th>Status</th>
                                     <th>Date</th>
-                                    <th>Solicitor Notes / Rejection Reason</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
