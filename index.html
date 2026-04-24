@@ -1468,6 +1468,20 @@
             border-color: #FDE68A !important;
         }
 
+        .static-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 12px;
+            border-radius: 99px;
+            font-size: 11px;
+            font-weight: 700;
+            min-width: 40px;
+            text-transform: uppercase;
+        }
+        .static-pill.success { background: var(--status-success-bg); color: var(--status-success-txt); }
+        .static-pill.danger { background: var(--status-danger-bg); color: var(--status-danger-txt); }
+
         .status-pill[data-color="gray"] {
             background: #F3F4F6 !important;
             color: #374151 !important;

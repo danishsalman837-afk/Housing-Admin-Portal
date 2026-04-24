@@ -391,8 +391,8 @@ function renderPerformanceTable(data) {
                 ${agent.displayName}
             </td>
             <td>${agent.total}</td>
-            <td><span class="status-pill success">${agent.accepted}</span></td>
-            <td><span class="status-pill danger">${agent.rejected}</span></td>
+            <td><span class="static-pill success">${agent.accepted}</span></td>
+            <td><span class="static-pill danger">${agent.rejected}</span></td>
             <td>
                 <div style="display:flex; align-items:center; gap:8px;">
                     <div style="flex:1; height:6px; background:var(--surface-3); border-radius:3px; overflow:hidden;">
