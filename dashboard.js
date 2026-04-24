@@ -965,6 +965,30 @@ window.openEditLeadModal = function (id) {
         let safeValue = String(displayValue).replace(/"/g, '&quot;');
         let label = leadFieldLabels[k] || k.replace(/_/g, ' ');
 
+        // Fields that should be dropdowns
+        const dropdownOptions = {
+            'tenancy_on_name': ['Yes', 'No'],
+            'tenancy_type': ['Joint', 'Individual'],
+            'is_name_on_joint': ['Yes', 'No'],
+            'tenantType': ['Council Tenant', 'Housing Association Tenant'],
+            'damp': ['Yes', 'No'],
+            'leak': ['Yes', 'No'],
+            'arrears': ['Yes', 'No'],
+            'alreadySubmitted': ['Yes', 'No'],
+            'reported': ['Yes', 'No']
+        };
+
+        if (dropdownOptions[k]) {
+            const options = dropdownOptions[k].map(opt => `<option value="${opt}" ${String(val) === opt ? 'selected' : ''}>${opt}</option>`).join('');
+            return `<div class="form-group">
+                        <label style="font-size:11px; font-weight:700; color:#64748B; text-transform:uppercase; margin-bottom:6px; display:block;">${label}</label>
+                        <select class="modern-input edit-inp" data-field="${k}" style="width:100%; appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748B%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C/polyline%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 12px center; background-size: 16px;">
+                            <option value="">Select Option</option>
+                            ${options}
+                        </select>
+                     </div>`;
+        }
+
         // If it's a long field or specific type, use textarea
         const isLongField = String(displayValue).length > 60 ||
             k.toLowerCase().includes('notes') ||
