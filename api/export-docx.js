@@ -139,6 +139,19 @@ module.exports = async function handler(req, res) {
     children.push(qaRow("Are you a council tenant or a housing association tenant?", val('tenantType', ['tenant_type'])));
     children.push(qaRow("Name of Landlord", val('landlordName', ['landlord_name'])));
     children.push(qaRow("How long have you been living in the property?", val('livingDuration', ['tenancyDuration', 'living_duration'])));
+    
+    // ── Section 1.1: Tenancy Details ──
+    children.push(spacer(100), sectionHeading("Section 1.1 — TENANCY VERIFICATION"), spacer(60));
+    children.push(qaRow("Is the tenancy agreement in your name?", val('tenancy_on_name')));
+    if (val('tenancy_on_name') === 'No') {
+        children.push(qaRow("Tenancy Type", val('tenancy_type')));
+        if (val('tenancy_type') === 'Joint') {
+            children.push(qaRow("Name on Joint Agreement?", val('is_name_on_joint')));
+            children.push(qaRow("Other Tenant Name", val('other_tenant_name')));
+        } else if (val('tenancy_type') === 'Individual') {
+            children.push(qaRow("Actual Tenant Full Name", val('actual_tenant_fullname')));
+        }
+    }
 
 
     // ── Section 2: Damp / Mould ──
@@ -167,6 +180,7 @@ module.exports = async function handler(req, res) {
     children.push(qaRow("Are there any Faulty Electrics in the property?", val('issues_electrics', ['faultyElectrics'])));
     children.push(qaRow("Are there any Heating / Boiler Issues?", val('issues_heating', ['heatingIssues'])));
     children.push(qaRow("Are there any Cracks or Structural Damages?", val('issues_structural', ['structuralDamage'])));
+    children.push(qaRow("Do you have any infestation issues in the property?", val('infestation')));
 
     // ── Section 5: Reporting ──
     children.push(spacer(160), sectionHeading("Section 5 — Reporting to Landlord"), spacer(60));

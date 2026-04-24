@@ -240,6 +240,7 @@ module.exports = async function handler(req, res) {
           reported: normalized.reported || '---', reportCount: normalized.reportCount || '---', reportFirst: normalized.reportFirst || '---',
           reportLast: normalized.reportLast || '---', reportResponse: normalized.reportResponse || '---', reportAttempt: normalized.reportAttempt || '---',
           reportStatus: normalized.reportStatus || '---',
+          infestation: normalized.infestation || '---',
           tenancyDuration: normalized.tenancyDuration || '---',
           alreadySubmitted: normalized.alreadySubmitted || '---',
           arrears: normalized.rentalArrears || '---',

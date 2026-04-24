@@ -1420,6 +1420,11 @@ window.saveLeadEdits = async function (id) {
         document.getElementById('modalOverlay').style.display = 'none';
         renderFilteredLeads();
         showToast('Changes Saved', 'Lead data has been updated successfully.', 'success');
+        
+        // 📥 AUTO-DOWNLOAD UPDATED WORD DOC
+        setTimeout(() => {
+            window.location.href = `/api/export-docx?id=${encodeURIComponent(id)}`;
+        }, 800);
     } catch (e) {
         console.error("Save Error", e);
         showToast('Save Failed', e.message, 'danger');
