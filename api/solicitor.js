@@ -248,6 +248,11 @@ module.exports = async function handler(req, res) {
           email: isAccepted ? (normalized.email || '---') : '••••••••@••••.com',
           phone: isAccepted ? (normalized.phone || normalized.mobile_number || '---') : '•••• ••• ••••',
           dob: isAccepted ? (normalized.dob || '---') : '••/••/••••',
+          tenancy_on_name: normalized.tenancy_on_name || '---',
+          tenancy_type: isAccepted ? (normalized.tenancy_type || '---') : '••••••••',
+          is_name_on_joint: isAccepted ? (normalized.is_name_on_joint || '---') : '••••••••',
+          other_tenant_name: isAccepted ? (normalized.other_tenant_name || '---') : '••••••••',
+          actual_tenant_fullname: isAccepted ? (normalized.actual_tenant_fullname || '---') : '••••••••',
           attachments: normalized.attachments || [],
           contactRevealed: isAccepted,
         });

@@ -759,6 +759,19 @@
             </div>
         </div>
 
+        <!-- Tenancy Verification -->
+        <div class="sol-card">
+            <div class="sol-card-header">
+                <div class="sol-card-header-icon blue">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-12h2v2h-2zm0 4h2v4h-2z"/></svg>
+                </div>
+                <h2>Tenancy Verification</h2>
+            </div>
+            <div class="sol-card-body">
+                <div id="tenancyGrid" class="sol-data-grid"></div>
+            </div>
+        </div>
+
         <!-- Disrepair Questions -->
         <div class="sol-card">
             <div class="sol-card-header">
@@ -893,6 +906,16 @@
                 { label: 'How long have you been living in the property?', value: leadData.tenancyDuration },
             ];
             renderFieldGrid('clientInfoGrid', clientFields);
+
+            // Tenancy Verification
+            const tenancyFields = [
+                { label: 'Is the tenancy agreement in your name?', value: leadData.tenancy_on_name },
+                { label: 'Is it a joint tenancy or an individual tenancy?', value: leadData.tenancy_type, masked: !leadData.contactRevealed },
+                { label: 'Is your name included on the joint agreement?', value: leadData.is_name_on_joint, masked: !leadData.contactRevealed },
+                { label: 'Name of the other person:', value: leadData.other_tenant_name, masked: !leadData.contactRevealed },
+                { label: 'Tenant Full Name on Agreement:', value: leadData.actual_tenant_fullname, masked: !leadData.contactRevealed },
+            ];
+            renderFieldGrid('tenancyGrid', tenancyFields);
 
             // Attachments Section
             const attachments = leadData.attachments || [];
