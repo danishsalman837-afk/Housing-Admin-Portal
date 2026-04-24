@@ -237,7 +237,7 @@
       <input type="text" name="postcode" placeholder="e.g. SW1A 1AA" required>
 
       <label>Are you a council tenant or a housing association tenant?</label>
-      <select name="tenantType" required>
+      <select name="tenantType" id="tenantType" required>
         <option value="">Select</option>
         <option value="Council Tenant">Council Tenant</option>
         <option value="Housing Association Tenant">Housing Association Tenant</option>
@@ -338,6 +338,16 @@
       
       <label>Are there any Cracks or Structural Damages?</label>
       <select name="issues_structural" required>
+        <option value="">Select</option>
+        <option value="No">No</option>
+        <option value="Yes">Yes</option>
+      </select>
+    </div>
+
+    <!-- Infestation -->
+    <div class="section">
+      <label>Do you have any infestation issues in the property?</label>
+      <select name="infestation" id="infestation" required>
         <option value="">Select</option>
         <option value="No">No</option>
         <option value="Yes">Yes</option>

@@ -73,7 +73,7 @@ const leadViewOrder = [
     'tenantType', 'landlordName', 'livingDuration',
     'damp', 'dampLocation', 'dampRooms', 'dampSurface', 'dampDuration', 'dampCause', 'dampDamage', 'dampHealth',
     'leak', 'leakLocation', 'leakSource', 'leakStart', 'leakDamage', 'leakCracks', 'leakBelongings',
-    'issues_electrics', 'issues_heating', 'issues_structural',
+    'issues_electrics', 'issues_heating', 'issues_structural', 'infestation',
     'alreadySubmitted', 'reported',
     'reportCount', 'reportFirst', 'reportLast', 'reportResponse', 'reportAttempt', 'reportStatus',
     'tenancy_on_name', 'tenancy_type', 'is_name_on_joint', 'other_tenant_name', 'actual_tenant_fullname',
@@ -95,6 +95,7 @@ const leadFieldLabels = {
     is_name_on_joint: 'Is your name included on the joint agreement?',
     other_tenant_name: 'Name of the other person:',
     actual_tenant_fullname: 'Can you please confirm the full name of the tenant on the agreement:',
+    infestation: 'Do you have any infestation issues in the property?',
     damp: 'Is there any damp or mould in the property?',
     dampLocation: 'Where exactly is the damp or mould located?',
     dampRooms: 'How many rooms are affected?',
@@ -975,7 +976,8 @@ window.openEditLeadModal = function (id) {
             'leak': ['Yes', 'No'],
             'arrears': ['Yes', 'No'],
             'alreadySubmitted': ['Yes', 'No'],
-            'reported': ['Yes', 'No']
+            'reported': ['Yes', 'No'],
+            'infestation': ['Yes', 'No']
         };
 
         if (dropdownOptions[k]) {
