@@ -79,7 +79,8 @@ module.exports = async function handler(req, res) {
         agentName: 'agent_name', name: 'name', phone: 'phone',
         tenancy_on_name: 'tenancy_on_name', tenancy_type: 'tenancy_type', is_name_on_joint: 'is_name_on_joint', 
         other_tenant_name: 'other_tenant_name', actual_tenant_fullname: 'actual_tenant_fullname',
-        infestation: 'infestation'
+        infestation: 'infestation',
+        property_type: 'property_type'
     };
       for (const [formKey, dbKey] of Object.entries(mapping)) {
           if (updates[formKey] !== undefined) {

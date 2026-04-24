@@ -69,7 +69,7 @@ function getStatusColor(status) {
 }
 
 const leadViewOrder = [
-    'name', 'email', 'phone', 'dob', 'address', 'postcode',
+    'name', 'email', 'phone', 'dob', 'address', 'postcode', 'property_type',
     'tenantType', 'landlordName', 'livingDuration',
     'damp', 'dampLocation', 'dampRooms', 'dampSurface', 'dampDuration', 'dampCause', 'dampDamage', 'dampHealth',
     'leak', 'leakLocation', 'leakSource', 'leakStart', 'leakDamage', 'leakCracks', 'leakBelongings',
@@ -87,6 +87,7 @@ const leadFieldLabels = {
     dob: 'Date of Birth (DOB):',
     address: 'Address',
     postcode: 'Postcode',
+    property_type: 'What type of property do you live in?',
     tenantType: 'Are you a council tenant or a housing association tenant?',
     landlordName: 'What is the name of your landlord?',
     livingDuration: 'How long have you been living in the property?',
@@ -968,6 +969,7 @@ window.openEditLeadModal = function (id) {
 
         // Fields that should be dropdowns
         const dropdownOptions = {
+            'property_type': ['Detached House', 'Semi-Detached House', 'Terraced', 'Mid-Terraced', 'End-Terraced', 'Detached Bungalows', 'Semi-Detached Bungalows', 'Cottages', 'Flats', 'Park Home', 'Maisonettes'],
             'tenancy_on_name': ['Yes', 'No'],
             'tenancy_type': ['Joint', 'Individual'],
             'is_name_on_joint': ['Yes', 'No'],

@@ -136,6 +136,7 @@ module.exports = async function handler(req, res) {
     children.push(qaRow("Date of Birth (DOB)", isAnonymized ? '••/••/••••' : val('dob', ['dateOfBirth', 'date_of_birth'])));
     children.push(qaRow("Address", isAnonymized ? '••••••••••••••••••••' : val('address')));
     children.push(qaRow("Postcode", val('postcode')));
+    children.push(qaRow("What type of property do you live in?", val('property_type')));
     children.push(qaRow("Are you a council tenant or a housing association tenant?", val('tenantType', ['tenant_type'])));
     children.push(qaRow("Name of Landlord", val('landlordName', ['landlord_name'])));
     children.push(qaRow("How long have you been living in the property?", val('livingDuration', ['tenancyDuration', 'living_duration'])));

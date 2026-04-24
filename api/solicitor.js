@@ -230,6 +230,7 @@ module.exports = async function handler(req, res) {
           landlordName: isAccepted ? (normalized.landlordName || '---') : '••••••••',
           address: isAccepted ? (normalized.address || '---') : '••••••••••••••••••••',
           postcode: isAccepted ? (normalized.postcode || '---') : '••••••••',
+          property_type: normalized.property_type || '---',
           damp: normalized.damp || '---', dampLocation: normalized.dampLocation || '---', dampRooms: normalized.dampRooms || '---',
           dampSurface: normalized.dampSurface || '---', dampDuration: normalized.dampDuration || '---', dampCause: normalized.dampCause || '---',
           dampDamage: normalized.dampDamage || '---', dampHealth: normalized.dampHealth || '---',
