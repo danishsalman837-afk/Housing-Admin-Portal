@@ -2072,6 +2072,17 @@
             animation: notifIn 0.2s var(--ease-spring);
         }
 
+        @media (max-width: 480px) {
+            .notif-dropdown {
+                width: calc(100vw - 24px);
+                right: -40px; /* Offset to center it more or keep it aligned with icons */
+                position: fixed;
+                top: 64px;
+                left: 12px;
+                right: 12px;
+            }
+        }
+
         .notif-dropdown.open {
             display: block;
         }
