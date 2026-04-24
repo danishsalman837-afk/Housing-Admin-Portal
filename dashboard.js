@@ -10,6 +10,11 @@ let whatsappMessages = [];
 let whatsappRealtimeSub = null;
 
 // ═══════════════════════════════════════
+// CONSTANTS & HELPERS
+// ═══════════════════════════════════════
+const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+// ═══════════════════════════════════════
 // THEME MANAGEMENT
 // ═══════════════════════════════════════
 window.toggleTheme = function (e) {
@@ -142,6 +147,7 @@ window.switchView = function (view) {
         'activity': 'Lead Activity',
         'leads': 'Lead Management',
         'whatsapp': 'Legacy WhatsApp',
+        'performance': 'Agent Performance',
         'comm': 'Communication Hub',
         'templates': 'Template Library',
         'settings': 'Settings'
@@ -182,6 +188,10 @@ window.switchView = function (view) {
         window.openSnippetManager(true);
     } else if (view === 'settings') {
         populateSettings();
+    } else if (view === 'performance') {
+        const detailSec = document.getElementById('agentDetailSection');
+        if (detailSec) detailSec.style.display = 'none';
+        window.calculateAgentPerformance();
     } else if (view === 'leads') {
         // Reset filters to default when clicking Lead Management from sidebar
         const statusSelect = document.getElementById('filterStatus');
@@ -284,6 +294,165 @@ function calculateDashboardStats() {
     initCharts(submissionsData, paidCount, total);
 }
 
+// ═══════════════════════════════════════
+// AGENT PERFORMANCE LOGIC
+// ═══════════════════════════════════════
+
+window.initPerformanceFilters = function () {
+    const monthSelect = document.getElementById('performanceMonth');
+    const yearSelect = document.getElementById('performanceYear');
+    if (!monthSelect || !yearSelect) return;
+
+    // Set current month
+    const now = new Date();
+    if (monthSelect.value === "") monthSelect.value = now.getMonth();
+
+    // Populate years based on data
+    const years = new Set();
+    years.add(now.getFullYear());
+    submissionsData.forEach(s => {
+        if (s.timestamp) {
+            const d = new Date(s.timestamp);
+            if (!isNaN(d)) years.add(d.getFullYear());
+        }
+    });
+
+    const sortedYears = Array.from(years).sort((a, b) => b - a);
+    yearSelect.innerHTML = sortedYears.map(y => `<option value="${y}" ${y === now.getFullYear() ? 'selected' : ''}>${y}</option>`).join('');
+};
+
+window.calculateAgentPerformance = function () {
+    const selectedMonth = parseInt(document.getElementById('performanceMonth')?.value || new Date().getMonth());
+    const selectedYear = parseInt(document.getElementById('performanceYear')?.value || new Date().getFullYear());
+
+    // Filter leads by month and year
+    const filteredLeads = submissionsData.filter(s => {
+        if (!s.timestamp) return false;
+        const d = new Date(s.timestamp);
+        return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
+    });
+
+    // Aggregate by Agent
+    const agentMap = {};
+    filteredLeads.forEach(s => {
+        const agent = (s.agentName || 'Unknown Agent').trim();
+        if (!agentMap[agent]) {
+            agentMap[agent] = {
+                name: agent,
+                total: 0,
+                accepted: 0,
+                rejected: 0,
+                leads: []
+            };
+        }
+        agentMap[agent].total++;
+        agentMap[agent].leads.push(s);
+
+        const status = (s.leadStatus || '').toLowerCase().trim();
+        if (status === 'accepted') {
+            agentMap[agent].accepted++;
+        } else if (status === 'rejected' || status === 'closed') {
+            agentMap[agent].rejected++;
+        }
+    });
+
+    const performanceData = Object.values(agentMap).sort((a, b) => b.total - a.total);
+    renderPerformanceTable(performanceData);
+
+    // Update performance summary stats
+    document.getElementById('perfTotalAgents').innerText = performanceData.length;
+    document.getElementById('perfTotalAccepted').innerText = filteredLeads.filter(s => (s.leadStatus || '').toLowerCase().trim() === 'accepted').length;
+    document.getElementById('perfTotalRejected').innerText = filteredLeads.filter(s => {
+        const ls = (s.leadStatus || '').toLowerCase().trim();
+        return ls === 'rejected' || ls === 'closed';
+    }).length;
+};
+
+function renderPerformanceTable(data) {
+    const tbody = document.querySelector("#performanceTable tbody");
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:var(--label-4);">No data for this period.</td></tr>';
+        return;
+    }
+
+    data.forEach(agent => {
+        const successRate = agent.total > 0 ? ((agent.accepted / agent.total) * 100).toFixed(1) : '0';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><strong>${agent.name}</strong></td>
+            <td>${agent.total}</td>
+            <td><span class="status-pill success">${agent.accepted}</span></td>
+            <td><span class="status-pill danger">${agent.rejected}</span></td>
+            <td>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <div style="flex:1; height:6px; background:var(--surface-3); border-radius:3px; overflow:hidden;">
+                        <div style="width:${successRate}%; height:100%; background:var(--blue);"></div>
+                    </div>
+                    <span style="font-weight:700; font-size:12px;">${successRate}%</span>
+                </div>
+            </td>
+            <td>
+                <button class="act-btn view" onclick="window.viewAgentDetails('${agent.name.replace(/'/g, "\\'")}')">
+                    View Details
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+window.viewAgentDetails = function (agentName) {
+    const selectedMonth = parseInt(document.getElementById('performanceMonth')?.value);
+    const selectedYear = parseInt(document.getElementById('performanceYear')?.value);
+
+    const agentLeads = submissionsData.filter(s => {
+        if (!s.timestamp) return false;
+        const d = new Date(s.timestamp);
+        const matchAgent = (s.agentName || 'Unknown Agent').trim() === agentName;
+        return matchAgent && d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
+    });
+
+    document.getElementById('agentDetailTitle').innerText = `Sales Details for ${agentName} (${months[selectedMonth]} ${selectedYear})`;
+    const tbody = document.querySelector("#agentLeadsTable tbody");
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    agentLeads.forEach(lead => {
+        const tr = document.createElement('tr');
+        
+        // Find solicitor notes if rejected
+        let notes = '--';
+        const ls = (lead.leadStatus || '').toLowerCase().trim();
+        if (ls === 'rejected' || ls === 'closed') {
+            const activity = activityData.find(a => String(a.lead_id) === String(lead.id) && a.status === 'Rejected');
+            if (activity && activity.rejection_reason) {
+                notes = `<div style="background:var(--red-light); color:var(--red); padding:8px 12px; border-radius:8px; font-size:12px; font-weight:600; line-height:1.4; border:1px solid rgba(255,69,58,0.2);">
+                            <strong>Rejection Note:</strong> ${activity.rejection_reason}
+                         </div>`;
+            } else if (lead.additionalNotes) {
+                notes = `<span style="font-size:12px; opacity:0.7;">Internal: ${lead.additionalNotes}</span>`;
+            }
+        }
+
+        tr.innerHTML = `
+            <td><strong>${lead.name || lead.first_name || '---'}</strong></td>
+            <td><span class="status-pill" data-color="${getStatusColor(lead.leadStatus)}">${lead.leadStatus}</span></td>
+            <td style="font-size:12px; color:var(--label-3);">${new Date(lead.timestamp).toLocaleDateString()}</td>
+            <td style="max-width:300px;">${notes}</td>
+            <td>
+                <button class="act-btn view" onclick="window.openViewModal('${lead.id}', false)">View Lead</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    document.getElementById('agentDetailSection').style.display = 'block';
+    document.getElementById('agentDetailSection').scrollIntoView({ behavior: 'smooth' });
+};
+
 function initCharts(data, paidCount, totalCount) {
     const ctxFlow = document.getElementById('leadsFlowChart');
     const ctxStatus = document.getElementById('statusDonutChart');
@@ -381,6 +550,9 @@ function initFilters() {
             companySelect.appendChild(opt);
         });
     }
+
+    // Agent Performance Filters
+    window.initPerformanceFilters();
 }
 
 window.renderFilteredLeads = function () {
@@ -728,7 +900,6 @@ window.openAddCompanyModal = function (existingCompany = null) {
 };
 
 // --- MODERN MODAL LOGIC ---
-const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 function formatDob(val) {
     if (!val || typeof val !== 'string') return val || '--';
     if (val === '0000-00-00' || val.includes('00 / 00')) return '--';
