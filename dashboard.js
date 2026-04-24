@@ -191,6 +191,8 @@ window.switchView = function (view) {
     } else if (view === 'performance') {
         const detailSec = document.getElementById('agentDetailSection');
         if (detailSec) detailSec.style.display = 'none';
+        const summaryPanel = document.querySelector('#performanceView > .panel');
+        if (summaryPanel) summaryPanel.style.display = 'block';
         window.calculateAgentPerformance();
     } else if (view === 'leads') {
         // Reset filters to default when clicking Lead Management from sidebar
@@ -335,24 +337,27 @@ window.calculateAgentPerformance = function () {
     // Aggregate by Agent
     const agentMap = {};
     filteredLeads.forEach(s => {
-        const agent = (s.agentName || 'Unknown Agent').trim();
-        if (!agentMap[agent]) {
-            agentMap[agent] = {
-                name: agent,
+        const rawName = (s.agentName || 'Unknown Agent').trim();
+        const agentKey = rawName.toUpperCase();
+        
+        if (!agentMap[agentKey]) {
+            agentMap[agentKey] = {
+                displayName: rawName, // Keep original casing of first encounter
+                name: rawName,
                 total: 0,
                 accepted: 0,
                 rejected: 0,
                 leads: []
             };
         }
-        agentMap[agent].total++;
-        agentMap[agent].leads.push(s);
+        agentMap[agentKey].total++;
+        agentMap[agentKey].leads.push(s);
 
         const status = (s.leadStatus || '').toLowerCase().trim();
         if (status === 'accepted') {
-            agentMap[agent].accepted++;
+            agentMap[agentKey].accepted++;
         } else if (status === 'rejected' || status === 'closed') {
-            agentMap[agent].rejected++;
+            agentMap[agentKey].rejected++;
         }
     });
 
@@ -382,7 +387,9 @@ function renderPerformanceTable(data) {
         const successRate = agent.total > 0 ? ((agent.accepted / agent.total) * 100).toFixed(1) : '0';
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td><strong>${agent.name}</strong></td>
+            <td onclick="window.viewAgentDetails('${agent.displayName.replace(/'/g, "\\'")}')" style="cursor:pointer; color:var(--blue); font-weight:700;">
+                ${agent.displayName}
+            </td>
             <td>${agent.total}</td>
             <td><span class="status-pill success">${agent.accepted}</span></td>
             <td><span class="status-pill danger">${agent.rejected}</span></td>
@@ -395,7 +402,7 @@ function renderPerformanceTable(data) {
                 </div>
             </td>
             <td>
-                <button class="act-btn view" onclick="window.viewAgentDetails('${agent.name.replace(/'/g, "\\'")}')">
+                <button class="act-btn view" onclick="window.viewAgentDetails('${agent.displayName.replace(/'/g, "\\'")}')">
                     View Details
                 </button>
             </td>
@@ -411,8 +418,9 @@ window.viewAgentDetails = function (agentName) {
     const agentLeads = submissionsData.filter(s => {
         if (!s.timestamp) return false;
         const d = new Date(s.timestamp);
-        const matchAgent = (s.agentName || 'Unknown Agent').trim() === agentName;
-        return matchAgent && d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
+        const currentAgent = (s.agentName || 'Unknown Agent').trim().toUpperCase();
+        const targetAgent = agentName.toUpperCase();
+        return currentAgent === targetAgent && d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
     });
 
     document.getElementById('agentDetailTitle').innerText = `Sales Details for ${agentName} (${months[selectedMonth]} ${selectedYear})`;
@@ -420,7 +428,7 @@ window.viewAgentDetails = function (agentName) {
     if (!tbody) return;
     tbody.innerHTML = '';
 
-    agentLeads.forEach(lead => {
+    agentLeads.forEach((lead, idx) => {
         const tr = document.createElement('tr');
         
         // Find solicitor notes if rejected
@@ -429,9 +437,17 @@ window.viewAgentDetails = function (agentName) {
         if (ls === 'rejected' || ls === 'closed') {
             const activity = activityData.find(a => String(a.lead_id) === String(lead.id) && a.status === 'Rejected');
             if (activity && activity.rejection_reason) {
-                notes = `<div style="background:var(--red-light); color:var(--red); padding:8px 12px; border-radius:8px; font-size:12px; font-weight:600; line-height:1.4; border:1px solid rgba(255,69,58,0.2);">
-                            <strong>Rejection Note:</strong> ${activity.rejection_reason}
-                         </div>`;
+                const noteId = `note-${lead.id}-${idx}`;
+                notes = `
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        <button class="btn-outline" style="font-size:11px; padding:4px 10px; border-radius:6px; width:fit-content;" 
+                            onclick="document.getElementById('${noteId}').style.display = document.getElementById('${noteId}').style.display === 'none' ? 'block' : 'none'">
+                            View Reason
+                        </button>
+                        <div id="${noteId}" style="display:none; background:var(--red-light); color:var(--red); padding:10px; border-radius:8px; font-size:12px; font-weight:600; line-height:1.4; border:1px solid rgba(255,69,58,0.2); animation: fadeIn 0.3s ease;">
+                            ${activity.rejection_reason}
+                        </div>
+                    </div>`;
             } else if (lead.additionalNotes) {
                 notes = `<span style="font-size:12px; opacity:0.7;">Internal: ${lead.additionalNotes}</span>`;
             }
@@ -449,8 +465,13 @@ window.viewAgentDetails = function (agentName) {
         tbody.appendChild(tr);
     });
 
-    document.getElementById('agentDetailSection').style.display = 'block';
-    document.getElementById('agentDetailSection').scrollIntoView({ behavior: 'smooth' });
+    const detailSec = document.getElementById('agentDetailSection');
+    detailSec.style.display = 'block';
+    // Hide the summary table to make it feel like a "new page"
+    const summaryPanel = document.querySelector('#performanceView > .panel');
+    if (summaryPanel) summaryPanel.style.display = 'none';
+    
+    detailSec.scrollIntoView({ behavior: 'smooth' });
 };
 
 function initCharts(data, paidCount, totalCount) {
