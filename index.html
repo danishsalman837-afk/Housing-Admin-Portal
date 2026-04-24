@@ -3197,6 +3197,15 @@
                 </div>
                 <span>Lead Management</span>
             </div>
+            <!-- Quick Add Lead Button -->
+            <div class="nav-item" style="margin-bottom: 12px; color: #166534; background: rgba(48, 209, 88, 0.1); border: 1px solid rgba(48, 209, 88, 0.2);" onclick="window.open('https://web-form-housing-dr.vercel.app/', '_blank')">
+                <div class="nav-icon" style="background: var(--green); color: white; box-shadow: 0 2px 6px rgba(48, 209, 88, 0.3);">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                    </svg>
+                </div>
+                <span style="font-weight: 700;">Add New Lead</span>
+            </div>
             <div class="nav-item" id="nav-comm" onclick="switchView('comm')">
                 <div class="nav-icon">
                     <svg viewBox="0 0 24 24">
@@ -3550,13 +3559,21 @@
                     <h1>Lead Management</h1>
                     <p>View, filter, and manage all incoming housing disrepair leads</p>
                 </div>
-                <button class="btn-action btn-green" onclick="window.exportExcel()">
-                    <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
-                        <path
-                            d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z" />
-                    </svg>
-                    Export CSV / Excel
-                </button>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn-action" onclick="window.open('https://web-form-housing-dr.vercel.app/', '_blank')">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+                            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                        </svg>
+                        Add New Lead
+                    </button>
+                    <button class="btn-action btn-green" onclick="window.exportExcel()">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+                            <path
+                                d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z" />
+                        </svg>
+                        Export CSV / Excel
+                    </button>
+                </div>
             </div>
 
             <div class="panel">
