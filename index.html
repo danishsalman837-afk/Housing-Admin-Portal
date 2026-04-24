@@ -1488,6 +1488,44 @@
             border-color: #E5E7EB !important;
         }
 
+        /* ─── PERFORMANCE VIEW RESPONSIVENESS ─── */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 1023px) {
+            #performanceView .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+            }
+            #performanceView .filter-group {
+                width: 100%;
+                display: flex;
+                gap: 10px;
+            }
+            #performanceView .filter-group select {
+                flex: 1;
+            }
+            #performanceView .filter-group .divider {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            #agentDetailSection .page-header {
+                flex-direction: column;
+                gap: 12px;
+            }
+            #agentDetailSection .btn-outline {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
         /* ═══════════════════════════════════════
            MODERN ACTION DROPDOWN
         ═══════════════════════════════════════ */
