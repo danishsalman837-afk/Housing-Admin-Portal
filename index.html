@@ -3961,13 +3961,34 @@
                 style="display:none; margin-top:30px; animation: slideUp 0.4s var(--ease) forwards;">
                 <div class="page-header">
                     <div class="page-header-left">
-                        <h2 id="agentDetailTitle" style="font-size:18px; font-weight:800; color:var(--label-1);">Sales
-                            Details for Agent</h2>
+                        <h2 id="agentDetailTitle" style="font-size:18px; font-weight:800; color:var(--label-1);">Sales Details for Agent</h2>
                     </div>
-                    <button class="btn-outline"
-                        onclick="document.getElementById('agentDetailSection').style.display='none'; document.getElementById('performanceSummaryPanel').style.display='block';">
-                        Close Details
-                    </button>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div class="filter-group">
+                            <select id="detailPerformanceMonth" class="modern-select" onchange="window.viewAgentDetails()">
+                                <option value="0">January</option>
+                                <option value="1">February</option>
+                                <option value="2">March</option>
+                                <option value="3">April</option>
+                                <option value="4">May</option>
+                                <option value="5">June</option>
+                                <option value="6">July</option>
+                                <option value="7">August</option>
+                                <option value="8">September</option>
+                                <option value="9">October</option>
+                                <option value="10">November</option>
+                                <option value="11">December</option>
+                            </select>
+                            <div class="divider"></div>
+                            <select id="detailPerformanceYear" class="modern-select" onchange="window.viewAgentDetails()">
+                                <!-- Dynamic years -->
+                            </select>
+                        </div>
+                        <button class="btn-outline"
+                            onclick="document.getElementById('agentDetailSection').style.display='none'; document.getElementById('performanceSummaryPanel').style.display='block';">
+                            Close Details
+                        </button>
+                    </div>
                 </div>
                 <div class="panel">
                     <div class="table-responsive">

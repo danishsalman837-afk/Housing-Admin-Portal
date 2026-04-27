@@ -8,6 +8,7 @@ let selectedCompanyId = null;
 let activeChatLeadId = null;
 let whatsappMessages = [];
 let whatsappRealtimeSub = null;
+let currentDetailAgent = null;
 
 // ═══════════════════════════════════════
 // CONSTANTS & HELPERS
@@ -301,17 +302,21 @@ function calculateDashboardStats() {
 // ═══════════════════════════════════════
 
 window.initPerformanceFilters = function () {
-    const monthSelect = document.getElementById('performanceMonth');
-    const yearSelect = document.getElementById('performanceYear');
-    if (!monthSelect || !yearSelect) return;
-
-    // Set current month
+    const monthSelects = [document.getElementById('performanceMonth'), document.getElementById('detailPerformanceMonth')];
+    const yearSelects = [document.getElementById('performanceYear'), document.getElementById('detailPerformanceYear')];
+    
+    // Set current month/year
     const now = new Date();
-    if (monthSelect.value === "") monthSelect.value = now.getMonth();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    monthSelects.forEach(sel => {
+        if (sel) sel.value = currentMonth;
+    });
 
     // Populate years based on data
     const years = new Set();
-    years.add(now.getFullYear());
+    years.add(currentYear);
     submissionsData.forEach(s => {
         if (s.timestamp) {
             const d = new Date(s.timestamp);
@@ -320,12 +325,20 @@ window.initPerformanceFilters = function () {
     });
 
     const sortedYears = Array.from(years).sort((a, b) => b - a);
-    yearSelect.innerHTML = sortedYears.map(y => `<option value="${y}" ${y === now.getFullYear() ? 'selected' : ''}>${y}</option>`).join('');
+    const yearOptions = sortedYears.map(y => `<option value="${y}" ${y === currentYear ? 'selected' : ''}>${y}</option>`).join('');
+    
+    yearSelects.forEach(sel => {
+        if (sel) {
+            sel.innerHTML = yearOptions;
+            sel.value = currentYear;
+        }
+    });
 };
 
 window.calculateAgentPerformance = function () {
-    const selectedMonth = parseInt(document.getElementById('performanceMonth')?.value || new Date().getMonth());
-    const selectedYear = parseInt(document.getElementById('performanceYear')?.value || new Date().getFullYear());
+    const now = new Date();
+    const selectedMonth = parseInt(document.getElementById('performanceMonth')?.value ?? now.getMonth());
+    const selectedYear = parseInt(document.getElementById('performanceYear')?.value ?? now.getFullYear());
 
     // Filter leads by month and year
     const filteredLeads = submissionsData.filter(s => {
@@ -412,8 +425,21 @@ function renderPerformanceTable(data) {
 }
 
 window.viewAgentDetails = function (agentName) {
-    const selectedMonth = parseInt(document.getElementById('performanceMonth')?.value);
-    const selectedYear = parseInt(document.getElementById('performanceYear')?.value);
+    if (!agentName) {
+        agentName = currentDetailAgent;
+    } else {
+        currentDetailAgent = agentName;
+        // When first opening from summary, sync detail filters with summary filters
+        const sMonth = document.getElementById('performanceMonth')?.value;
+        const sYear = document.getElementById('performanceYear')?.value;
+        if (sMonth !== undefined) document.getElementById('detailPerformanceMonth').value = sMonth;
+        if (sYear !== undefined) document.getElementById('detailPerformanceYear').value = sYear;
+    }
+
+    if (!agentName) return;
+
+    const selectedMonth = parseInt(document.getElementById('detailPerformanceMonth')?.value ?? new Date().getMonth());
+    const selectedYear = parseInt(document.getElementById('detailPerformanceYear')?.value ?? new Date().getFullYear());
 
     const agentLeads = submissionsData.filter(s => {
         if (!s.timestamp) return false;
