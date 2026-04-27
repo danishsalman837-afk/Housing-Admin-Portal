@@ -84,8 +84,16 @@ module.exports = async function handler(req, res) {
         
         if (isDraft) {
            delete safeUpdate.leadStatus; // Don't reset status on draft save
-        } else if (!existingLead.leadStatus || existingLead.leadStatus === 'Agent Saved') {
-           safeUpdate.leadStatus = 'New Lead';
+           safeUpdate.is_submitted = false;
+           safeUpdate.lead_stage = 'Draft';
+        } else {
+           if (!existingLead.leadStatus || existingLead.leadStatus === 'Agent Saved') {
+              safeUpdate.leadStatus = 'New Lead';
+              safeUpdate.lead_stage = 'New Lead';
+           } else {
+              safeUpdate.lead_stage = existingLead.leadStatus;
+           }
+           safeUpdate.is_submitted = true;
         }
 
         const { data: updated, error: updErr } = await supabase.from('submissions').update(safeUpdate).eq('id', existingLead.id).select();
@@ -93,7 +101,10 @@ module.exports = async function handler(req, res) {
         return res.status(200).json({ success: true, message: "Lead updated", lead: updated[0] });
     } else {
         // Insert
+        data.is_submitted = !isDraft;
         data.leadStatus = isDraft ? 'Agent Saved' : 'New Lead';
+        data.lead_stage = isDraft ? 'Draft' : 'New Lead';
+        
         if (!data.unique_token) data.unique_token = crypto.randomUUID();
         if (!data.actual_status) data.actual_status = 'New';
         

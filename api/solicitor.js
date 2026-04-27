@@ -181,7 +181,11 @@ module.exports = async function handler(req, res) {
       if (updErr) return res.status(500).json({ error: "Email sent, but failed to update status: " + updErr.message });
       
       // SYNC: Update the main lead status to 'Sent'
-      await supabase.from('submissions').update({ leadStatus: 'Sent' }).eq('id', activity.lead_id);
+      await supabase.from('submissions').update({ 
+          leadStatus: 'Sent',
+          lead_stage: 'Sent',
+          is_submitted: true 
+      }).eq('id', activity.lead_id);
       
       return res.status(200).json({ success: true, activity: updated[0] });
     } catch (err) {
@@ -286,7 +290,9 @@ module.exports = async function handler(req, res) {
           if (updErr) return res.status(500).json({ error: updErr.message });
           await supabase.from('submissions').update({ 
               actual_status: 'Assigned',
-              leadStatus: 'Accepted' 
+              leadStatus: 'Accepted',
+              lead_stage: 'Accepted',
+              is_submitted: true 
           }).eq('id', lead.id);
           
           const { data: fullLead } = await supabase.from('submissions').select('*').eq('id', lead.id).single();
@@ -313,7 +319,9 @@ module.exports = async function handler(req, res) {
           if (updErr) return res.status(500).json({ error: updErr.message });
           await supabase.from('submissions').update({ 
               actual_status: 'Re-assign',
-              leadStatus: 'Rejected'
+              leadStatus: 'Rejected',
+              lead_stage: 'Rejected',
+              is_submitted: true
           }).eq('id', lead.id);
           return res.status(200).json({ success: true, status: 'Rejected' });
         }

@@ -96,6 +96,13 @@ module.exports = async function handler(req, res) {
           updates.is_edited = true;
       }
 
+      // If leadStatus is being updated, also update lead_stage for export consistency
+      if (updates.leadStatus) {
+          updates.lead_stage = updates.leadStatus;
+          // If it's being updated in admin, it's definitely submitted (or was already)
+          updates.is_submitted = true; 
+      }
+
       const { data, error } = await supabase.from('submissions').update(updates).eq('id', id).select();
       if (error) return res.status(500).json({ error: error.message });
       return res.status(200).json(data[0] || {});

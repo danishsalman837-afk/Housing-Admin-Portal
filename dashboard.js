@@ -548,6 +548,17 @@ function initFilters() {
         });
     }
 
+    const stageSelect = document.getElementById('filterLeadStage');
+    if (stageSelect && stageSelect.options.length <= 1) {
+        stageSelect.innerHTML = '<option value="All">All Submitted Stages</option>';
+        // We use the same leadStatuses for lead_stage
+        leadStatuses.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s; opt.innerText = s;
+            stageSelect.appendChild(opt);
+        });
+    }
+
     // Agent Performance Filters
     window.initPerformanceFilters();
 }
@@ -572,6 +583,13 @@ window.renderFilteredLeads = function () {
             matchStatus = (item.leadStatus === statusFilter);
         }
 
+        // Additional filter for Lead Stage (submitted leads only)
+        const leadStageFilter = document.getElementById('filterLeadStage')?.value || 'All';
+        let matchLeadStage = true;
+        if (leadStageFilter !== 'All') {
+            matchLeadStage = item.is_submitted && (item.lead_stage === leadStageFilter);
+        }
+
         let matchCompany = companyFilter === 'All' || String(item.assigned_company_id || '') === String(companyFilter);
         let matchSearch = true;
 
@@ -580,7 +598,7 @@ window.renderFilteredLeads = function () {
             matchSearch = textToSearch.includes(searchVal);
         }
 
-        return matchStatus && matchCompany && matchSearch;
+        return matchStatus && matchCompany && matchSearch && matchLeadStage;
     });
 
     renderTable(filtered);
@@ -786,10 +804,25 @@ window.handleFieldUpdate = async function (id, fieldName, value) {
 };
 
 window.exportDocx = function (id) { window.open('/api/export-docx?id=' + id, '_blank'); };
+window.exportSubmittedOnly = function () {
+    window.open('/api/export-xlsx?allSubmitted=true', '_blank');
+};
+
+window.exportFilteredLeads = function () {
+    const stage = document.getElementById('filterLeadStage')?.value || 'All';
+    if (stage === 'All') {
+        // If "All" is selected in stage filter, we could either export everything or ask to select.
+        // The user said "containing only the leads matching the selected stage".
+        // I'll export all submitted if All is selected, or just the specific stage.
+        window.open('/api/export-xlsx?allSubmitted=true', '_blank');
+    } else {
+        window.open('/api/export-xlsx?stage=' + stage, '_blank');
+    }
+};
+
 window.exportExcel = function () {
-    const status = document.getElementById('filterStatus')?.value || 'All';
-    const company = document.getElementById('filterCompany')?.value || 'All';
-    window.open('/api/export-xlsx?status=' + status + '&company=' + company, '_blank');
+    // Legacy support or fallback
+    window.exportFilteredLeads();
 };
 
 

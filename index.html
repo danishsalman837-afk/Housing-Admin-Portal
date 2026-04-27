@@ -3716,13 +3716,20 @@
                         </svg>
                         Add New Lead
                     </button>
-                    <button class="btn-action btn-green" onclick="window.exportExcel()">
-                        <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
-                            <path
-                                d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z" />
-                        </svg>
-                        Export CSV / Excel
-                    </button>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn-action" style="background: var(--surface-2); color: var(--label-1); border: 1px solid var(--border); box-shadow: none;" onclick="window.exportSubmittedOnly()">
+                            <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+                                <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z" />
+                            </svg>
+                            Export All Submitted
+                        </button>
+                        <button class="btn-action btn-green" onclick="window.exportFilteredLeads()">
+                            <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+                                <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z" />
+                            </svg>
+                            Export Filtered
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -3748,6 +3755,13 @@
                                 <select id="filterStatus" class="modern-select" onchange="window.renderFilteredLeads()">
                                     <option value="All">All Statuses</option>
                                 </select>
+                                <div class="divider"></div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="font-size: 11px; font-weight: 700; color: var(--label-4); text-transform: uppercase;">Stage:</span>
+                                    <select id="filterLeadStage" class="modern-select" onchange="window.renderFilteredLeads()">
+                                        <option value="All">All Submitted Stages</option>
+                                    </select>
+                                </div>
                             </div>
 
                             <label class="filter-check">
