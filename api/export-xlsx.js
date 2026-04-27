@@ -16,6 +16,7 @@ module.exports = async function handler(req, res) {
 
   try {
     // MANDATORY RULE: is_submitted must be true
+    // Exclusion: Drafts are is_submitted = false
     let query = supabase.from('submissions')
       .select('*')
       .eq('is_submitted', true)
@@ -38,7 +39,7 @@ module.exports = async function handler(req, res) {
         "Phone Number": lead.phone,
         "Email Address": lead.email,
         "Lead Stage": lead.lead_stage || lead.leadStatus || 'New Lead',
-        "Submission Status": lead.is_submitted ? "Submitted" : "Draft",
+        "Submission Status": "Submitted",
         "Assigned Company ID": lead.assigned_company_id,
       };
 

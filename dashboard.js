@@ -548,16 +548,7 @@ function initFilters() {
         });
     }
 
-    const stageSelect = document.getElementById('filterLeadStage');
-    if (stageSelect && stageSelect.options.length <= 1) {
-        stageSelect.innerHTML = '<option value="All">All Submitted Stages</option>';
-        // We use the same leadStatuses for lead_stage
-        leadStatuses.forEach(s => {
-            const opt = document.createElement('option');
-            opt.value = s; opt.innerText = s;
-            stageSelect.appendChild(opt);
-        });
-    }
+    // Lead Stage filter is now inside the Export Modal
 
     // Agent Performance Filters
     window.initPerformanceFilters();
@@ -583,13 +574,6 @@ window.renderFilteredLeads = function () {
             matchStatus = (item.leadStatus === statusFilter);
         }
 
-        // Additional filter for Lead Stage (submitted leads only)
-        const leadStageFilter = document.getElementById('filterLeadStage')?.value || 'All';
-        let matchLeadStage = true;
-        if (leadStageFilter !== 'All') {
-            matchLeadStage = item.is_submitted && (item.lead_stage === leadStageFilter);
-        }
-
         let matchCompany = companyFilter === 'All' || String(item.assigned_company_id || '') === String(companyFilter);
         let matchSearch = true;
 
@@ -598,7 +582,7 @@ window.renderFilteredLeads = function () {
             matchSearch = textToSearch.includes(searchVal);
         }
 
-        return matchStatus && matchCompany && matchSearch && matchLeadStage;
+        return matchStatus && matchCompany && matchSearch;
     });
 
     renderTable(filtered);
@@ -804,16 +788,66 @@ window.handleFieldUpdate = async function (id, fieldName, value) {
 };
 
 window.exportDocx = function (id) { window.open('/api/export-docx?id=' + id, '_blank'); };
+window.openExportModal = function () {
+    const overlay = document.getElementById('modalOverlay');
+    const modalBox = document.getElementById('modalBox');
+
+    modalBox.innerHTML = `
+        <div class="modal-header">
+            <div>
+                <h2 style="font-size: 20px; font-weight: 800; letter-spacing: -0.5px; margin: 0; color: var(--text-main);">Export CRM Data</h2>
+                <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Choose your export preferences and filter by lead stage.</p>
+            </div>
+            <button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button>
+        </div>
+        
+        <div style="padding: 24px; display: flex; flex-direction: column; gap: 20px;">
+            <div style="background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 20px;">
+                <label style="font-size: 11px; font-weight: 800; color: var(--label-3); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 12px;">Filter by Lead Stage</label>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <select id="modalExportStage" class="modern-select" style="flex: 1; height: 44px;">
+                        <option value="All">All Stages</option>
+                        ${leadStatuses.filter(s => s !== 'Agent Saved').map(s => `<option value="${s}">${s}</option>`).join('')}
+                    </select>
+                    <button class="btn-action btn-green" style="height: 44px; padding: 0 24px; border-radius: 8px;" onclick="window.exportFilteredLeads()">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="margin-right: 8px;">
+                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                        </svg>
+                        Export Filtered
+                    </button>
+                </div>
+                <p style="font-size: 11px; color: var(--label-4); margin-top: 10px;">Note: Drafts (Agent Saved) are strictly excluded from all exports.</p>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 16px; padding: 0 4px;">
+                <div style="height: 1px; flex: 1; background: var(--border);"></div>
+                <span style="font-size: 11px; font-weight: 800; color: var(--label-4); text-transform: uppercase;">OR</span>
+                <div style="height: 1px; flex: 1; background: var(--border);"></div>
+            </div>
+
+            <button class="btn-action" style="width: 100%; height: 50px; justify-content: center; font-size: 14px; background: var(--surface-3); color: var(--label-1); border: 1px solid var(--border); box-shadow: none;" onclick="window.exportSubmittedOnly()">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" style="margin-right: 10px;">
+                    <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+                </svg>
+                Download All Submitted Leads (All Stages)
+            </button>
+        </div>
+        
+        <div style="padding: 16px 24px; background: var(--surface-2); border-top: 1px solid var(--border); border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; display: flex; justify-content: flex-end;">
+            <button class="btn-outline" style="font-size: 13px; font-weight: 700;" onclick="document.getElementById('modalOverlay').style.display='none'">Cancel</button>
+        </div>
+    `;
+
+    overlay.style.display = 'flex';
+};
+
 window.exportSubmittedOnly = function () {
     window.open('/api/export-xlsx?allSubmitted=true', '_blank');
 };
 
 window.exportFilteredLeads = function () {
-    const stage = document.getElementById('filterLeadStage')?.value || 'All';
+    const stage = document.getElementById('modalExportStage')?.value || 'All';
     if (stage === 'All') {
-        // If "All" is selected in stage filter, we could either export everything or ask to select.
-        // The user said "containing only the leads matching the selected stage".
-        // I'll export all submitted if All is selected, or just the specific stage.
         window.open('/api/export-xlsx?allSubmitted=true', '_blank');
     } else {
         window.open('/api/export-xlsx?stage=' + stage, '_blank');
@@ -821,8 +855,7 @@ window.exportFilteredLeads = function () {
 };
 
 window.exportExcel = function () {
-    // Legacy support or fallback
-    window.exportFilteredLeads();
+    window.openExportModal();
 };
 
 
