@@ -54,7 +54,7 @@ function syncThemeToggle() {
 
 const leadStatuses = [
     'New Lead', 'Allocated', 'Sent', 'Accepted', 'Rejected', 'Transferred',
-    'Not Yet Invoiced', 'Invoice Raised', 'Paid', 'Test Lead', 'Closed'
+    'Not Yet Invoiced', 'Invoice Raised', 'Paid', 'Test Lead', 'Client Not Engaging', 'Closed'
 ];
 
 function getStatusColor(status) {
@@ -70,6 +70,7 @@ function getStatusColor(status) {
     if (s === 'Invoice Raised') return 'pink';
     if (s === 'Allocated') return 'allocated';
     if (s === 'Sent') return 'sent';
+    if (s === 'Client Not Engaging') return 'slate';
     if (s === 'Test Lead' || s === 'test') return 'gray';
     return 'gray';
 }
@@ -3561,6 +3562,7 @@ window.onDialerInputChange = function () {
             'Accepted': '#34C759', 'Paid': '#34C759', 'Not Yet Invoiced': '#34C759',
             'New Lead': '#007AFF', 'Allocated': '#007AFF', 'Sent': '#007AFF',
             'Rejected': '#FF9500', 'Closed': '#FF3B30',
+            'Client Not Engaging': '#64748B',
         };
         if (statusDot) statusDot.style.background = dotColours[leadStatus] || '#8E8E93';
 

@@ -144,6 +144,12 @@
             border-color: #FECACA;
         }
 
+        .sol-status-pill.client-not-engaging {
+            background: #F1F5F9;
+            color: #475569;
+            border-color: #E2E8F0;
+        }
+
         /* ═══ MAIN CONTENT ═══ */
         .sol-container {
             max-width: 840px;
@@ -1146,7 +1152,7 @@
             const pill = document.getElementById('statusPill');
             pill.style.display = 'inline-block';
             pill.textContent = status;
-            pill.className = 'sol-status-pill ' + status.toLowerCase();
+            pill.className = 'sol-status-pill ' + status.toLowerCase().replace(/\s+/g, '-');
         }
 
         // ─── ACCEPT ───
