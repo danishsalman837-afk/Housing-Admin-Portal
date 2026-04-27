@@ -524,6 +524,7 @@ function initCharts(data, paidCount, totalCount) {
             '#DB2777', // Invoice Raised (pink)
             '#166534', // Paid (dark green)
             '#94A3B8', // Test Lead (gray)
+            '#64748B', // Client Not Engaging (slate)
             '#EF4444'  // Closed (red)
         ];
 
