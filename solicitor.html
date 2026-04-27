@@ -711,6 +711,136 @@
                 font-size: 22px;
             }
         }
+
+        /* ═══════════════════════════════════════
+           TOAST NOTIFICATIONS (APPLE STYLE)
+        ═══════════════════════════════════════ */
+        #app-toast-container {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 11000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: none;
+        }
+
+        .app-toast {
+            background: rgba(255, 255, 255, 0.9) !important;
+            backdrop-filter: blur(14px) saturate(180%) !important;
+            -webkit-backdrop-filter: blur(14px) saturate(180%) !important;
+            border: 1px solid rgba(255, 255, 255, 0.4) !important;
+            border-radius: 18px !important;
+            padding: 12px 16px !important;
+            min-width: 320px !important;
+            max-width: 420px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 14px !important;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1) !important;
+            pointer-events: auto !important;
+            animation: appToastSlideIn 0.5s cubic-bezier(0.19, 1, 0.22, 1) forwards !important;
+            transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1) !important;
+            position: relative;
+            color: #1d1d1f !important;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+            text-align: left;
+        }
+
+        @keyframes appToastSlideIn {
+            from {
+                transform: translateX(120%) scale(0.9);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .app-toast.fade-out {
+            opacity: 0 !important;
+            transform: translateX(30px) scale(0.95) !important;
+        }
+
+        .app-toast-icon {
+            width: 36px !important;
+            height: 36px !important;
+            border-radius: 11px !important;
+            flex-shrink: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            color: white !important;
+        }
+
+        .app-toast-icon svg {
+            width: 20px !important;
+            height: 20px !important;
+            fill: currentColor !important;
+        }
+
+        .app-toast-content {
+            flex: 1 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            min-width: 0 !important;
+        }
+
+        .app-toast-title {
+            font-weight: 700 !important;
+            font-size: 14px !important;
+            line-height: 1.2 !important;
+        }
+
+        .app-toast-msg {
+            font-size: 13px !important;
+            opacity: 0.7 !important;
+            line-height: 1.4 !important;
+            margin-top: 2px !important;
+            white-space: pre-wrap !important;
+        }
+
+        .app-toast-close {
+            background: rgba(0, 0, 0, 0.05) !important;
+            border: none !important;
+            cursor: pointer !important;
+            color: inherit !important;
+            font-size: 16px !important;
+            width: 24px !important;
+            height: 24px !important;
+            border-radius: 50% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            opacity: 0.5 !important;
+            transition: opacity 0.2s !important;
+        }
+
+        .app-toast-close:hover {
+            opacity: 1 !important;
+        }
+
+        .app-toast-success .app-toast-icon {
+            background: #34C759 !important;
+            box-shadow: 0 4px 12px rgba(52, 199, 89, 0.3) !important;
+        }
+
+        .app-toast-danger .app-toast-icon {
+            background: #FF3B30 !important;
+            box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3) !important;
+        }
+
+        .app-toast-warning .app-toast-icon {
+            background: #FF9500 !important;
+            box-shadow: 0 4px 12px rgba(255, 149, 0, 0.3) !important;
+        }
+
+        .app-toast-info .app-toast-icon {
+            background: #007AFF !important;
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3) !important;
+        }
     </style>
 </head>
 
@@ -1046,7 +1176,7 @@
                 }, 1000);
 
             } catch (err) {
-                alert('Error: ' + err.message);
+                showToast('Action Failed', err.message, 'danger');
                 btn.disabled = false;
                 rejectBtn.disabled = false;
                 btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg> Accept Lead';
@@ -1102,7 +1232,7 @@
         async function handleReject() {
             const reason = document.getElementById('rejectionReason').value.trim();
             if (!reason) {
-                alert('Please provide a rejection reason. This field is mandatory.');
+                showToast('Reason Required', 'Please provide a rejection reason. This field is mandatory.', 'warning');
                 return;
             }
 
@@ -1124,7 +1254,7 @@
                 showRejectedResult();
 
             } catch (err) {
-                alert('Error: ' + err.message);
+                showToast('Rejection Failed', err.message, 'danger');
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Submit Rejection';
             }
@@ -1181,6 +1311,41 @@
         window.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') closeViewer();
         });
+
+        function showToast(title, message, type = 'info') {
+            let container = document.getElementById('app-toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'app-toast-container';
+                document.body.appendChild(container);
+            }
+
+            const toast = document.createElement('div');
+            toast.className = `app-toast app-toast-${type}`;
+
+            const icons = {
+                success: '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>',
+                info: '<svg viewBox="0 0 24 24"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>',
+                warning: '<svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>',
+                danger: '<svg viewBox="0 0 24 24"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/></svg>'
+            };
+
+            toast.innerHTML = `
+                <div class="app-toast-icon">${icons[type] || icons.info}</div>
+                <div class="app-toast-content">
+                    <div class="app-toast-title">${title}</div>
+                    <div class="app-toast-msg">${message}</div>
+                </div>
+                <button class="app-toast-close" onclick="this.parentElement.remove()">&times;</button>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add('fade-out');
+                setTimeout(() => toast.remove(), 400);
+            }, 4000);
+        }
     </script>
 </body>
 </html>

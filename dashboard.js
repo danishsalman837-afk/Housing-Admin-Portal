@@ -1489,26 +1489,27 @@ window.toggleCompanyActive = async function (id, isActive) {
 };
 
 window.deleteCompany = async function (id) {
-    if (!confirm("Are you sure you want to delete this company? This will remove the firm from the system.")) return;
-    try {
-        const res = await fetch('/api/companies', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id, action: 'delete' })
-        });
-        if (res.ok) {
-            companiesData = companiesData.filter(c => String(c.id) !== String(id));
-            renderCompanies();
-            initFilters(); // update solicitor dropdowns
-            calculateDashboardStats();
-            showToast('Deleted', 'Company successfully removed.', 'success');
-        } else {
-            throw new Error("Failed to delete from server");
+    window.showConfirm("Delete Company", "Are you sure you want to delete this company? This will remove the firm from the system.", async () => {
+        try {
+            const res = await fetch('/api/companies', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, action: 'delete' })
+            });
+            if (res.ok) {
+                companiesData = companiesData.filter(c => String(c.id) !== String(id));
+                renderCompanies();
+                initFilters(); // update solicitor dropdowns
+                calculateDashboardStats();
+                showToast('Deleted', 'Company successfully removed.', 'success');
+            } else {
+                throw new Error("Failed to delete from server");
+            }
+        } catch (e) {
+            console.error(e);
+            showToast('Error', 'Failed to delete company.', 'danger');
         }
-    } catch (e) {
-        console.error(e);
-        showToast('Error', 'Failed to delete company.', 'danger');
-    }
+    });
 };
 
 window.viewCompanyMembers = function (companyId) {
@@ -1557,7 +1558,7 @@ window.viewCompanyMembers = function (companyId) {
 };
 
 window.openAddMemberModal = function (editId = null) {
-    if (!selectedCompanyId) return alert('Select a company first');
+    if (!selectedCompanyId) return showToast('Selection Required', 'Please select a company first by clicking "Members" on a firm.', 'warning');
     const m = membersData.find(x => String(x.id) === String(editId)) || {};
 
     document.getElementById('modalBox').innerHTML = `
@@ -1630,23 +1631,24 @@ window.saveNewMember = async function (id) {
         viewCompanyMembers(selectedCompanyId);
         calculateDashboardStats();
         if (document.getElementById('leadsView').classList.contains('active')) renderFilteredLeads();
-    } catch (e) { console.error(e); alert("Network Error: " + e.message); }
+    } catch (e) { console.error(e); showToast('Network Error', e.message, 'danger'); }
 };
 
 window.deleteMember = async function (id) {
-    if (!confirm("Are you sure you want to delete this member?")) return;
-    try {
-        const res = await fetch('/api/members', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, action: 'delete' }) });
-        if (!res.ok) throw new Error("Delete failed");
-        membersData = membersData.filter(m => String(m.id) !== String(id));
-        initFilters();
-        viewCompanyMembers(selectedCompanyId);
-        if (document.getElementById('leadsView').classList.contains('active')) renderFilteredLeads();
-        showToast('Member Removed', 'Solicitor has been deleted.', 'success');
-    } catch (e) {
-        console.error(e);
-        showToast('Error', 'Failed to delete member.', 'danger');
-    }
+    window.showConfirm("Delete Member", "Are you sure you want to delete this member?", async () => {
+        try {
+            const res = await fetch('/api/members', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, action: 'delete' }) });
+            if (!res.ok) throw new Error("Delete failed");
+            membersData = membersData.filter(m => String(m.id) !== String(id));
+            initFilters();
+            viewCompanyMembers(selectedCompanyId);
+            if (document.getElementById('leadsView').classList.contains('active')) renderFilteredLeads();
+            showToast('Member Removed', 'Solicitor has been deleted.', 'success');
+        } catch (e) {
+            console.error(e);
+            showToast('Error', 'Failed to delete member.', 'danger');
+        }
+    });
 };
 
 window.saveLeadEdits = async function (id) {
@@ -1800,27 +1802,27 @@ window.handleAttachmentUpload = async function (leadId, input) {
 
 
 window.deleteAllAttachments = async function (leadId) {
-    if (!confirm("Are you sure you want to permanently delete ALL pictures for this lead? This action cannot be undone.")) return;
+    window.showConfirm("Delete All Pictures", "Are you sure you want to permanently delete ALL pictures for this lead? This action cannot be undone.", async () => {
+        try {
+            const res = await fetch('/api/attachments?action=delete-all', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ leadId })
+            });
 
-    try {
-        const res = await fetch('/api/attachments?action=delete-all', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ leadId })
-        });
+            if (!res.ok) throw new Error('Bulk delete failed');
 
-        if (!res.ok) throw new Error('Bulk delete failed');
+            const result = await res.json();
+            const lead = submissionsData.find(s => String(s.id) === String(leadId));
+            if (lead) lead.attachments = [];
 
-        const result = await res.json();
-        const lead = submissionsData.find(s => String(s.id) === String(leadId));
-        if (lead) lead.attachments = [];
-
-        renderAttachmentList(leadId, []);
-        showToast('Storage Cleared', 'All attachments have been removed.', 'success');
-    } catch (e) {
-        console.error(e);
-        showToast('Error', 'Failed to delete all attachments.', 'danger');
-    }
+            renderAttachmentList(leadId, []);
+            showToast('Storage Cleared', 'All attachments have been removed.', 'success');
+        } catch (e) {
+            console.error(e);
+            showToast('Error', 'Failed to delete all attachments.', 'danger');
+        }
+    });
 };
 
 window.deleteAttachment = async function (leadId, index) {
@@ -1835,31 +1837,31 @@ window.deleteAttachment = async function (leadId, index) {
         return;
     }
 
-    if (!confirm("Are you sure you want to delete this attachment?")) return;
+    window.showConfirm("Delete Attachment", "Are you sure you want to delete this attachment?", async () => {
+        try {
+            const res = await fetch('/api/delete-attachment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ leadId, index })
+            });
 
-    try {
-        const res = await fetch('/api/delete-attachment', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ leadId, index })
-        });
+            if (!res.ok) {
+                let errData;
+                try { errData = await res.json(); } catch (e) { }
+                throw new Error(errData?.error || 'Delete failed');
+            }
 
-        if (!res.ok) {
-            let errData;
-            try { errData = await res.json(); } catch (e) { }
-            throw new Error(errData?.error || 'Delete failed');
+            const result = await res.json();
+            
+            if (lead) lead.attachments = result.attachments;
+
+            renderAttachmentList(leadId, result.attachments);
+            showToast('Attachment Deleted', 'The file has been removed.', 'success');
+        } catch (e) {
+            console.error(e);
+            showToast('Delete Failed', e.message, 'danger');
         }
-
-        const result = await res.json();
-        
-        if (lead) lead.attachments = result.attachments;
-
-        renderAttachmentList(leadId, result.attachments);
-        showToast('Attachment Deleted', 'The file has been removed.', 'success');
-    } catch (e) {
-        console.error(e);
-        showToast('Delete Failed', e.message, 'danger');
-    }
+    });
 };
 
 function renderAttachmentList(leadId, attachments) {
@@ -2012,17 +2014,18 @@ window.saveEditedNote = async function (leadId, noteIndex) {
 };
 
 window.deleteNote = async function (leadId, noteIndex) {
-    if (!confirm("Are you sure you want to delete this note?")) return;
-    const s = submissionsData.find(x => String(x.id) === String(leadId));
-    if (!s) return;
+    window.showConfirm("Delete Note", "Are you sure you want to delete this note?", async () => {
+        const s = submissionsData.find(x => String(x.id) === String(leadId));
+        if (!s) return;
 
-    let notesArray = [];
-    try {
-        notesArray = Array.isArray(s.notes) ? [...s.notes] : JSON.parse(s.notes);
-    } catch (e) { console.error("Parse error", e); }
+        let notesArray = [];
+        try {
+            notesArray = Array.isArray(s.notes) ? [...s.notes] : JSON.parse(s.notes);
+        } catch (e) { console.error("Parse error", e); }
 
-    notesArray.splice(noteIndex, 1);
-    await updateNotesInDb(s, notesArray);
+        notesArray.splice(noteIndex, 1);
+        await updateNotesInDb(s, notesArray);
+    });
 };
 
 async function updateNotesInDb(lead, notesArray) {
@@ -2048,42 +2051,44 @@ async function updateNotesInDb(lead, notesArray) {
 }
 
 window.archiveLead = async function (id) {
-    if (!confirm("Are you sure you want to delete this lead from the dashboard?\n\n(It will be removed from this view but remain archived in the database)")) return;
-    try {
-        const res = await fetch('/api/update', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id, leadStatus: 'Archived' })
-        });
-        if (!res.ok) throw new Error("Failed to archive lead");
+    window.showConfirm("Archive Lead", "Are you sure you want to delete this lead from the dashboard?\n\n(It will be removed from this view but remain archived in the database)", async () => {
+        try {
+            const res = await fetch('/api/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, leadStatus: 'Archived' })
+            });
+            if (!res.ok) throw new Error("Failed to archive lead");
 
-        submissionsData = submissionsData.filter(s => String(s.id) !== String(id));
-        renderFilteredLeads();
-        calculateDashboardStats();
-        showToast('Archived', 'Lead has been removed from active view.', 'info');
-    } catch (e) {
-        console.error("Archive Error", e);
-        showToast('Error', "Could not update lead status. Please try again.", 'danger');
-    }
+            submissionsData = submissionsData.filter(s => String(s.id) !== String(id));
+            renderFilteredLeads();
+            calculateDashboardStats();
+            showToast('Archived', 'Lead has been removed from active view.', 'info');
+        } catch (e) {
+            console.error("Archive Error", e);
+            showToast('Error', "Could not update lead status. Please try again.", 'danger');
+        }
+    });
 };
 
 window.deleteActivity = async function (id) {
-    if (!confirm("Are you sure you want to delete this activity record?")) return;
-    try {
-        const res = await fetch('/api/solicitor?route=activity', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'delete', id })
-        });
-        if (!res.ok) throw new Error("Failed up delete activity");
+    window.showConfirm("Delete Activity", "Are you sure you want to delete this activity record?", async () => {
+        try {
+            const res = await fetch('/api/solicitor?route=activity', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'delete', id })
+            });
+            if (!res.ok) throw new Error("Failed up delete activity");
 
-        activityData = activityData.filter(a => String(a.id) !== String(id));
-        renderFilteredActivity();
-        showToast('Activity Deleted', 'The record has been permanently removed.', 'info');
-    } catch (e) {
-        console.error("Delete Activity Error", e);
-        showToast('Error', "Could not remove activity record. Please try again.", 'danger');
-    }
+            activityData = activityData.filter(a => String(a.id) !== String(id));
+            renderFilteredActivity();
+            showToast('Activity Deleted', 'The record has been permanently removed.', 'info');
+        } catch (e) {
+            console.error("Delete Activity Error", e);
+            showToast('Error', "Could not remove activity record. Please try again.", 'danger');
+        }
+    });
 };
 
 window.initDashboard = async function () {
@@ -2752,6 +2757,45 @@ function initRealtimeSubscription() {
         }
     }, 10000); // Poll every 10 seconds
 }
+
+window.showConfirm = function (title, message, onConfirm, onCancel = null) {
+    const overlay = document.getElementById('modalOverlay');
+    const modalBox = document.getElementById('modalBox');
+    if (!overlay || !modalBox) return;
+
+    modalBox.innerHTML = `
+        <div class="modal-header" style="background:var(--surface-1); padding:24px 32px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; border-top-left-radius:24px; border-top-right-radius:24px; flex-shrink:0;">
+            <div>
+                <h2 style="font-size:20px; font-weight:800; letter-spacing:-0.5px; margin:0; color:var(--label-1);">${title}</h2>
+            </div>
+            <button class="close-btn" id="confirmClose" style="background:var(--surface-2); border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:none; color:var(--label-3); cursor:pointer; font-size:22px;">&times;</button>
+        </div>
+        <div style="padding:40px 32px; text-align:center; background: var(--surface-1);">
+            <div style="background:var(--red-light); color:var(--red); width:64px; height:64px; border-radius:20px; display:flex; align-items:center; justify-content:center; margin:0 auto 24px; transform: rotate(-5deg);">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            </div>
+            <p style="font-size:16px; color:var(--label-1); font-weight:600; line-height:1.6; margin:0; max-width:320px; margin:0 auto;">${message}</p>
+        </div>
+        <div style="padding:20px 32px; border-top:1px solid var(--border); display:flex; gap:12px; justify-content:flex-end; background:var(--surface-1); border-bottom-left-radius:24px; border-bottom-right-radius:24px;">
+            <button class="btn-outline" id="confirmCancel" style="padding:10px 24px; height:auto; font-size:14px; border-radius:10px; font-weight:700;">Cancel</button>
+            <button class="btn-action" id="confirmProceed" style="padding:10px 24px; height:auto; font-size:14px; border-radius:10px; font-weight:800; background:var(--red); border:none; box-shadow: 0 4px 12px rgba(255, 69, 58, 0.2);">Yes, Proceed</button>
+        </div>
+    `;
+
+    const close = () => { overlay.style.display = 'none'; };
+    
+    document.getElementById('confirmClose').onclick = close;
+    document.getElementById('confirmCancel').onclick = () => {
+        close();
+        if (onCancel) onCancel();
+    };
+    document.getElementById('confirmProceed').onclick = () => {
+        close();
+        if (onConfirm) onConfirm();
+    };
+
+    overlay.style.display = 'flex';
+};
 
 window.showNotification = function (message, type = 'info') {
     let title = 'Notification';
