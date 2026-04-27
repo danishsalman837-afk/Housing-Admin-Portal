@@ -2763,26 +2763,45 @@ window.showConfirm = function (title, message, onConfirm, onCancel = null) {
     const modalBox = document.getElementById('modalBox');
     if (!overlay || !modalBox) return;
 
+    // Store original styles to restore later
+    const originalMaxWidth = modalBox.style.maxWidth;
+    const originalPadding = modalBox.style.padding;
+    const originalBorderRadius = modalBox.style.borderRadius;
+
+    // Apply compact confirmation styles
+    modalBox.style.maxWidth = '420px';
+    modalBox.style.padding = '0';
+    modalBox.style.borderRadius = '32px';
+
     modalBox.innerHTML = `
-        <div class="modal-header" style="background:var(--surface-1); padding:24px 32px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; border-top-left-radius:24px; border-top-right-radius:24px; flex-shrink:0;">
-            <div>
-                <h2 style="font-size:20px; font-weight:800; letter-spacing:-0.5px; margin:0; color:var(--label-1);">${title}</h2>
+        <div style="position:relative; padding:48px 32px 40px; text-align:center; background: var(--surface-1); border-radius:32px;">
+            <button id="confirmClose" style="position:absolute; top:24px; right:24px; background:var(--surface-2); width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:none; color:var(--label-3); cursor:pointer; font-size:20px; border-radius:50%;">&times;</button>
+            
+            <div style="background:rgba(255, 59, 48, 0.1); color:#FF3B30; width:90px; height:90px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 28px;">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
             </div>
-            <button class="close-btn" id="confirmClose" style="background:var(--surface-2); border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:none; color:var(--label-3); cursor:pointer; font-size:22px;">&times;</button>
-        </div>
-        <div style="padding:40px 32px; text-align:center; background: var(--surface-1);">
-            <div style="background:var(--red-light); color:var(--red); width:64px; height:64px; border-radius:20px; display:flex; align-items:center; justify-content:center; margin:0 auto 24px; transform: rotate(-5deg);">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            
+            <h2 style="font-size:26px; font-weight:800; letter-spacing:-0.8px; margin:0 0 16px; color:var(--label-1);">${title}</h2>
+            
+            <p style="font-size:16px; color:var(--label-3); line-height:1.6; margin:0 0 36px; padding: 0 10px;">${message}</p>
+            
+            <div style="display:flex; flex-direction:column; gap:12px;">
+                <button id="confirmProceed" style="width:100%; justify-content:center; padding:18px; font-size:16px; font-weight:800; background:#FF3B30; color:white; border:none; border-radius:18px; cursor:pointer; box-shadow: 0 10px 25px rgba(255, 59, 48, 0.2);">Delete Permanently</button>
+                <button id="confirmCancel" style="width:100%; justify-content:center; padding:18px; font-size:16px; font-weight:700; border-radius:18px; background:white; color:#1C1C1E; border:1px solid #E5E5E7; cursor:pointer;">No, keep it</button>
             </div>
-            <p style="font-size:16px; color:var(--label-1); font-weight:600; line-height:1.6; margin:0; max-width:320px; margin:0 auto;">${message}</p>
-        </div>
-        <div style="padding:20px 32px; border-top:1px solid var(--border); display:flex; gap:12px; justify-content:flex-end; background:var(--surface-1); border-bottom-left-radius:24px; border-bottom-right-radius:24px;">
-            <button class="btn-outline" id="confirmCancel" style="padding:10px 24px; height:auto; font-size:14px; border-radius:10px; font-weight:700;">Cancel</button>
-            <button class="btn-action" id="confirmProceed" style="padding:10px 24px; height:auto; font-size:14px; border-radius:10px; font-weight:800; background:var(--red); border:none; box-shadow: 0 4px 12px rgba(255, 69, 58, 0.2);">Yes, Proceed</button>
         </div>
     `;
 
-    const close = () => { overlay.style.display = 'none'; };
+    const resetModal = () => {
+        modalBox.style.maxWidth = originalMaxWidth;
+        modalBox.style.padding = originalPadding;
+        modalBox.style.borderRadius = originalBorderRadius;
+    };
+
+    const close = () => { 
+        overlay.style.display = 'none';
+        resetModal();
+    };
     
     document.getElementById('confirmClose').onclick = close;
     document.getElementById('confirmCancel').onclick = () => {

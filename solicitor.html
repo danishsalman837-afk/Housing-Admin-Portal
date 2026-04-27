@@ -1312,6 +1312,62 @@
             if (e.key === 'Escape') closeViewer();
         });
 
+        window.showConfirm = function (title, message, onConfirm, onCancel = null) {
+            const overlay = document.getElementById('rejectOverlay'); // Use existing overlay if possible or generic
+            const modalBox = document.querySelector('.sol-modal');
+            if (!overlay || !modalBox) return;
+
+            // Store original content
+            const originalHTML = modalBox.innerHTML;
+            const originalMaxWidth = modalBox.style.maxWidth;
+
+            modalBox.style.maxWidth = '420px';
+            modalBox.style.padding = '0';
+            modalBox.style.borderRadius = '32px';
+
+            modalBox.innerHTML = `
+                <div style="position:relative; padding:48px 32px 40px; text-align:center; background: var(--surface-1); border-radius:32px;">
+                    <button id="confirmClose" style="position:absolute; top:24px; right:24px; background:var(--surface-2); width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:none; color:var(--label-3); cursor:pointer; font-size:20px; border-radius:50%;">&times;</button>
+                    
+                    <div style="background:rgba(255, 59, 48, 0.1); color:#FF3B30; width:90px; height:90px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 28px;">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                    </div>
+                    
+                    <h2 style="font-size:26px; font-weight:800; letter-spacing:-0.8px; margin:0 0 16px; color:var(--label-1);">${title}</h2>
+                    
+                    <p style="font-size:16px; color:var(--label-3); line-height:1.6; margin:0 0 36px; padding: 0 10px;">${message}</p>
+                    
+                    <div style="display:flex; flex-direction:column; gap:12px;">
+                        <button id="confirmProceed" style="width:100%; justify-content:center; padding:18px; font-size:16px; font-weight:800; background:#FF3B30; color:white; border:none; border-radius:18px; cursor:pointer; box-shadow: 0 10px 25px rgba(255, 59, 48, 0.2);">Delete Permanently</button>
+                        <button id="confirmCancel" style="width:100%; justify-content:center; padding:18px; font-size:16px; font-weight:700; border-radius:18px; background:white; color:#1C1C1E; border:1px solid #E5E5E7; cursor:pointer;">No, keep it</button>
+                    </div>
+                </div>
+            `;
+
+            const resetModal = () => {
+                modalBox.style.maxWidth = originalMaxWidth;
+                modalBox.innerHTML = originalHTML;
+                // Re-bind original events if needed, but here we just restore for next use
+            };
+
+            const close = () => { 
+                overlay.classList.remove('active');
+                resetModal();
+            };
+            
+            document.getElementById('confirmClose').onclick = close;
+            document.getElementById('confirmCancel').onclick = () => {
+                close();
+                if (onCancel) onCancel();
+            };
+            document.getElementById('confirmProceed').onclick = () => {
+                close();
+                if (onConfirm) onConfirm();
+            };
+
+            overlay.classList.add('active');
+        };
+
         function showToast(title, message, type = 'info') {
             let container = document.getElementById('app-toast-container');
             if (!container) {
