@@ -54,7 +54,7 @@ function syncThemeToggle() {
 
 const leadStatuses = [
     'New Lead', 'Allocated', 'Sent', 'Accepted', 'Rejected', 'Transferred',
-    'Not Yet Invoiced', 'Invoice Raised', 'Paid', 'Test Lead', 'Client Not Engaging', 'Closed'
+    'Not Yet Invoiced', 'Invoice Raised', 'Paid', 'Test Lead', 'Client Not Engaging', 'Awaiting for pictures', 'More info/pic required', 'Closed'
 ];
 
 function getStatusColor(status) {
@@ -71,6 +71,8 @@ function getStatusColor(status) {
     if (s === 'Allocated') return 'allocated';
     if (s === 'Sent') return 'sent';
     if (s === 'Client Not Engaging') return 'slate';
+    if (s === 'Awaiting for pictures') return 'teal';
+    if (s === 'More info/pic required') return 'indigo';
     if (s === 'Test Lead' || s === 'test') return 'gray';
     return 'gray';
 }
@@ -525,6 +527,8 @@ function initCharts(data, paidCount, totalCount) {
             '#166534', // Paid (dark green)
             '#94A3B8', // Test Lead (gray)
             '#64748B', // Client Not Engaging (slate)
+            '#14B8A6', // Awaiting for pictures (teal)
+            '#6366F1', // More info/pic required (indigo)
             '#EF4444'  // Closed (red)
         ];
 
@@ -3564,6 +3568,8 @@ window.onDialerInputChange = function () {
             'New Lead': '#007AFF', 'Allocated': '#007AFF', 'Sent': '#007AFF',
             'Rejected': '#FF9500', 'Closed': '#FF3B30',
             'Client Not Engaging': '#64748B',
+            'Awaiting for pictures': '#14B8A6',
+            'More info/pic required': '#6366F1',
         };
         if (statusDot) statusDot.style.background = dotColours[leadStatus] || '#8E8E93';
 

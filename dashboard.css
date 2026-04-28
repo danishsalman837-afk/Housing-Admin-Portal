@@ -56,6 +56,14 @@
     --status-new-txt:    #0369A1;
     --status-new-border: #BAE6FD;
 
+    --status-teal-bg: #CCFBF1;
+    --status-teal-txt: #0F766E;
+    --status-teal-border: #99F6E4;
+
+    --status-indigo-bg: #E0E7FF;
+    --status-indigo-txt: #4338CA;
+    --status-indigo-border: #C7D2FE;
+
     --status-allocated-bg: #DBEAFE;
     --status-allocated-txt: #1E40AF;
     --status-allocated-border: #BFDBFE;
@@ -145,6 +153,14 @@
     --status-new-bg:     rgba(12, 74, 110, 0.5);
     --status-new-txt:    #7DD3FC;
     --status-new-border: #0369A1;
+
+    --status-teal-bg: rgba(20, 184, 166, 0.15);
+    --status-teal-txt: #5EEAD4;
+    --status-teal-border: rgba(20, 184, 166, 0.3);
+
+    --status-indigo-bg: rgba(99, 102, 241, 0.15);
+    --status-indigo-txt: #818CF8;
+    --status-indigo-border: rgba(99, 102, 241, 0.3);
 
     --status-allocated-bg: rgba(30, 58, 138, 0.5);
     --status-allocated-txt: #93C5FD;
@@ -972,6 +988,8 @@ select.status-pill {
 }
 
 .status-pill[data-color="new"] { background: var(--status-new-bg); color: var(--status-new-txt); border-color: var(--status-new-border); }
+.status-pill[data-color="teal"] { background: var(--status-teal-bg); color: var(--status-teal-txt); border-color: var(--status-teal-border); }
+.status-pill[data-color="indigo"] { background: var(--status-indigo-bg); color: var(--status-indigo-txt); border-color: var(--status-indigo-border); }
 .status-pill[data-color="success"] { background: var(--status-success-bg); color: var(--status-success-txt); border-color: var(--status-success-border); }
 .status-pill[data-color="danger"] { background: var(--status-danger-bg); color: var(--status-danger-txt); border-color: var(--status-danger-border); }
 .status-pill[data-color="warning"] { background: var(--status-orange-bg); color: var(--status-orange-txt); border-color: var(--status-orange-border); }
