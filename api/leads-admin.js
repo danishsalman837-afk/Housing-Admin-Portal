@@ -14,7 +14,6 @@ module.exports = async function handler(req, res) {
       const { data, error } = await supabase
         .from('submissions')
         .select('*')
-        .neq('leadStatus', 'Agent Saved')
         .neq('leadStatus', 'Archived')
         .order('timestamp', { ascending: false });
 
@@ -52,8 +51,14 @@ module.exports = async function handler(req, res) {
       }
 
       const strippedPhone = phone.replace(/\D/g, '');
-      const uniqueVariations = [...new Set([phone, strippedPhone].filter(v => v))];
-      const orQuery = uniqueVariations.map(v => `phone.eq."${v}"`).join(',');
+      let variations = [phone, strippedPhone];
+      if (strippedPhone.startsWith('44') && strippedPhone.length > 2) {
+          variations.push('0' + strippedPhone.substring(2));
+      } else if (strippedPhone.startsWith('0') && strippedPhone.length > 1) {
+          variations.push('44' + strippedPhone.substring(1));
+      }
+      const uniqueVariations = [...new Set(variations.filter(v => v))];
+      const orQuery = uniqueVariations.map(v => `phone.eq."${v}",mobile_number.eq."${v}"`).join(',');
 
       const { data, error } = await supabase
         .from('submissions')
