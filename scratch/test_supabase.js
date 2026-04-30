@@ -4,22 +4,30 @@ const { createClient } = require('@supabase/supabase-js');
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
 async function test() {
-  const phone = '07897723956'; // We need a real phone number from DB. Let's just select 1 to find a phone.
-  const { data: sample } = await supabase.from('submissions').select('phone, mobile_number').limit(1);
-  console.log("Sample phone:", sample);
+  console.log("Searching for Michael Proctor...");
+  const { data, error } = await supabase
+    .from('submissions')
+    .select('*')
+    .ilike('name', '%Michael%Proctor%');
   
-  if (sample && sample.length > 0) {
-    const testPhone = sample[0].phone || sample[0].mobile_number;
-    console.log("Testing with phone:", testPhone);
-    const { data, error } = await supabase
-      .from('submissions')
-      .select('*')
-      .or(`phone.eq."${testPhone}",mobile_number.eq."${testPhone}"`)
-      .order('timestamp', { ascending: false })
-      .limit(1);
-    
-    console.log("Error:", error);
-    console.log("Data found:", data ? data.length : 0);
+  if (error) {
+    console.error("Error:", error);
+    return;
+  }
+  
+  console.log("Records found:", data ? data.length : 0);
+  if (data && data.length > 0) {
+    data.forEach(lead => {
+        console.log(`- ID: ${lead.id}, Name: ${lead.name}, Phone: [${lead.phone}], Status: ${lead.leadStatus}, Timestamp: ${lead.timestamp}`);
+    });
+  } else {
+    console.log("Checking last 5 submissions in submissions table...");
+    const { data: lastLeads } = await supabase
+        .from('submissions')
+        .select('id, name, phone, timestamp, leadStatus')
+        .order('timestamp', { ascending: false })
+        .limit(5);
+    console.log(JSON.stringify(lastLeads, null, 2));
   }
 }
 

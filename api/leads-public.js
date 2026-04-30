@@ -54,8 +54,8 @@ module.exports = async function handler(req, res) {
     const { data: existing, error: findError } = await supabase
         .from('submissions')
         .select('id, leadStatus, agent_data, agent_name')
-        .or(`mobile_number.eq."${phoneToSearch}",phone.eq."${phoneToSearch}"`)
-        .order('created_at', { ascending: false })
+        .or(`phone.eq."${phoneToSearch}"`)
+        .order('timestamp', { ascending: false })
         .limit(1);
 
     if (findError) return res.status(500).json({ error: findError.message });
