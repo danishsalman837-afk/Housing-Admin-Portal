@@ -59,7 +59,7 @@ module.exports = async function handler(req, res) {
           variations.push('44' + strippedPhone.substring(1));
       }
       const uniqueVariations = [...new Set(variations.filter(v => v))];
-      const orQuery = uniqueVariations.map(v => `phone.eq."${v}",mobile_number.eq."${v}"`).join(',');
+      const orQuery = uniqueVariations.map(v => `phone.eq."${v}"`).join(',');
 
       const { data, error } = await supabase
         .from('submissions')
