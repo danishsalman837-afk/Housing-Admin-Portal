@@ -14,7 +14,7 @@ module.exports = async function handler(req, res) {
       const { data, error } = await supabase
         .from('submissions')
         .select('*')
-        .neq('leadStatus', 'Agent Saved')
+        .eq('is_submitted', true)
         .neq('leadStatus', 'Archived')
         .order('timestamp', { ascending: false });
 
