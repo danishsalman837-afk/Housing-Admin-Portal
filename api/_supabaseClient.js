@@ -42,6 +42,12 @@ function normalizeLead(lead) {
         lead[formKey] = lead[dbKey];
       }
     }
+    // Reverse mapping for older saved leads
+    if (lead[formKey] !== undefined && lead[formKey] !== null) {
+      if (lead[dbKey] === undefined || lead[dbKey] === null) {
+        lead[dbKey] = lead[formKey];
+      }
+    }
   };
   n('dob', 'dateOfBirth');
   n('livingDuration', 'tenancyDuration');
