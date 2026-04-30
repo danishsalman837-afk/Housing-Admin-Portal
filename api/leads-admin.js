@@ -55,8 +55,13 @@ module.exports = async function handler(req, res) {
       let variations = [phone, strippedPhone];
       if (strippedPhone.startsWith('44') && strippedPhone.length > 2) {
           variations.push('0' + strippedPhone.substring(2));
+          variations.push(strippedPhone.substring(2));
       } else if (strippedPhone.startsWith('0') && strippedPhone.length > 1) {
           variations.push('44' + strippedPhone.substring(1));
+          variations.push(strippedPhone.substring(1));
+      } else if (strippedPhone.length >= 10) {
+          variations.push('0' + strippedPhone);
+          variations.push('44' + strippedPhone);
       }
       const uniqueVariations = [...new Set(variations.filter(v => v))];
       const orQuery = uniqueVariations.map(v => `phone.eq."${v}"`).join(',');
