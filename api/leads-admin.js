@@ -16,7 +16,7 @@ module.exports = async function handler(req, res) {
         .select('*')
         .neq('leadStatus', 'Agent Saved')
         .neq('leadStatus', 'Archived')
-        .order('created_at', { ascending: false });
+        .order('timestamp', { ascending: false });
 
       if (error) return res.status(500).json({ error: error.message });
       
@@ -52,15 +52,14 @@ module.exports = async function handler(req, res) {
       }
 
       const strippedPhone = phone.replace(/\D/g, '');
-      const orQuery = strippedPhone 
-        ? `phone.eq."${phone}",mobile_number.eq."${phone}",phone.eq."${strippedPhone}",mobile_number.eq."${strippedPhone}"`
-        : `phone.eq."${phone}",mobile_number.eq."${phone}"`;
+      const uniqueVariations = [...new Set([phone, strippedPhone].filter(v => v))];
+      const orQuery = uniqueVariations.map(v => `phone.eq."${v}"`).join(',');
 
       const { data, error } = await supabase
         .from('submissions')
         .select('*')
         .or(orQuery)
-        .order('created_at', { ascending: false })
+        .order('timestamp', { ascending: false })
         .limit(1);
 
       if (error) return res.status(500).json({ error: error.message });
