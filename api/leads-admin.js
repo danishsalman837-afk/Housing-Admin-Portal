@@ -47,10 +47,19 @@ module.exports = async function handler(req, res) {
     // ═════════════════════════════════════════════════
     if (method === 'GET' && (req.query.phone || route === 'get')) {
       const { phone } = req.query;
+      if (!phone) {
+        return res.status(400).json({ error: 'Phone parameter is required' });
+      }
+
+      const strippedPhone = phone.replace(/\D/g, '');
+      const orQuery = strippedPhone 
+        ? `phone.eq."${phone}",mobile_number.eq."${phone}",phone.eq."${strippedPhone}",mobile_number.eq."${strippedPhone}"`
+        : `phone.eq."${phone}",mobile_number.eq."${phone}"`;
+
       const { data, error } = await supabase
         .from('submissions')
         .select('*')
-        .or(`phone.eq."${phone}",mobile_number.eq."${phone}"`)
+        .or(orQuery)
         .order('created_at', { ascending: false })
         .limit(1);
 
