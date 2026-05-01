@@ -2663,22 +2663,23 @@ function initRealtimeSubscription() {
 
                 // Identify completely new leads
                 freshSubmissions.forEach(fresh => {
-                    const exists = submissionsData.some(s => String(s.id) === String(fresh.id));
-                    if (!exists) {
-                        // NEW LEAD RECEIVED
+                    const idx = submissionsData.findIndex(s => String(s.id) === String(fresh.id));
+                    if (idx === -1) {
                         submissionsData.unshift(fresh);
                         const leadName = fresh.name || fresh.first_name || 'New Client';
-
-                        // Show visual pop/toast
                         showToast('New Lead Received', `<strong>${leadName}</strong> has just submitted a form.`, 'success');
-
-                        // Add to persistent notifications
                         addNotification(`New lead received from <strong>${leadName}</strong>.`, 'blue');
-
-                        // Refresh active view if needed
-                        if (document.getElementById('leadsView')?.classList.contains('active')) renderFilteredLeads();
-                        calculateDashboardStats();
+                    } else {
+                        const existing = submissionsData[idx];
+                        if (existing.timestamp !== fresh.timestamp || existing.leadStatus !== fresh.leadStatus) {
+                            submissionsData.splice(idx, 1);
+                            submissionsData.unshift(fresh);
+                            const leadName = fresh.name || fresh.first_name || 'Client';
+                            showToast('Lead Updated', `<strong>${leadName}</strong> updated.`, 'info');
+                        } else { return; }
                     }
+                    if (document.getElementById('leadsView')?.classList.contains('active')) renderFilteredLeads();
+                    calculateDashboardStats();
                 });
             }
 

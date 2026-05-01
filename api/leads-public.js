@@ -123,9 +123,9 @@ module.exports = async function handler(req, res) {
            safeUpdate.lead_stage = 'Draft';
         } else {
            const currentStatus = (existingLead.leadStatus || '').trim();
-           // Reset to 'New Lead' if it was archived, closed, rejected, or a draft
-           const hiddenStatuses = ['Archived', 'Closed', 'Rejected', 'Agent Saved', ''];
-           if (hiddenStatuses.includes(currentStatus)) {
+           // Case-insensitive check for statuses that should be reset to 'New Lead'
+           const hiddenStatuses = ['archived', 'closed', 'rejected', 'agent saved', ''];
+           if (hiddenStatuses.includes(currentStatus.toLowerCase())) {
               safeUpdate.leadStatus = 'New Lead';
               safeUpdate.lead_stage = 'New Lead';
            } else {
