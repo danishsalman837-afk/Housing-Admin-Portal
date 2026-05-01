@@ -13,10 +13,16 @@ module.exports = async function handler(req, res) {
     if (method === 'GET' && route === 'ping') {
         const url = process.env.SUPABASE_URL || 'NOT_SET';
         const projectId = url.split('.')[0].split('//')[1] || 'UNKNOWN';
+        
+        // Fetch column metadata using limit 0
+        const { data: cols, error: metaError } = await supabase.from('submissions').select('*').limit(0);
+        const availableColumns = !metaError ? Object.keys(cols[0] || {}) : [];
+
         return res.status(200).json({ 
             status: "online", 
             projectId: projectId,
-            urlMasked: url.substring(0, 12) + "..." 
+            urlMasked: url.substring(0, 12) + "...",
+            columns: availableColumns
         });
     }
 
@@ -26,8 +32,7 @@ module.exports = async function handler(req, res) {
         .select('*')
         .eq('is_submitted', true)
         .neq('leadStatus', 'Archived')
-        .order('timestamp', { ascending: false })
-        .order('created_at', { ascending: false });
+        .order('timestamp', { ascending: false });
 
       if (error) return res.status(500).json({ error: error.message });
       
@@ -82,7 +87,6 @@ module.exports = async function handler(req, res) {
         .select('*')
         .or(orQuery)
         .order('timestamp', { ascending: false })
-        .order('created_at', { ascending: false })
         .limit(1);
 
       if (error) return res.status(500).json({ error: error.message });

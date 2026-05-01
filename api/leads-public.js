@@ -14,10 +14,15 @@ module.exports = async function handler(req, res) {
   if (method === 'GET' && route === 'ping') {
       const url = process.env.SUPABASE_URL || 'NOT_SET';
       const projectId = url.split('.')[0].split('//')[1] || 'UNKNOWN';
+      
+      const { data: cols, error: metaErr } = await supabase.from('submissions').select('*').limit(0);
+      const availableColumns = !metaErr ? Object.keys(cols[0] || {}) : [];
+
       return res.status(200).json({ 
           status: "online", 
           projectId: projectId,
-          urlMasked: url.substring(0, 12) + "..." 
+          urlMasked: url.substring(0, 12) + "...",
+          columns: availableColumns
       });
   }
 
@@ -35,17 +40,17 @@ module.exports = async function handler(req, res) {
     const mapping = {
         dateOfBirth: 'dob', tenancyDuration: 'livingDuration', hasDampMould: 'damp', roomsAffected: 'dampRooms',
         affectedSurface: 'dampSurface', issueDuration: 'dampDuration', issueCause: 'dampCause', damageBelongings: 'dampDamage',
-        healthProblems: 'dampHealth', hasLeaks: 'leak', cracksDamage: 'leakCracks', faultyElectrics: 'issues_electrics',
-        heatingIssues: 'issues_heating', structuralDamage: 'issues_structural', reportedOverMonth: 'reported',
+        healthProblems: 'dampHealth', hasLeaks: 'leak', cracksDamage: 'leakCracks', faultyElectrics: 'issuesElectrics',
+        heatingIssues: 'issuesHeating', structuralDamage: 'issuesStructural', reportedOverMonth: 'reported',
         rentalArrears: 'arrears', dampLocation: 'dampLocation', leakLocation: 'leakLocation', leakSource: 'leakSource',
         leakStart: 'leakStart', leakDamage: 'leakDamage', leakBelongings: 'leakBelongings', reportCount: 'reportCount',
         reportFirst: 'reportFirst', reportLast: 'reportLast', reportResponse: 'reportResponse', reportAttempt: 'reportAttempt',
         reportStatus: 'reportStatus', arrearsAmount: 'arrearsAmount', alreadySubmitted: 'alreadySubmitted', additionalNotes: 'additionalNotes',
-        agentName: 'agent_name', name: 'name', phone: 'phone',
-        tenancy_on_name: 'tenancy_on_name', tenancy_type: 'tenancy_type', is_name_on_joint: 'is_name_on_joint', 
-        other_tenant_name: 'other_tenant_name', actual_tenant_fullname: 'actual_tenant_fullname',
+        agentName: 'agentName', name: 'name', phone: 'phone',
+        tenancyOnName: 'tenancyOnName', tenancyType: 'tenancyType', isNameOnJoint: 'isNameOnJoint', 
+        otherTenantName: 'otherTenantName', actualTenantFullname: 'actualTenantFullname',
         infestation: 'infestation',
-        property_type: 'property_type'
+        propertyType: 'propertyType'
     };
 
     // Whitelist of valid DB columns to prevent "column does not exist" errors
@@ -53,17 +58,16 @@ module.exports = async function handler(req, res) {
         'id', 'name', 'phone', 'email', 'address', 'postcode', 'dob', 'livingDuration', 'tenantType', 'landlordName',
         'damp', 'dampLocation', 'dampRooms', 'dampSurface', 'dampDuration', 'dampCause', 'dampDamage', 'dampHealth',
         'leak', 'leakLocation', 'leakSource', 'leakStart', 'leakDamage', 'leakBelongings', 'leakCracks',
-        'issues_electrics', 'issues_heating', 'issues_structural', 'infestation', 'reported', 'reportCount',
+        'issuesElectrics', 'issuesHeating', 'issuesStructural', 'infestation', 'reported', 'reportCount',
         'reportFirst', 'reportLast', 'reportResponse', 'reportAttempt', 'reportStatus', 'arrears', 'arrearsAmount',
-        'alreadySubmitted', 'additionalNotes', 'agent_name', 'timestamp', 'is_submitted', 'leadStatus', 'lead_stage',
-        'agent_data', 'unique_token', 'property_type', 'tenancy_on_name', 'tenancy_type', 'is_name_on_joint',
-        'other_tenant_name', 'actual_tenant_fullname', 'assigned_company_id', 'assigned_solicitor_id', 'mobile_number'
+        'alreadySubmitted', 'additionalNotes', 'agentName', 'timestamp', 'isSubmitted', 'leadStatus', 'leadStage',
+        'agentData', 'uniqueToken', 'propertyType', 'tenancyOnName', 'tenancyType', 'isNameOnJoint',
+        'otherTenantName', 'actualTenantFullname', 'assignedCompanyId', 'assignedSolicitorId', 'mobileNumber'
     ];
     
     // Save a DEEP CLONE of the original raw data for the agent_data backup
     const originalRawData = JSON.parse(JSON.stringify(data));
     
-    const rawPhone = data.phone || data.mobile_number;
     const rawAgentName = data.agentName || data.agent_name;
 
     for (const [formKey, dbKey] of Object.entries(mapping)) {
