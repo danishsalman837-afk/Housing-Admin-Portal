@@ -8,15 +8,26 @@ module.exports = async function handler(req, res) {
 
   try {
     // ═════════════════════════════════════════════════
-    // GET: LIST ALL (Submissions)
+    // DIAGNOSTIC PING
     // ═════════════════════════════════════════════════
+    if (method === 'GET' && route === 'ping') {
+        const url = process.env.SUPABASE_URL || 'NOT_SET';
+        const projectId = url.split('.')[0].split('//')[1] || 'UNKNOWN';
+        return res.status(200).json({ 
+            status: "online", 
+            projectId: projectId,
+            urlMasked: url.substring(0, 12) + "..." 
+        });
+    }
+
     if (method === 'GET' && (route === 'list' || (!req.query.phone && !route))) {
       const { data, error } = await supabase
         .from('submissions')
         .select('*')
         .eq('is_submitted', true)
         .neq('leadStatus', 'Archived')
-        .order('timestamp', { ascending: false });
+        .order('timestamp', { ascending: false })
+        .order('created_at', { ascending: false });
 
       if (error) return res.status(500).json({ error: error.message });
       
@@ -71,6 +82,7 @@ module.exports = async function handler(req, res) {
         .select('*')
         .or(orQuery)
         .order('timestamp', { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(1);
 
       if (error) return res.status(500).json({ error: error.message });
@@ -129,7 +141,14 @@ module.exports = async function handler(req, res) {
 
     return res.status(405).json({ error: 'Method Not Allowed' });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: "Server Error" });
+    console.error("Leads Admin Error:", err.message);
+    const envStatus = {
+        hasUrl: !!process.env.SUPABASE_URL,
+        hasKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY
+    };
+    return res.status(500).json({ 
+        error: "Server Error: " + err.message,
+        debug: envStatus
+    });
   }
 };

@@ -5,9 +5,24 @@ module.exports = async function handler(req, res) {
   if (!assertEnv('service', res)) return;
   const supabase = createSupabaseClient('service');
   
+  const method = req.method;
+  const route = req.query.route || req.body.route;
+
+  // ═════════════════════════════════════════════════
+  // DIAGNOSTIC PING
+  // ═════════════════════════════════════════════════
+  if (method === 'GET' && route === 'ping') {
+      const url = process.env.SUPABASE_URL || 'NOT_SET';
+      const projectId = url.split('.')[0].split('//')[1] || 'UNKNOWN';
+      return res.status(200).json({ 
+          status: "online", 
+          projectId: projectId,
+          urlMasked: url.substring(0, 12) + "..." 
+      });
+  }
+
   // Detect if it's a "draft" vs full "submit"
   // If the path includes 'save-draft' or explicitly marked
-  const route = req.query.route || req.body.route;
   const isDraft = route === 'draft' || req.url.includes('save-draft') || req.body.isDraft === true;
   const data = (req.method === 'POST') ? req.body : req.query;
 
@@ -157,6 +172,13 @@ module.exports = async function handler(req, res) {
 
   } catch (err) {
     console.error("Leads Public Error:", err.message);
-    return res.status(500).json({ error: "Failed to process submission: " + err.message });
+    const envStatus = {
+        hasUrl: !!process.env.SUPABASE_URL,
+        hasKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY
+    };
+    return res.status(500).json({ 
+        error: "Failed to process submission: " + err.message,
+        debug: envStatus
+    });
   }
 };
