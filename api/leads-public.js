@@ -49,12 +49,27 @@ module.exports = async function handler(req, res) {
     data.timestamp = new Date().toISOString();
     if (!rawPhone) return res.status(400).json({ error: "Phone number is required." });
 
-    // 2. Find existing lead by phone (checking both potential DB columns)
-    const phoneToSearch = rawPhone;
+    // 2. Find existing lead by phone (Robust searching with variations and multiple columns)
+    const strippedPhone = rawPhone.replace(/\D/g, '');
+    let variations = [rawPhone, strippedPhone];
+    if (strippedPhone.startsWith('44') && strippedPhone.length > 2) {
+        variations.push('0' + strippedPhone.substring(2));
+        variations.push(strippedPhone.substring(2));
+    } else if (strippedPhone.startsWith('0') && strippedPhone.length > 1) {
+        variations.push('44' + strippedPhone.substring(1));
+        variations.push(strippedPhone.substring(1));
+    } else if (strippedPhone.length >= 10) {
+        variations.push('0' + strippedPhone);
+        variations.push('44' + strippedPhone);
+    }
+    const uniqueVariations = [...new Set(variations.filter(v => v))];
+    // Search in both 'phone' and 'mobile_number' columns
+    const orQuery = uniqueVariations.flatMap(v => [`phone.eq."${v}"`, `mobile_number.eq."${v}"`]).join(',');
+
     const { data: existing, error: findError } = await supabase
         .from('submissions')
-        .select('id, leadStatus, agent_data, agent_name')
-        .or(`phone.eq."${phoneToSearch}"`)
+        .select('id, leadStatus, agent_data, agent_name, phone, mobile_number')
+        .or(orQuery)
         .order('timestamp', { ascending: false })
         .limit(1);
 
@@ -87,11 +102,15 @@ module.exports = async function handler(req, res) {
            safeUpdate.is_submitted = false;
            safeUpdate.lead_stage = 'Draft';
         } else {
-           if (!existingLead.leadStatus || existingLead.leadStatus === 'Agent Saved') {
+           const currentStatus = (existingLead.leadStatus || '').trim();
+           // Reset to 'New Lead' if it was archived, closed, rejected, or a draft
+           const hiddenStatuses = ['Archived', 'Closed', 'Rejected', 'Agent Saved', ''];
+           if (hiddenStatuses.includes(currentStatus)) {
               safeUpdate.leadStatus = 'New Lead';
               safeUpdate.lead_stage = 'New Lead';
            } else {
-              safeUpdate.lead_stage = existingLead.leadStatus;
+              safeUpdate.lead_stage = currentStatus || 'New Lead';
+              // Note: we don't set leadStatus here to preserve existing non-hidden status (e.g. Allocated)
            }
            safeUpdate.is_submitted = true;
         }
