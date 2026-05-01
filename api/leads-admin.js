@@ -80,6 +80,8 @@ module.exports = async function handler(req, res) {
       if (!id) return res.status(400).json({ error: "ID required" });
 
       // Ensure we update both the old and new columns for consistency
+      updates.isEdited = true;
+      updates.is_edited = true;
       if (updates.leadStatus) {
           updates.leadStage = updates.leadStatus;
           updates.lead_stage = updates.leadStatus;
