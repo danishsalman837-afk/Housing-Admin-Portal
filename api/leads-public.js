@@ -27,7 +27,6 @@ module.exports = async function handler(req, res) {
   }
 
   // Detect if it's a "draft" vs full "submit"
-  // If the path includes 'save-draft' or explicitly marked
   const isDraft = route === 'draft' || req.url.includes('save-draft') || req.body.isDraft === true;
   const data = (req.method === 'POST') ? req.body : req.query;
 
@@ -36,19 +35,47 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    // 1. Normalize
+    // Mapping: Form Key -> DB Key (Matching your CamelCase SQL schema)
     const mapping = {
-        dateOfBirth: 'dob', tenancyDuration: 'livingDuration', hasDampMould: 'damp', roomsAffected: 'dampRooms',
-        affectedSurface: 'dampSurface', issueDuration: 'dampDuration', issueCause: 'dampCause', damageBelongings: 'dampDamage',
-        healthProblems: 'dampHealth', hasLeaks: 'leak', cracksDamage: 'leakCracks', faultyElectrics: 'issuesElectrics',
-        heatingIssues: 'issuesHeating', structuralDamage: 'issuesStructural', reportedOverMonth: 'reported',
-        rentalArrears: 'arrears', dampLocation: 'dampLocation', leakLocation: 'leakLocation', leakSource: 'leakSource',
-        leakStart: 'leakStart', leakDamage: 'leakDamage', leakBelongings: 'leakBelongings', reportCount: 'reportCount',
-        reportFirst: 'reportFirst', reportLast: 'reportLast', reportResponse: 'reportResponse', reportAttempt: 'reportAttempt',
-        reportStatus: 'reportStatus', arrearsAmount: 'arrearsAmount', alreadySubmitted: 'alreadySubmitted', additionalNotes: 'additionalNotes',
-        agentName: 'agentName', name: 'name', phone: 'phone',
-        tenancyOnName: 'tenancyOnName', tenancyType: 'tenancyType', isNameOnJoint: 'isNameOnJoint', 
-        otherTenantName: 'otherTenantName', actualTenantFullname: 'actualTenantFullname',
+        dateOfBirth: 'dob', 
+        tenancyDuration: 'livingDuration', 
+        hasDampMould: 'damp', 
+        roomsAffected: 'dampRooms',
+        affectedSurface: 'dampSurface', 
+        issueDuration: 'dampDuration', 
+        issueCause: 'dampCause', 
+        damageBelongings: 'dampDamage',
+        healthProblems: 'dampHealth', 
+        hasLeaks: 'leak', 
+        cracksDamage: 'leakCracks', 
+        faultyElectrics: 'issuesElectrics',
+        heatingIssues: 'issuesHeating', 
+        structuralDamage: 'issuesStructural', 
+        reportedOverMonth: 'reported',
+        rentalArrears: 'arrears', 
+        dampLocation: 'dampLocation', 
+        leakLocation: 'leakLocation', 
+        leakSource: 'leakSource',
+        leakStart: 'leakStart', 
+        leakDamage: 'leakDamage', 
+        leakBelongings: 'leakBelongings', 
+        reportCount: 'reportCount',
+        reportFirst: 'reportFirst', 
+        reportLast: 'reportLast', 
+        reportResponse: 'reportResponse', 
+        reportAttempt: 'reportAttempt', 
+        reportStatus: 'reportStatus',
+        arrearsAmount: 'arrearsAmount', 
+        alreadySubmitted: 'alreadySubmitted', 
+        additionalNotes: 'additionalNotes', 
+        agentName: 'agentName', 
+        name: 'name', 
+        phone: 'phone',
+        tenancyOnName: 'tenancyOnName', 
+        tenancyType: 'tenancyType', 
+        isNameOnJoint: 'isNameOnJoint', 
+        otherTenantName: 'otherTenantName', 
+        actualTenantFullname: 'actualTenantFullname',
         infestation: 'infestation',
         propertyType: 'propertyType'
     };
@@ -65,9 +92,10 @@ module.exports = async function handler(req, res) {
         'otherTenantName', 'actualTenantFullname', 'assignedCompanyId', 'assignedSolicitorId', 'mobileNumber'
     ];
     
-    // Save a DEEP CLONE of the original raw data for the agent_data backup
+    // Save a DEEP CLONE of the original raw data for the agentData backup
     const originalRawData = JSON.parse(JSON.stringify(data));
     
+    const rawPhone = data.phone || data.mobileNumber || data.mobile_number;
     const rawAgentName = data.agentName || data.agent_name;
 
     for (const [formKey, dbKey] of Object.entries(mapping)) {
@@ -87,7 +115,7 @@ module.exports = async function handler(req, res) {
     data.timestamp = new Date().toISOString();
     if (!rawPhone) return res.status(400).json({ error: "Phone number is required." });
 
-    // 2. Find existing lead by phone (Robust searching with variations and multiple columns)
+    // 2. Find existing lead by phone (Robust searching with variations)
     const strippedPhone = rawPhone.replace(/\D/g, '');
     let variations = [rawPhone, strippedPhone];
     if (strippedPhone.startsWith('44') && strippedPhone.length > 2) {
@@ -101,13 +129,11 @@ module.exports = async function handler(req, res) {
         variations.push('44' + strippedPhone);
     }
     const uniqueVariations = [...new Set(variations.filter(v => v))];
-    // Search in both 'phone' and 'mobile_number' columns.
-    // Note: PostgREST .or() filter values should generally not be quoted unless they contain commas.
-    const orQuery = uniqueVariations.flatMap(v => [`phone.eq.${v}`, `mobile_number.eq.${v}`]).join(',');
+    const orQuery = uniqueVariations.flatMap(v => [`phone.eq.${v}`, `mobileNumber.eq.${v}`]).join(',');
 
     const { data: existing, error: findError } = await supabase
         .from('submissions')
-        .select('id, leadStatus, agent_data, agent_name, phone, mobile_number')
+        .select('id, leadStatus, agentData, agentName, phone, mobileNumber')
         .or(orQuery)
         .order('timestamp', { ascending: false })
         .limit(1);
@@ -116,7 +142,7 @@ module.exports = async function handler(req, res) {
     const existingLead = (existing && existing.length > 0) ? existing[0] : null;
 
     if (existingLead) {
-        // Update
+        // UPDATE EXISTING LEAD
         const safeUpdate = {};
         for (const [key, val] of Object.entries(data)) {
             if (val !== null && val !== undefined) {
@@ -124,54 +150,49 @@ module.exports = async function handler(req, res) {
             }
         }
         
-        // Ensure agent_name is included in the update if we have it
         if (rawAgentName) {
-            safeUpdate.agent_name = rawAgentName;
-        } else if (existingLead.agent_name && !safeUpdate.agent_name) {
-            safeUpdate.agent_name = existingLead.agent_name;
+            safeUpdate.agentName = rawAgentName;
+        } else if (existingLead.agentName && !safeUpdate.agentName) {
+            safeUpdate.agentName = existingLead.agentName;
         }
         
-        // Backup original data if not already backed up
-        if (!existingLead.agent_data) {
-            safeUpdate.agent_data = originalRawData;
+        if (!existingLead.agentData) {
+            safeUpdate.agentData = originalRawData;
         }
         
         if (isDraft) {
-           delete safeUpdate.leadStatus; // Don't reset status on draft save
-           safeUpdate.is_submitted = false;
-           safeUpdate.lead_stage = 'Draft';
+           delete safeUpdate.leadStatus;
+           safeUpdate.isSubmitted = false;
+           safeUpdate.leadStage = 'Draft';
         } else {
            const currentStatus = (existingLead.leadStatus || '').trim();
-           // Case-insensitive check for statuses that should be reset to 'New Lead'
            const hiddenStatuses = ['archived', 'closed', 'rejected', 'agent saved', ''];
            if (hiddenStatuses.includes(currentStatus.toLowerCase())) {
               safeUpdate.leadStatus = 'New Lead';
-              safeUpdate.lead_stage = 'New Lead';
+              safeUpdate.leadStage = 'New Lead';
            } else {
-              safeUpdate.lead_stage = currentStatus || 'New Lead';
-              // Note: we don't set leadStatus here to preserve existing non-hidden status (e.g. Allocated)
+              safeUpdate.leadStage = currentStatus || 'New Lead';
            }
-           safeUpdate.is_submitted = true;
+           safeUpdate.isSubmitted = true;
         }
 
         const { data: updated, error: updErr } = await supabase.from('submissions').update(safeUpdate).eq('id', existingLead.id).select();
         if (updErr) throw updErr;
         return res.status(200).json({ success: true, message: "Lead updated", lead: updated[0] });
+
     } else {
-        // Insert
-        data.is_submitted = !isDraft;
+        // INSERT NEW LEAD
+        data.isSubmitted = !isDraft;
         data.leadStatus = isDraft ? 'Agent Saved' : 'New Lead';
-        data.lead_stage = isDraft ? 'Draft' : 'New Lead';
+        data.leadStage = isDraft ? 'Draft' : 'New Lead';
         
-        if (!data.unique_token) data.unique_token = crypto.randomUUID();
-        if (!data.actual_status) data.actual_status = 'New';
-        
-        // Save initial submission as agent_data backup
-        data.agent_data = originalRawData;
+        if (!data.uniqueToken) data.uniqueToken = crypto.randomUUID();
+        if (rawAgentName) data.agentName = rawAgentName;
+        data.agentData = originalRawData;
 
         const { data: inserted, error: insErr } = await supabase.from('submissions').insert([data]).select();
         if (insErr) throw insErr;
-        return res.status(200).json({ success: true, message: "Lead captured", lead: inserted[0] });
+        return res.status(200).json({ success: true, message: isDraft ? "Draft saved" : "Submission successful", lead: inserted[0] });
     }
 
   } catch (err) {

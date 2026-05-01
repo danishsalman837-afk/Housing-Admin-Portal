@@ -60,9 +60,9 @@ function normalizeLead(lead) {
   n('dampHealth', 'healthProblems');
   n('leak', 'hasLeaks');
   n('leakCracks', 'cracksDamage');
-  n('issues_electrics', 'faultyElectrics');
-  n('issues_heating', 'heatingIssues');
-  n('issues_structural', 'structuralDamage');
+  n('issuesElectrics', 'faultyElectrics');
+  n('issuesHeating', 'heatingIssues');
+  n('issuesStructural', 'issuesStructural');
   n('reported', 'reportedOverMonth');
   n('arrears', 'rentalArrears');
   n('attachments', 'attachments');
@@ -82,27 +82,27 @@ function normalizeLead(lead) {
   n('arrearsAmount', 'arrearsAmount');
   n('alreadySubmitted', 'alreadySubmitted');
   n('additionalNotes', 'additionalNotes');
-
+ 
   // New Fields
   n('infestation', 'infestation');
-  n('property_type', 'property_type');
-  n('tenancy_on_name', 'tenancy_on_name');
-  n('tenancy_type', 'tenancy_type');
-  n('is_name_on_joint', 'is_name_on_joint');
-  n('other_tenant_name', 'other_tenant_name');
-  n('actual_tenant_fullname', 'actual_tenant_fullname');
-
-  n('agent_name', 'agentName');
+  n('propertyType', 'propertyType');
+  n('tenancyOnName', 'tenancyOnName');
+  n('tenancyType', 'tenancyType');
+  n('isNameOnJoint', 'isNameOnJoint');
+  n('otherTenantName', 'otherTenantName');
+  n('actualTenantFullname', 'actualTenantFullname');
+ 
+  n('agentName', 'agentName');
   
   // Robust fallback for Agent Name
   if (!lead.agentName || lead.agentName === '--') {
-    const rootAgent = lead.agent_name || lead.agentName || lead.dialler || lead.Dialler || lead.agent;
-    const backup = lead.agent_data;
-    const backupAgent = backup ? (backup.agentName || backup.agent_name || backup.dialler || backup.Dialler || backup.agent) : null;
+    const rootAgent = lead.agentName || lead.dialler || lead.Dialler || lead.agent;
+    const backup = lead.agentData;
+    const backupAgent = backup ? (backup.agentName || backup.dialler || backup.Dialler || backup.agent) : null;
     lead.agentName = rootAgent || backupAgent || lead.agentName;
   }
-
+ 
   return lead;
 }
-
+ 
 module.exports = { createSupabaseClient, assertEnv, normalizeLead };

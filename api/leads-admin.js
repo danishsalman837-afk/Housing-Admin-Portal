@@ -14,9 +14,9 @@ module.exports = async function handler(req, res) {
         const url = process.env.SUPABASE_URL || 'NOT_SET';
         const projectId = url.split('.')[0].split('//')[1] || 'UNKNOWN';
         
-        // Fetch column metadata using limit 0
-        const { data: cols, error: metaError } = await supabase.from('submissions').select('*').limit(0);
-        const availableColumns = !metaError ? Object.keys(cols[0] || {}) : [];
+        // Fetch column metadata
+        const { data: cols, error: metaError } = await supabase.from('submissions').select('*').limit(1);
+        const availableColumns = !metaError && cols && cols.length > 0 ? Object.keys(cols[0]) : [];
 
         return res.status(200).json({ 
             status: "online", 
@@ -26,35 +26,20 @@ module.exports = async function handler(req, res) {
         });
     }
 
+    // ═════════════════════════════════════════════════
+    // GET: LIST ALL (Submissions)
+    // ═════════════════════════════════════════════════
     if (method === 'GET' && (route === 'list' || (!req.query.phone && !route))) {
       const { data, error } = await supabase
         .from('submissions')
         .select('*')
-        .eq('is_submitted', true)
+        .eq('isSubmitted', true)
         .neq('leadStatus', 'Archived')
         .order('timestamp', { ascending: false });
 
       if (error) return res.status(500).json({ error: error.message });
       
-      const { data: messages, error: msgError } = await supabase
-        .from('whatsapp_messages')
-        .select('lead_id, message_body')
-        .order('created_at', { ascending: false });
-
-      const msgMap = {};
-      if (!msgError && messages) {
-          for (let i = messages.length - 1; i >= 0; i--) {
-              if (messages[i].lead_id) msgMap[messages[i].lead_id] = messages[i].message_body;
-          }
-      }
-
-      const normalizedData = (data || []).map(lead => {
-          let l = normalizeLead(lead);
-          if (msgMap[l.id]) {
-              l.last_message = msgMap[l.id];
-          }
-          return l;
-      });
+      const normalizedData = (data || []).map(lead => normalizeLead(lead));
       return res.status(200).json(normalizedData);
     }
 
@@ -80,7 +65,7 @@ module.exports = async function handler(req, res) {
           variations.push('44' + strippedPhone);
       }
       const uniqueVariations = [...new Set(variations.filter(v => v))];
-      const orQuery = uniqueVariations.flatMap(v => [`phone.eq.${v}`, `mobile_number.eq.${v}`]).join(',');
+      const orQuery = uniqueVariations.flatMap(v => [`phone.eq.${v}`, `mobileNumber.eq.${v}`]).join(',');
 
       const { data, error } = await supabase
         .from('submissions')
@@ -103,19 +88,47 @@ module.exports = async function handler(req, res) {
 
     // Mapping: Form Key -> DB Key
     const mapping = {
-        dateOfBirth: 'dob', tenancyDuration: 'livingDuration', hasDampMould: 'damp', roomsAffected: 'dampRooms',
-        affectedSurface: 'dampSurface', issueDuration: 'dampDuration', issueCause: 'dampCause', damageBelongings: 'dampDamage',
-        healthProblems: 'dampHealth', hasLeaks: 'leak', cracksDamage: 'leakCracks', faultyElectrics: 'issues_electrics',
-        heatingIssues: 'issues_heating', structuralDamage: 'issues_structural', reportedOverMonth: 'reported',
-        rentalArrears: 'arrears', dampLocation: 'dampLocation', leakLocation: 'leakLocation', leakSource: 'leakSource',
-        leakStart: 'leakStart', leakDamage: 'leakDamage', leakBelongings: 'leakBelongings', reportCount: 'reportCount',
-        reportFirst: 'reportFirst', reportLast: 'reportLast', reportResponse: 'reportResponse', reportAttempt: 'reportAttempt', reportStatus: 'reportStatus',
-        arrearsAmount: 'arrearsAmount', alreadySubmitted: 'alreadySubmitted', additionalNotes: 'additionalNotes', 
-        agentName: 'agent_name', name: 'name', phone: 'phone',
-        tenancy_on_name: 'tenancy_on_name', tenancy_type: 'tenancy_type', is_name_on_joint: 'is_name_on_joint', 
-        other_tenant_name: 'other_tenant_name', actual_tenant_fullname: 'actual_tenant_fullname',
+        dateOfBirth: 'dob', 
+        tenancyDuration: 'livingDuration', 
+        hasDampMould: 'damp', 
+        roomsAffected: 'dampRooms',
+        affectedSurface: 'dampSurface', 
+        issueDuration: 'dampDuration', 
+        issueCause: 'dampCause', 
+        damageBelongings: 'dampDamage',
+        healthProblems: 'dampHealth', 
+        hasLeaks: 'leak', 
+        cracksDamage: 'leakCracks', 
+        faultyElectrics: 'issuesElectrics',
+        heatingIssues: 'issuesHeating', 
+        structuralDamage: 'issuesStructural', 
+        reportedOverMonth: 'reported',
+        rentalArrears: 'arrears', 
+        dampLocation: 'dampLocation', 
+        leakLocation: 'leakLocation', 
+        leakSource: 'leakSource',
+        leakStart: 'leakStart', 
+        leakDamage: 'leakDamage', 
+        leakBelongings: 'leakBelongings', 
+        reportCount: 'reportCount',
+        reportFirst: 'reportFirst', 
+        reportLast: 'reportLast', 
+        reportResponse: 'reportResponse', 
+        reportAttempt: 'reportAttempt', 
+        reportStatus: 'reportStatus',
+        arrearsAmount: 'arrearsAmount', 
+        alreadySubmitted: 'alreadySubmitted', 
+        additionalNotes: 'additionalNotes', 
+        agentName: 'agentName', 
+        name: 'name', 
+        phone: 'phone',
+        tenancyOnName: 'tenancyOnName', 
+        tenancyType: 'tenancyType', 
+        isNameOnJoint: 'isNameOnJoint', 
+        otherTenantName: 'otherTenantName', 
+        actualTenantFullname: 'actualTenantFullname',
         infestation: 'infestation',
-        property_type: 'property_type'
+        propertyType: 'propertyType'
     };
       for (const [formKey, dbKey] of Object.entries(mapping)) {
           if (updates[formKey] !== undefined) {
@@ -124,18 +137,16 @@ module.exports = async function handler(req, res) {
           }
       }
 
-      // Backup original agent data if this is the first edit
+      // Backup original agent data
       const { data: currentLead } = await supabase.from('submissions').select('*').eq('id', id).single();
-      if (currentLead && !currentLead.agent_data) {
-          updates.agent_data = currentLead;
-          updates.is_edited = true;
+      if (currentLead && !currentLead.agentData) {
+          updates.agentData = currentLead;
+          updates.isEdited = true;
       }
 
-      // If leadStatus is being updated, also update lead_stage for export consistency
       if (updates.leadStatus) {
-          updates.lead_stage = updates.leadStatus;
-          // If it's being updated in admin, it's definitely submitted (or was already)
-          updates.is_submitted = true; 
+          updates.leadStage = updates.leadStatus;
+          updates.isSubmitted = true; 
       }
 
       const { data, error } = await supabase.from('submissions').update(updates).eq('id', id).select();
