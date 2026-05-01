@@ -32,6 +32,18 @@ module.exports = async function handler(req, res) {
         infestation: 'infestation',
         property_type: 'property_type'
     };
+
+    // Whitelist of valid DB columns to prevent "column does not exist" errors
+    const validColumns = [
+        'id', 'name', 'phone', 'email', 'address', 'postcode', 'dob', 'livingDuration', 'tenantType', 'landlordName',
+        'damp', 'dampLocation', 'dampRooms', 'dampSurface', 'dampDuration', 'dampCause', 'dampDamage', 'dampHealth',
+        'leak', 'leakLocation', 'leakSource', 'leakStart', 'leakDamage', 'leakBelongings', 'leakCracks',
+        'issues_electrics', 'issues_heating', 'issues_structural', 'infestation', 'reported', 'reportCount',
+        'reportFirst', 'reportLast', 'reportResponse', 'reportAttempt', 'reportStatus', 'arrears', 'arrearsAmount',
+        'alreadySubmitted', 'additionalNotes', 'agent_name', 'timestamp', 'is_submitted', 'leadStatus', 'lead_stage',
+        'agent_data', 'unique_token', 'property_type', 'tenancy_on_name', 'tenancy_type', 'is_name_on_joint',
+        'other_tenant_name', 'actual_tenant_fullname', 'assigned_company_id', 'assigned_solicitor_id', 'mobile_number'
+    ];
     
     // Save a DEEP CLONE of the original raw data for the agent_data backup
     const originalRawData = JSON.parse(JSON.stringify(data));
@@ -43,6 +55,13 @@ module.exports = async function handler(req, res) {
         if (data[formKey] !== undefined) {
             data[dbKey] = data[formKey];
             if (formKey !== dbKey) delete data[formKey];
+        }
+    }
+
+    // Filter data to only valid columns
+    for (const key of Object.keys(data)) {
+        if (!validColumns.includes(key)) {
+            delete data[key];
         }
     }
 
@@ -63,8 +82,9 @@ module.exports = async function handler(req, res) {
         variations.push('44' + strippedPhone);
     }
     const uniqueVariations = [...new Set(variations.filter(v => v))];
-    // Search in both 'phone' and 'mobile_number' columns
-    const orQuery = uniqueVariations.flatMap(v => [`phone.eq."${v}"`, `mobile_number.eq."${v}"`]).join(',');
+    // Search in both 'phone' and 'mobile_number' columns.
+    // Note: PostgREST .or() filter values should generally not be quoted unless they contain commas.
+    const orQuery = uniqueVariations.flatMap(v => [`phone.eq.${v}`, `mobile_number.eq.${v}`]).join(',');
 
     const { data: existing, error: findError } = await supabase
         .from('submissions')
@@ -137,6 +157,6 @@ module.exports = async function handler(req, res) {
 
   } catch (err) {
     console.error("Leads Public Error:", err.message);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: "Failed to process submission: " + err.message });
   }
 };
