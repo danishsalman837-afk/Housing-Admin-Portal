@@ -8,28 +8,23 @@ module.exports = async function handler(req, res) {
 
   try {
     // ═════════════════════════════════════════════════
-    // DIAGNOSTIC PING (With column detection)
+    // DIAGNOSTIC PING
     // ═════════════════════════════════════════════════
     if (method === 'GET' && route === 'ping') {
         const url = process.env.SUPABASE_URL || 'NOT_SET';
         const projectId = url.split('.')[0].split('//')[1] || 'UNKNOWN';
-        
-        const { data: cols, error: metaError } = await supabase.from('submissions').select('*').limit(1);
-        const availableColumns = !metaError && cols && cols.length > 0 ? Object.keys(cols[0]) : [];
-
+        const { data: cols } = await supabase.from('submissions').select('*').limit(1);
         return res.status(200).json({ 
             status: "online", 
-            projectId: projectId,
-            urlMasked: url.substring(0, 12) + "...",
-            columns: availableColumns
+            projectId, 
+            columns: cols && cols.length > 0 ? Object.keys(cols[0]) : [] 
         });
     }
 
     // ═════════════════════════════════════════════════
-    // GET: LIST ALL (Submissions)
+    // GET: LIST ALL
     // ═════════════════════════════════════════════════
     if (method === 'GET' && (route === 'list' || (!req.query.phone && !route))) {
-      // We check both "isSubmitted" and the old "is_submitted" to ensure nothing is missed
       const { data, error } = await supabase
         .from('submissions')
         .select('*')
@@ -38,65 +33,58 @@ module.exports = async function handler(req, res) {
         .order('timestamp', { ascending: false });
 
       if (error) return res.status(500).json({ error: error.message });
-      
-      const normalizedData = (data || []).map(lead => normalizeLead(lead));
-      return res.status(200).json(normalizedData);
+      return res.status(200).json((data || []).map(l => normalizeLead(l)));
     }
 
     // ═════════════════════════════════════════════════
-    // GET: SINGLE BY PHONE (Get-Lead)
-    // ═════════════════════════════════════════════════
-    if (method === 'GET' && (req.query.phone || route === 'get')) {
-      const { phone } = req.query;
-      if (!phone) return res.status(400).json({ error: 'Phone parameter is required' });
-
-      const strippedPhone = phone.replace(/\D/g, '');
-      let variations = [phone, strippedPhone];
-      if (strippedPhone.length >= 10) {
-          variations.push('0' + strippedPhone.replace(/^44/, ''));
-          variations.push('44' + strippedPhone.replace(/^0/, ''));
-      }
-      const uniqueVariations = [...new Set(variations.filter(v => v))];
-      // Check both phone and mobileNumber columns
-      const orQuery = uniqueVariations.flatMap(v => [`phone.eq.${v}`, `mobileNumber.eq.${v}`]).join(',');
-
-      const { data, error } = await supabase
-        .from('submissions')
-        .select('*')
-        .or(orQuery)
-        .order('timestamp', { ascending: false })
-        .limit(1);
-
-      if (error) return res.status(500).json({ error: error.message });
-      if (data && data.length > 0) return res.status(200).json(normalizeLead(data[0]));
-      return res.status(200).json(null);
-    }
-
-    // ═════════════════════════════════════════════════
-    // POST: UPDATE (Update)
+    // POST: UPDATE (Safe & Filtered)
     // ═════════════════════════════════════════════════
     if (method === 'POST') {
-      const { id, ...updates } = req.body;
+      const { id, ...rawUpdates } = req.body;
       if (!id) return res.status(400).json({ error: "ID required" });
 
-      // Ensure we update both the old and new columns for consistency
-      updates.isEdited = true;
-      updates.is_edited = true;
-      if (updates.leadStatus) {
-          updates.leadStage = updates.leadStatus;
-          updates.lead_stage = updates.leadStatus;
-          updates.isSubmitted = true; 
-          updates.is_submitted = true;
+      // 1. Get actual columns from DB to prevent "column not found" errors
+      const { data: colCheck } = await supabase.from('submissions').select('*').limit(1);
+      const validCols = colCheck && colCheck.length > 0 ? Object.keys(colCheck[0]) : [];
+
+      const updates = {};
+      
+      // 2. Map known fields and handle dual-columns
+      if (rawUpdates.leadStatus) {
+          if (validCols.includes('leadStatus')) updates.leadStatus = rawUpdates.leadStatus;
+          if (validCols.includes('leadStage')) updates.leadStage = rawUpdates.leadStatus;
+          if (validCols.includes('lead_stage')) updates.lead_stage = rawUpdates.leadStatus;
+          if (validCols.includes('isSubmitted')) updates.isSubmitted = true;
+          if (validCols.includes('is_submitted')) updates.is_submitted = true;
+      }
+
+      // 3. Mark as edited
+      if (validCols.includes('isEdited')) updates.isEdited = true;
+      if (validCols.includes('is_edited')) updates.is_edited = true;
+
+      // 4. Pass through other valid fields
+      for (const key of Object.keys(rawUpdates)) {
+          if (validCols.includes(key) && key !== 'id') {
+              updates[key] = rawUpdates[key];
+          }
+      }
+
+      // 5. Special fallback for notes (check both columns)
+      if (rawUpdates.notes && !validCols.includes('notes') && validCols.includes('call_notes')) {
+          updates.call_notes = rawUpdates.notes;
       }
 
       const { data, error } = await supabase.from('submissions').update(updates).eq('id', id).select();
-      if (error) return res.status(500).json({ error: error.message });
+      
+      if (error) {
+          console.error("Update Error:", error);
+          return res.status(500).json({ error: error.message, details: error.hint });
+      }
       return res.status(200).json(data[0] || {});
     }
 
     return res.status(405).json({ error: 'Method Not Allowed' });
   } catch (err) {
-    console.error("Leads Admin Error:", err.message);
-    return res.status(500).json({ error: "Server Error: " + err.message });
+    return res.status(500).json({ error: err.message });
   }
 };
