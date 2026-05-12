@@ -370,7 +370,9 @@ window.calculateAgentPerformance = function () {
         agentMap[agentKey].leads.push(s);
 
         const status = (s.leadStatus || '').toLowerCase().trim();
-        if (status === 'accepted') {
+        const acceptedStatuses = ['accepted', 'invoice raised', 'not yet invoiced', 'paid'];
+        
+        if (acceptedStatuses.includes(status)) {
             agentMap[agentKey].accepted++;
         } else if (status === 'rejected' || status === 'closed') {
             agentMap[agentKey].rejected++;
@@ -381,8 +383,14 @@ window.calculateAgentPerformance = function () {
     renderPerformanceTable(performanceData);
 
     // Update performance summary stats
+    const acceptedStatuses = ['accepted', 'invoice raised', 'not yet invoiced', 'paid'];
+    
     document.getElementById('perfTotalAgents').innerText = performanceData.length;
-    document.getElementById('perfTotalAccepted').innerText = filteredLeads.filter(s => (s.leadStatus || '').toLowerCase().trim() === 'accepted').length;
+    document.getElementById('perfTotalAccepted').innerText = filteredLeads.filter(s => {
+        const ls = (s.leadStatus || '').toLowerCase().trim();
+        return acceptedStatuses.includes(ls);
+    }).length;
+    
     document.getElementById('perfTotalRejected').innerText = filteredLeads.filter(s => {
         const ls = (s.leadStatus || '').toLowerCase().trim();
         return ls === 'rejected' || ls === 'closed';

@@ -92,15 +92,27 @@ function normalizeLead(lead) {
   n('otherTenantName', 'otherTenantName');
   n('actualTenantFullname', 'actualTenantFullname');
  
-  n('agentName', 'agentName');
-  
   // Robust fallback for Agent Name
-  if (!lead.agentName || lead.agentName === '--') {
-    const rootAgent = lead.agentName || lead.dialler || lead.Dialler || lead.agent;
-    const backup = lead.agentData;
-    const backupAgent = backup ? (backup.agentName || backup.dialler || backup.Dialler || backup.agent) : null;
-    lead.agentName = rootAgent || backupAgent || lead.agentName;
+  const getAgent = (obj) => {
+    if (!obj) return null;
+    let target = obj;
+    if (typeof obj === 'string') {
+      try { target = JSON.parse(obj); } catch(e) { return null; }
+    }
+    const val = target.agentName || target.agent_name || target.dialler || target.Dialler || target.Dialer || target.agent || target.user_name || target.username;
+    if (typeof val === 'string' && val.trim() !== '' && val.trim() !== '--') return val.trim();
+    return null;
+  };
+
+  const rootAgent = getAgent(lead);
+  const backupAgent = getAgent(lead.agentData) || getAgent(lead.agent_data);
+  
+  if (rootAgent) {
+    lead.agentName = rootAgent;
+  } else if (backupAgent) {
+    lead.agentName = backupAgent;
   }
+
  
   return lead;
 }
