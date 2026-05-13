@@ -529,15 +529,11 @@ window.viewAgentDetails = function (agentName) {
     agentLeads.forEach((lead) => {
         const tr = document.createElement('tr');
         const submittedDate = lead.timestamp ? new Date(lead.timestamp).toLocaleDateString('en-GB') : '---';
-        const acceptedDate = lead.accepted_at ? new Date(lead.accepted_at).toLocaleDateString('en-GB') : null;
-        const dateDisplay = acceptedDate
-            ? `<span style="font-size:11px; color:var(--label-3);">Submitted: ${submittedDate}</span><br><span style="font-size:11px; color:#10B981; font-weight:600;">Accepted: ${acceptedDate}</span>`
-            : `<span style="font-size:12px; color:var(--label-3);">${submittedDate}</span>`;
 
         tr.innerHTML = `
             <td><strong>${lead.name || lead.first_name || '---'}</strong></td>
             <td><span class="status-pill" data-color="${getStatusColor(lead.leadStatus)}">${lead.leadStatus}</span></td>
-            <td>${dateDisplay}</td>
+            <td style="font-size:12px; color:var(--label-3);">${submittedDate}</td>
             <td style="display:flex; gap:6px; flex-wrap:wrap;">
                 <button class="act-btn view" onclick="window.openViewModal('${lead.id}', false)">View Lead</button>
                 <button class="act-btn" style="background:var(--surface-3); color:var(--label-1);" onclick="window.showLeadTrack('${lead.id}')">&#128336; Track</button>
@@ -559,9 +555,10 @@ window.showLeadTrack = function (leadId) {
     if (!lead) return;
 
     const name = lead.name || lead.first_name || 'Unknown Client';
-    const submittedDate = lead.timestamp ? new Date(lead.timestamp).toLocaleString('en-GB') : 'Unknown';
-    const acceptedDate = lead.accepted_at ? new Date(lead.accepted_at).toLocaleString('en-GB') : null;
-    const rejectedDate = lead.rejected_at ? new Date(lead.rejected_at).toLocaleString('en-GB') : null;
+    const submittedDate = lead.timestamp ? new Date(lead.timestamp).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Unknown';
+    const acceptedDate = lead.accepted_at ? new Date(lead.accepted_at).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : null;
+    const rejectedDate = lead.rejected_at ? new Date(lead.rejected_at).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : null;
+    const closedDate = lead.closed_at ? new Date(lead.closed_at).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : null;
     const agent = lead.agentName || 'Unknown Agent';
 
     const rows = [
@@ -569,8 +566,9 @@ window.showLeadTrack = function (leadId) {
         `<div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--surface-3);"><span style="color:var(--label-3); font-size:13px;">Agent</span><span style="font-weight:700;">${agent}</span></div>`,
         `<div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--surface-3);"><span style="color:var(--label-3); font-size:13px;">📅 Lead Generated</span><span style="font-weight:700; color:var(--blue);">${submittedDate}</span></div>`,
         acceptedDate ? `<div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--surface-3);"><span style="color:var(--label-3); font-size:13px;">✅ Accepted On</span><span style="font-weight:700; color:#10B981;">${acceptedDate}</span></div>` : '',
-        rejectedDate ? `<div style="display:flex; justify-content:space-between; padding:12px 0;"><span style="color:var(--label-3); font-size:13px;">❌ Rejected On</span><span style="font-weight:700; color:#EF4444;">${rejectedDate}</span></div>` : '',
-        !acceptedDate && !rejectedDate ? `<div style="display:flex; justify-content:space-between; padding:12px 0;"><span style="color:var(--label-3); font-size:13px;">Current Status</span><span style="font-weight:700; color:var(--label-2);">${lead.leadStatus || 'Pending'}</span></div>` : ''
+        rejectedDate ? `<div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--surface-3);"><span style="color:var(--label-3); font-size:13px;">❌ Rejected On</span><span style="font-weight:700; color:#EF4444;">${rejectedDate}</span></div>` : '',
+        closedDate ? `<div style="display:flex; justify-content:space-between; padding:12px 0;"><span style="color:var(--label-3); font-size:13px;">🏁 Closed On</span><span style="font-weight:700; color:var(--label-2);">${closedDate}</span></div>` : 
+        `<div style="display:flex; justify-content:space-between; padding:12px 0;"><span style="color:var(--label-3); font-size:13px;">Current Status</span><span style="font-weight:700; color:var(--label-2);">${lead.leadStatus || 'Pending'}</span></div>`
     ].join('');
 
     document.getElementById('modalBox').innerHTML = `
@@ -904,10 +902,11 @@ window.handleFieldUpdate = async function (id, fieldName, value) {
                 lead['assigned_company_id'] = null;
                 lead['assigned_solicitor_id'] = null;
             }
-            if (fieldName === 'leadStatus' && (sanitizedValue === 'Accepted' || sanitizedValue === 'Rejected')) {
+            if (fieldName === 'leadStatus' && (sanitizedValue === 'Accepted' || sanitizedValue === 'Rejected' || sanitizedValue === 'Closed')) {
                 const now = new Date().toISOString();
                 if (sanitizedValue === 'Accepted') lead.accepted_at = now;
                 if (sanitizedValue === 'Rejected') lead.rejected_at = now;
+                if (sanitizedValue === 'Closed') lead.closed_at = now;
             }
         }
 

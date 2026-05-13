@@ -78,19 +78,21 @@ module.exports = async function handler(req, res) {
       
       if (!error && updates.leadStatus) {
           const status = updates.leadStatus;
-          if (status === 'Accepted' || status === 'Rejected') {
+          if (status === 'Accepted' || status === 'Rejected' || status === 'Closed') {
               const now = new Date().toISOString();
               const actUpdate = { status };
               const subTimestampUpdate = {};
 
               if (status === 'Accepted') {
                   actUpdate.accepted_at = now;
-                  // Write directly to submissions table too, so the perf report picks it up
                   if (validCols.includes('accepted_at')) subTimestampUpdate.accepted_at = now;
               }
               if (status === 'Rejected') {
                   actUpdate.rejected_at = now;
                   if (validCols.includes('rejected_at')) subTimestampUpdate.rejected_at = now;
+              }
+              if (status === 'Closed') {
+                  if (validCols.includes('closed_at')) subTimestampUpdate.closed_at = now;
               }
 
               // Update solicitor_activity (if an activity record exists for this lead)
