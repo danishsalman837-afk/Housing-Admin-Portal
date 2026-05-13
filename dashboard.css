@@ -88,6 +88,10 @@
     --status-orange-txt:   #9A3412;
     --status-orange-border: #FED7AA;
 
+    --status-teal-bg:      #F0FDFA;
+    --status-teal-txt:     #0F766E;
+    --status-teal-border:  #99F6E4;
+
     /* Sidebar Constraints */
     --sidebar-w:       260px;
     --sidebar-w-col:   80px;
@@ -185,6 +189,10 @@
     --status-orange-bg:    rgba(124, 45, 18, 0.5);
     --status-orange-txt:   #FB923C;
     --status-orange-border: #7C2D12;
+
+    --status-teal-bg:      rgba(13, 148, 136, 0.15);
+    --status-teal-txt:     #5EEAD4;
+    --status-teal-border:  rgba(13, 148, 136, 0.3);
 
     --shadow-glass:    0 8px 32px 0 rgba(0, 0, 0, 0.4);
 }
@@ -1001,6 +1009,7 @@ select.status-pill {
 .status-pill[data-color="brown"] { background: var(--status-brown-bg); color: var(--status-brown-txt); border-color: var(--status-brown-border); }
 .status-pill[data-color="pink"] { background: var(--status-pink-bg); color: var(--status-pink-txt); border-color: var(--status-pink-border); }
 .status-pill[data-color="orange"] { background: var(--status-orange-bg); color: var(--status-orange-txt); border-color: var(--status-orange-border); }
+.status-pill[data-color="teal"] { background: var(--status-teal-bg); color: var(--status-teal-txt); border-color: var(--status-teal-border); }
  
 .badge {
     display: inline-flex;

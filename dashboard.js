@@ -54,7 +54,7 @@ function syncThemeToggle() {
 
 const leadStatuses = [
     'New Lead', 'Allocated', 'Sent', 'Accepted', 'Rejected', 'Transferred',
-    'Not Yet Invoiced', 'Invoice Raised', 'Paid', 'Test Lead', 'Client Not Engaging', 'Awaiting for pictures', 'More info/pic required', 'Closed'
+    'Not Yet Invoiced', 'Invoice Raised', 'Paid', 'Test Lead', 'Client Not Engaging', 'Awaiting for pictures', 'More info/pic required', 'On Hold', 'Closed'
 ];
 
 function getStatusColor(status) {
@@ -73,6 +73,7 @@ function getStatusColor(status) {
     if (s === 'Client Not Engaging') return 'slate';
     if (s === 'Awaiting for pictures') return 'violet';
     if (s === 'More info/pic required') return 'indigo';
+    if (s === 'On Hold') return 'teal';
     if (s === 'Test Lead' || s === 'test') return 'gray';
     return 'gray';
 }
@@ -632,6 +633,7 @@ function initCharts(data, paidCount, totalCount) {
             '#64748B', // Client Not Engaging (slate)
             '#8B5CF6', // Awaiting for pictures (violet)
             '#6366F1', // More info/pic required (indigo)
+            '#14B8A6', // On Hold (teal)
             '#EF4444'  // Closed (red)
         ];
 
