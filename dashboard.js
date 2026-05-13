@@ -343,6 +343,8 @@ window.calculateAgentPerformance = function () {
     const selectedMonth = parseInt(document.getElementById('performanceMonth')?.value ?? now.getMonth());
     const selectedYear = parseInt(document.getElementById('performanceYear')?.value ?? now.getFullYear());
 
+    const agentMap = {};
+
     // Process ALL leads to find matches for the selected month/year
     submissionsData.forEach(s => {
         const rawName = (s.agentName || 'Unknown Agent').trim();
