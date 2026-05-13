@@ -284,13 +284,14 @@ module.exports = async function handler(req, res) {
 
         if (action === 'accept') {
           const { error: updErr } = await supabase.from('solicitor_activity').update({ 
-            status: 'Accepted',
+            status: 'Transferred',
             accepted_at: new Date().toISOString()
           }).eq('id', activity.id);
           if (updErr) return res.status(500).json({ error: updErr.message });
           await supabase.from('submissions').update({ 
               actual_status: 'Assigned',
               leadStatus: 'Transferred',
+              leadStage: 'Transferred',
               lead_stage: 'Transferred',
               is_submitted: true 
           }).eq('id', lead.id);
@@ -299,7 +300,7 @@ module.exports = async function handler(req, res) {
           const normalized = normalizeLead({ ...(fullLead || {}) });
           return res.status(200).json({ 
             success: true, 
-            status: 'Accepted', 
+            status: 'Transferred', 
             contactDetails: { 
               email: normalized.email || '---', 
               phone: normalized.phone || normalized.mobile_number || '---', 
