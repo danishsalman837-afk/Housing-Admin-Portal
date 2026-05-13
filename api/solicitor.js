@@ -223,7 +223,7 @@ module.exports = async function handler(req, res) {
         const activityStatus = activity ? activity.status : 'Unknown';
 
         const normalized = normalizeLead({ ...lead });
-        const isAccepted = activityStatus === 'Accepted';
+        const isAccepted = activityStatus === 'Accepted' || activityStatus === 'Transferred';
 
         return res.status(200).json({
           id: lead.id,
@@ -280,7 +280,7 @@ module.exports = async function handler(req, res) {
         if (actErr || !activities || activities.length === 0) return res.status(404).json({ error: "No solicitor activity found for this lead." });
         const activity = activities[0];
 
-        if (activity.status === 'Accepted' || activity.status === 'Rejected') return res.status(400).json({ error: `This lead has already been ${activity.status.toLowerCase()}.` });
+        if (activity.status === 'Accepted' || activity.status === 'Rejected' || activity.status === 'Transferred') return res.status(400).json({ error: `This lead has already been ${activity.status.toLowerCase()}.` });
 
         if (action === 'accept') {
           const { error: updErr } = await supabase.from('solicitor_activity').update({ 
@@ -290,8 +290,8 @@ module.exports = async function handler(req, res) {
           if (updErr) return res.status(500).json({ error: updErr.message });
           await supabase.from('submissions').update({ 
               actual_status: 'Assigned',
-              leadStatus: 'Accepted',
-              lead_stage: 'Accepted',
+              leadStatus: 'Transferred',
+              lead_stage: 'Transferred',
               is_submitted: true 
           }).eq('id', lead.id);
           
