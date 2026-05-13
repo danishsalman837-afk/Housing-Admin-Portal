@@ -292,7 +292,8 @@ module.exports = async function handler(req, res) {
               actual_status: 'Assigned',
               leadStatus: 'Accepted',
               lead_stage: 'Accepted',
-              is_submitted: true 
+              is_submitted: true,
+              accepted_at: new Date().toISOString()
           }).eq('id', lead.id);
 
           const { data: fullLead } = await supabase.from('submissions').select('*').eq('id', lead.id).single();
@@ -321,7 +322,8 @@ module.exports = async function handler(req, res) {
             actual_status: 'Re-assign',
             leadStatus: 'Rejected',
             lead_stage: 'Rejected',
-            is_submitted: true
+            is_submitted: true,
+            rejected_at: new Date().toISOString()
           }).eq('id', lead.id);
           return res.status(200).json({ success: true, status: 'Rejected' });
         }

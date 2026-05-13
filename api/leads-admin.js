@@ -79,13 +79,27 @@ module.exports = async function handler(req, res) {
       if (!error && updates.leadStatus) {
           const status = updates.leadStatus;
           if (status === 'Accepted' || status === 'Rejected') {
+              const now = new Date().toISOString();
               const actUpdate = { status };
-              if (status === 'Accepted') actUpdate.accepted_at = new Date().toISOString();
-              if (status === 'Rejected') actUpdate.rejected_at = new Date().toISOString();
-              
-              await supabase.from('solicitor_activity')
-                .update(actUpdate)
-                .eq('lead_id', id);
+              const subTimestampUpdate = {};
+
+              if (status === 'Accepted') {
+                  actUpdate.accepted_at = now;
+                  // Write directly to submissions table too, so the perf report picks it up
+                  if (validCols.includes('accepted_at')) subTimestampUpdate.accepted_at = now;
+              }
+              if (status === 'Rejected') {
+                  actUpdate.rejected_at = now;
+                  if (validCols.includes('rejected_at')) subTimestampUpdate.rejected_at = now;
+              }
+
+              // Update solicitor_activity (if an activity record exists for this lead)
+              await supabase.from('solicitor_activity').update(actUpdate).eq('lead_id', id);
+
+              // Update submissions table directly with the timestamp
+              if (Object.keys(subTimestampUpdate).length > 0) {
+                  await supabase.from('submissions').update(subTimestampUpdate).eq('id', id);
+              }
           }
       }
       
