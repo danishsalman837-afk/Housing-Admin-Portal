@@ -27,7 +27,7 @@ module.exports = async function handler(req, res) {
         return res.status(500).json({ error: "Server Error: " + err.message });
       }
     }
-    
+
     if (req.method === 'POST') {
       try {
         const { id, action, ...fields } = req.body;
@@ -106,25 +106,25 @@ module.exports = async function handler(req, res) {
 
       // 3. Determine SMTP Configuration
       // Check if this is Felix Legal (by member email or company name)
-      const isFelix = (member.email || '').toLowerCase().includes('felix') || 
-                      (company && (company.name || '').toLowerCase().includes('felix'));
+      const isFelix = (member.email || '').toLowerCase().includes('felix') ||
+        (company && (company.name || '').toLowerCase().includes('felix'));
 
       if (isFelix) {
         console.log(`[SMTP Debug] Detected Felix Legal. Using direct SMTP (Office 365).`);
         smtpConfig = {
           host: 'smtp.office365.com',
           port: 587,
-          secure: false, 
-          auth: { 
-            user: 'claims@felixlegal.co.uk', 
-            pass: 'bjwtflrfvfgbsrrt' 
+          secure: false,
+          auth: {
+            user: 'claims@felixlegal.co.uk',
+            pass: 'bjwtflrfvfgbsrrt'
           },
           tls: {
             rejectUnauthorized: false,
             minVersion: 'TLSv1.2'
           }
         };
-      } 
+      }
       // 2. Fetch from database for other solicitors
       else if (company && company.smtp_host && company.smtp_user && company.smtp_pass) {
         console.log(`[SMTP Debug] Using Database config for: ${company.name}`);
@@ -132,7 +132,7 @@ module.exports = async function handler(req, res) {
         smtpConfig = {
           host: company.smtp_host,
           port: port,
-          secure: port === 465, 
+          secure: port === 465,
           auth: { user: company.smtp_user, pass: company.smtp_pass },
           tls: {
             rejectUnauthorized: false,
@@ -140,7 +140,7 @@ module.exports = async function handler(req, res) {
           }
         };
         if (port === 587) smtpConfig.secure = false;
-      } 
+      }
       // 3. Final Fallback (Global ENV)
       else {
         console.log(`[SMTP Debug] Using Global Default config.`);
@@ -162,8 +162,8 @@ module.exports = async function handler(req, res) {
       const transporter = nodemailer.createTransport(smtpConfig);
 
       // 4. Send the email
-      const fromEmail = (smtpConfig.auth.user && smtpConfig.auth.user.includes('@')) 
-        ? smtpConfig.auth.user 
+      const fromEmail = (smtpConfig.auth.user && smtpConfig.auth.user.includes('@'))
+        ? smtpConfig.auth.user
         : (process.env.SMTP_FROM || process.env.SMTP_USER);
 
       const fromName = isFelix ? "Felix Legal Claims" : "HOUSING STANDARDS";
@@ -179,14 +179,14 @@ module.exports = async function handler(req, res) {
 
       const { data: updated, error: updErr } = await supabase.from('solicitor_activity').update({ status: 'Sent', sent_at: new Date().toISOString() }).eq('id', activity_id).select();
       if (updErr) return res.status(500).json({ error: "Email sent, but failed to update status: " + updErr.message });
-      
+
       // SYNC: Update the main lead status to 'Sent'
-      await supabase.from('submissions').update({ 
-          leadStatus: 'Sent',
-          lead_stage: 'Sent',
-          is_submitted: true 
+      await supabase.from('submissions').update({
+        leadStatus: 'Sent',
+        lead_stage: 'Sent',
+        is_submitted: true
       }).eq('id', activity.lead_id);
-      
+
       return res.status(200).json({ success: true, activity: updated[0] });
     } catch (err) {
       console.error("SMTP Error Details:", {
@@ -223,7 +223,7 @@ module.exports = async function handler(req, res) {
         const activityStatus = activity ? activity.status : 'Unknown';
 
         const normalized = normalizeLead({ ...lead });
-        const isAccepted = activityStatus === 'Accepted' || activityStatus === 'Transferred';
+        const isAccepted = activityStatus === 'Accepted';
 
         return res.status(200).json({
           id: lead.id,
@@ -280,49 +280,48 @@ module.exports = async function handler(req, res) {
         if (actErr || !activities || activities.length === 0) return res.status(404).json({ error: "No solicitor activity found for this lead." });
         const activity = activities[0];
 
-        if (activity.status === 'Accepted' || activity.status === 'Rejected' || activity.status === 'Transferred') return res.status(400).json({ error: `This lead has already been ${activity.status.toLowerCase()}.` });
+        if (activity.status === 'Accepted' || activity.status === 'Rejected') return res.status(400).json({ error: `This lead has already been ${activity.status.toLowerCase()}.` });
 
         if (action === 'accept') {
-          const { error: updErr } = await supabase.from('solicitor_activity').update({ 
-            status: 'Transferred',
+          const { error: updErr } = await supabase.from('solicitor_activity').update({
+            status: 'Accepted',
             accepted_at: new Date().toISOString()
           }).eq('id', activity.id);
           if (updErr) return res.status(500).json({ error: updErr.message });
           await supabase.from('submissions').update({ 
               actual_status: 'Assigned',
-              leadStatus: 'Transferred',
-              leadStage: 'Transferred',
-              lead_stage: 'Transferred',
+              leadStatus: 'Accepted',
+              lead_stage: 'Accepted',
               is_submitted: true 
           }).eq('id', lead.id);
-          
+
           const { data: fullLead } = await supabase.from('submissions').select('*').eq('id', lead.id).single();
           const normalized = normalizeLead({ ...(fullLead || {}) });
-          return res.status(200).json({ 
-            success: true, 
-            status: 'Transferred', 
-            contactDetails: { 
-              email: normalized.email || '---', 
-              phone: normalized.phone || normalized.mobile_number || '---', 
+          return res.status(200).json({
+            success: true,
+            status: 'Accepted',
+            contactDetails: {
+              email: normalized.email || '---',
+              phone: normalized.phone || normalized.mobile_number || '---',
               dob: normalized.dob || '---',
               address: normalized.address || '---',
               postcode: normalized.postcode || '---',
               landlordName: normalized.landlordName || '---'
-            } 
+            }
           });
         } else if (action === 'reject') {
           if (!rejection_reason || !rejection_reason.trim()) return res.status(400).json({ error: "A rejection reason is required." });
-          const { error: updErr } = await supabase.from('solicitor_activity').update({ 
-            status: 'Rejected', 
+          const { error: updErr } = await supabase.from('solicitor_activity').update({
+            status: 'Rejected',
             rejection_reason: rejection_reason.trim(),
             rejected_at: new Date().toISOString()
           }).eq('id', activity.id);
           if (updErr) return res.status(500).json({ error: updErr.message });
-          await supabase.from('submissions').update({ 
-              actual_status: 'Re-assign',
-              leadStatus: 'Rejected',
-              lead_stage: 'Rejected',
-              is_submitted: true
+          await supabase.from('submissions').update({
+            actual_status: 'Re-assign',
+            leadStatus: 'Rejected',
+            lead_stage: 'Rejected',
+            is_submitted: true
           }).eq('id', lead.id);
           return res.status(200).json({ success: true, status: 'Rejected' });
         }
@@ -337,7 +336,7 @@ module.exports = async function handler(req, res) {
 function buildEmailTemplate(leadName, url, member, lead = {}) {
   const solicitorName = ((member.first_name || '') + ' ' + (member.last_name || '')).trim() || 'Solicitor';
   const attachments = Array.isArray(lead.attachments) ? lead.attachments : [];
-  
+
   let attachmentSection = '';
   if (attachments.length > 0) {
     const attachmentItems = attachments.map(a => `
