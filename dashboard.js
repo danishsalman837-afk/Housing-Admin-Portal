@@ -560,15 +560,17 @@ window.showLeadTrack = function (leadId) {
     const rejectedDate = lead.rejected_at ? new Date(lead.rejected_at).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : null;
     const closedDate = lead.closed_at ? new Date(lead.closed_at).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : null;
     const agent = lead.agentName || 'Unknown Agent';
+    const status = lead.leadStatus || 'Pending';
 
     const rows = [
         `<div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--surface-3);"><span style="color:var(--label-3); font-size:13px;">Client</span><span style="font-weight:700;">${name}</span></div>`,
         `<div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--surface-3);"><span style="color:var(--label-3); font-size:13px;">Agent</span><span style="font-weight:700;">${agent}</span></div>`,
+        `<div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--surface-3);"><span style="color:var(--label-3); font-size:13px;">Current Status</span><span class="status-pill" data-color="${getStatusColor(status)}" style="margin:0;">${status}</span></div>`,
         `<div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--surface-3);"><span style="color:var(--label-3); font-size:13px;">📅 Lead Generated</span><span style="font-weight:700; color:var(--blue);">${submittedDate}</span></div>`,
         acceptedDate ? `<div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--surface-3);"><span style="color:var(--label-3); font-size:13px;">✅ Accepted On</span><span style="font-weight:700; color:#10B981;">${acceptedDate}</span></div>` : '',
         rejectedDate ? `<div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--surface-3);"><span style="color:var(--label-3); font-size:13px;">❌ Rejected On</span><span style="font-weight:700; color:#EF4444;">${rejectedDate}</span></div>` : '',
-        closedDate ? `<div style="display:flex; justify-content:space-between; padding:12px 0;"><span style="color:var(--label-3); font-size:13px;">🏁 Closed On</span><span style="font-weight:700; color:var(--label-2);">${closedDate}</span></div>` : 
-        `<div style="display:flex; justify-content:space-between; padding:12px 0;"><span style="color:var(--label-3); font-size:13px;">Current Status</span><span style="font-weight:700; color:var(--label-2);">${lead.leadStatus || 'Pending'}</span></div>`
+        closedDate ? `<div style="display:flex; justify-content:space-between; padding:12px 0;"><span style="color:var(--label-3); font-size:13px;">🏁 Closed On</span><span style="font-weight:700; color:#B91C1C;">${closedDate}</span></div>` : 
+        (status === 'Closed' ? `<div style="display:flex; justify-content:space-between; padding:12px 0;"><span style="color:var(--label-3); font-size:13px;">🏁 Closed On</span><span style="font-weight:700; color:var(--label-3);">Timestamp Unavailable</span></div>` : '')
     ].join('');
 
     document.getElementById('modalBox').innerHTML = `
