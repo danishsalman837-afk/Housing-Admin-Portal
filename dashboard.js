@@ -480,13 +480,40 @@ window.viewAgentDetails = function (agentName) {
 
     const selectedMonth = parseInt(document.getElementById('detailPerformanceMonth')?.value ?? new Date().getMonth());
     const selectedYear = parseInt(document.getElementById('detailPerformanceYear')?.value ?? new Date().getFullYear());
+    const targetAgent = agentName.toUpperCase();
+    const acceptedStatuses = ['accepted', 'invoice raised', 'not yet invoiced', 'paid'];
 
-    const agentLeads = submissionsData.filter(s => {
-        if (!s.timestamp) return false;
-        const d = new Date(s.timestamp);
+    // Gather all leads relevant to this agent for the selected month
+    // using the same multi-date logic as calculateAgentPerformance
+    const seen = new Set();
+    const agentLeads = [];
+    submissionsData.forEach(s => {
         const currentAgent = (s.agentName || 'Unknown Agent').trim().toUpperCase();
-        const targetAgent = agentName.toUpperCase();
-        return currentAgent === targetAgent && d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
+        if (currentAgent !== targetAgent) return;
+        const status = (s.leadStatus || '').toLowerCase().trim();
+
+        let relevant = false;
+
+        // Created in selected month
+        if (s.timestamp) {
+            const d = new Date(s.timestamp);
+            if (d.getMonth() === selectedMonth && d.getFullYear() === selectedYear) relevant = true;
+        }
+        // Accepted in selected month
+        if (s.accepted_at && acceptedStatuses.includes(status)) {
+            const d = new Date(s.accepted_at);
+            if (d.getMonth() === selectedMonth && d.getFullYear() === selectedYear) relevant = true;
+        }
+        // Rejected in selected month
+        if (s.rejected_at) {
+            const d = new Date(s.rejected_at);
+            if (d.getMonth() === selectedMonth && d.getFullYear() === selectedYear) relevant = true;
+        }
+
+        if (relevant && !seen.has(s.id)) {
+            seen.add(s.id);
+            agentLeads.push(s);
+        }
     });
 
     document.getElementById('agentDetailTitle').innerText = `Sales Details for ${agentName} (${months[selectedMonth]} ${selectedYear})`;
@@ -494,15 +521,25 @@ window.viewAgentDetails = function (agentName) {
     if (!tbody) return;
     tbody.innerHTML = '';
 
-    agentLeads.forEach((lead, idx) => {
+    if (agentLeads.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px; color:var(--label-4);">No leads for this period.</td></tr>';
+    }
+
+    agentLeads.forEach((lead) => {
         const tr = document.createElement('tr');
+        const submittedDate = lead.timestamp ? new Date(lead.timestamp).toLocaleDateString('en-GB') : '---';
+        const acceptedDate = lead.accepted_at ? new Date(lead.accepted_at).toLocaleDateString('en-GB') : null;
+        const dateDisplay = acceptedDate
+            ? `<span style="font-size:11px; color:var(--label-3);">Submitted: ${submittedDate}</span><br><span style="font-size:11px; color:#10B981; font-weight:600;">Accepted: ${acceptedDate}</span>`
+            : `<span style="font-size:12px; color:var(--label-3);">${submittedDate}</span>`;
 
         tr.innerHTML = `
             <td><strong>${lead.name || lead.first_name || '---'}</strong></td>
             <td><span class="status-pill" data-color="${getStatusColor(lead.leadStatus)}">${lead.leadStatus}</span></td>
-            <td style="font-size:12px; color:var(--label-3);">${new Date(lead.timestamp).toLocaleDateString()}</td>
-            <td>
+            <td>${dateDisplay}</td>
+            <td style="display:flex; gap:6px; flex-wrap:wrap;">
                 <button class="act-btn view" onclick="window.openViewModal('${lead.id}', false)">View Lead</button>
+                <button class="act-btn" style="background:var(--surface-3); color:var(--label-1);" onclick="window.showLeadTrack('${lead.id}')">&#128336; Track</button>
             </td>
         `;
         tbody.appendChild(tr);
@@ -514,6 +551,35 @@ window.viewAgentDetails = function (agentName) {
     if (summaryPanel) summaryPanel.style.display = 'none';
 
     detailSec.scrollIntoView({ behavior: 'smooth' });
+};
+
+window.showLeadTrack = function (leadId) {
+    const lead = submissionsData.find(s => String(s.id) === String(leadId));
+    if (!lead) return;
+
+    const name = lead.name || lead.first_name || 'Unknown Client';
+    const submittedDate = lead.timestamp ? new Date(lead.timestamp).toLocaleString('en-GB') : 'Unknown';
+    const acceptedDate = lead.accepted_at ? new Date(lead.accepted_at).toLocaleString('en-GB') : null;
+    const rejectedDate = lead.rejected_at ? new Date(lead.rejected_at).toLocaleString('en-GB') : null;
+    const agent = lead.agentName || 'Unknown Agent';
+
+    const rows = [
+        `<div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--surface-3);"><span style="color:var(--label-3); font-size:13px;">Client</span><span style="font-weight:700;">${name}</span></div>`,
+        `<div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--surface-3);"><span style="color:var(--label-3); font-size:13px;">Agent</span><span style="font-weight:700;">${agent}</span></div>`,
+        `<div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--surface-3);"><span style="color:var(--label-3); font-size:13px;">📅 Lead Generated</span><span style="font-weight:700; color:var(--blue);">${submittedDate}</span></div>`,
+        acceptedDate ? `<div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--surface-3);"><span style="color:var(--label-3); font-size:13px;">✅ Accepted On</span><span style="font-weight:700; color:#10B981;">${acceptedDate}</span></div>` : '',
+        rejectedDate ? `<div style="display:flex; justify-content:space-between; padding:12px 0;"><span style="color:var(--label-3); font-size:13px;">❌ Rejected On</span><span style="font-weight:700; color:#EF4444;">${rejectedDate}</span></div>` : '',
+        !acceptedDate && !rejectedDate ? `<div style="display:flex; justify-content:space-between; padding:12px 0;"><span style="color:var(--label-3); font-size:13px;">Current Status</span><span style="font-weight:700; color:var(--label-2);">${lead.leadStatus || 'Pending'}</span></div>` : ''
+    ].join('');
+
+    document.getElementById('modalBox').innerHTML = `
+        <div class="modal-header">
+            <h2 style="font-size:18px; font-weight:800;">&#128336; Lead Timeline</h2>
+            <button class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button>
+        </div>
+        <div style="padding: 8px 0;">${rows}</div>
+    `;
+    document.getElementById('modalOverlay').style.display = 'flex';
 };
 
 function initCharts(data, paidCount, totalCount) {
