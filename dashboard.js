@@ -30,10 +30,10 @@ window.toggleTheme = function (e) {
     calculateDashboardStats();
 };
 
-window.toggleSidebar = function() {
+window.toggleSidebar = function () {
     const sidebar = document.getElementById('sidebar');
     if (!sidebar) return;
-    
+
     if (window.innerWidth > 1024) {
         // Desktop: toggle collapsed state
         sidebar.classList.toggle('collapsed');
@@ -210,27 +210,27 @@ window.switchView = function (view) {
     }
 };
 
-window.filterByStatus = function(status, showClosed = false) {
+window.filterByStatus = function (status, showClosed = false) {
     console.log("Filtering leads by status:", status, "Show Closed:", showClosed);
     // 1. Switch to leads view
     window.switchView('leads');
-    
+
     // 2. Set the filter dropdown value and closed toggle
     const statusSelect = document.getElementById('filterStatus');
     const closedCheck = document.getElementById('showClosedCheck');
-    
+
     if (statusSelect) statusSelect.value = status;
     if (closedCheck) closedCheck.checked = showClosed;
-    
+
     // 3. Trigger the filtered render
     window.renderFilteredLeads();
 };
 
-window.filterActivityByStatus = function(status) {
+window.filterActivityByStatus = function (status) {
     console.log("Filtering activity by status:", status);
     // 1. Switch to activity view
     window.switchView('activity');
-    
+
     // 2. Set the activity filter dropdown
     const saFilter = document.getElementById('filterActivityStatus');
     if (saFilter) {
@@ -274,7 +274,7 @@ function populateSettings() {
 
 function calculateDashboardStats() {
     const total = submissionsData.length;
-    const acceptedCount = submissionsData.filter(s => ['Accepted', 'Invoice Raised', 'Not Yet Invoiced', 'Paid'].includes(s.leadStatus)).length;
+    const acceptedCount = submissionsData.filter(s => ['Accepted', 'Invoice Raised', 'Not Yet Invoiced'].includes(s.leadStatus)).length;
     const paidCount = submissionsData.filter(s => s.leadStatus === 'Paid').length;
     const rejectedCount = submissionsData.filter(s => ['Rejected', 'Closed'].includes(s.leadStatus)).length;
 
@@ -307,7 +307,7 @@ function calculateDashboardStats() {
 window.initPerformanceFilters = function () {
     const monthSelects = [document.getElementById('performanceMonth'), document.getElementById('detailPerformanceMonth')];
     const yearSelects = [document.getElementById('performanceYear'), document.getElementById('detailPerformanceYear')];
-    
+
     // Set current month/year
     const now = new Date();
     const currentMonth = now.getMonth();
@@ -329,7 +329,7 @@ window.initPerformanceFilters = function () {
 
     const sortedYears = Array.from(years).sort((a, b) => b - a);
     const yearOptions = sortedYears.map(y => `<option value="${y}" ${y === currentYear ? 'selected' : ''}>${y}</option>`).join('');
-    
+
     yearSelects.forEach(sel => {
         if (sel) {
             sel.innerHTML = yearOptions;
@@ -355,7 +355,7 @@ window.calculateAgentPerformance = function () {
     filteredLeads.forEach(s => {
         const rawName = (s.agentName || 'Unknown Agent').trim();
         const agentKey = rawName.toUpperCase();
-        
+
         if (!agentMap[agentKey]) {
             agentMap[agentKey] = {
                 displayName: rawName, // Keep original casing of first encounter
@@ -371,7 +371,7 @@ window.calculateAgentPerformance = function () {
 
         const status = (s.leadStatus || '').toLowerCase().trim();
         const acceptedStatuses = ['accepted', 'invoice raised', 'not yet invoiced', 'paid'];
-        
+
         if (acceptedStatuses.includes(status)) {
             agentMap[agentKey].accepted++;
         } else if (status === 'rejected' || status === 'closed') {
@@ -384,13 +384,13 @@ window.calculateAgentPerformance = function () {
 
     // Update performance summary stats
     const acceptedStatuses = ['accepted', 'invoice raised', 'not yet invoiced', 'paid'];
-    
+
     document.getElementById('perfTotalAgents').innerText = performanceData.length;
     document.getElementById('perfTotalAccepted').innerText = filteredLeads.filter(s => {
         const ls = (s.leadStatus || '').toLowerCase().trim();
         return acceptedStatuses.includes(ls);
     }).length;
-    
+
     document.getElementById('perfTotalRejected').innerText = filteredLeads.filter(s => {
         const ls = (s.leadStatus || '').toLowerCase().trim();
         return ls === 'rejected' || ls === 'closed';
@@ -467,7 +467,7 @@ window.viewAgentDetails = function (agentName) {
 
     agentLeads.forEach((lead, idx) => {
         const tr = document.createElement('tr');
-        
+
         tr.innerHTML = `
             <td><strong>${lead.name || lead.first_name || '---'}</strong></td>
             <td><span class="status-pill" data-color="${getStatusColor(lead.leadStatus)}">${lead.leadStatus}</span></td>
@@ -483,7 +483,7 @@ window.viewAgentDetails = function (agentName) {
     detailSec.style.display = 'block';
     const summaryPanel = document.getElementById('performanceSummaryPanel');
     if (summaryPanel) summaryPanel.style.display = 'none';
-    
+
     detailSec.scrollIntoView({ behavior: 'smooth' });
 };
 
@@ -1166,23 +1166,23 @@ window.openViewModal = function (id, showOriginal = false) {
                         </div>
                         <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:20px;">
                             ${(leadData.attachments || []).map(a => {
-                                const ext = (a.url || '').split('.').pop().toLowerCase();
-                                const isImg = ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext);
-                                const isPdf = ext === 'pdf';
-                                const isVid = ['mp4', 'mov', 'webm'].includes(ext);
-                                
-                                let previewHtml = '';
-                                if (isImg) {
-                                    previewHtml = `<img src="${a.url}" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover;">`;
-                                } else if (isPdf) {
-                                    previewHtml = `<div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#FFF1F1; color:#C53030; gap:8px;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg><span style="font-size:10px; font-weight:800;">PDF DOCUMENT</span></div>`;
-                                } else if (isVid) {
-                                    previewHtml = `<div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#F0F7FF; color:#0066CC; gap:8px;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line></svg><span style="font-size:10px; font-weight:800;">VIDEO</span></div>`;
-                                } else {
-                                    previewHtml = `<div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:#F8FAFC;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path></svg></div>`;
-                                }
+            const ext = (a.url || '').split('.').pop().toLowerCase();
+            const isImg = ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext);
+            const isPdf = ext === 'pdf';
+            const isVid = ['mp4', 'mov', 'webm'].includes(ext);
 
-                                return `
+            let previewHtml = '';
+            if (isImg) {
+                previewHtml = `<img src="${a.url}" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover;">`;
+            } else if (isPdf) {
+                previewHtml = `<div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#FFF1F1; color:#C53030; gap:8px;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg><span style="font-size:10px; font-weight:800;">PDF DOCUMENT</span></div>`;
+            } else if (isVid) {
+                previewHtml = `<div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#F0F7FF; color:#0066CC; gap:8px;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line></svg><span style="font-size:10px; font-weight:800;">VIDEO</span></div>`;
+            } else {
+                previewHtml = `<div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:#F8FAFC;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path></svg></div>`;
+            }
+
+            return `
                                     <div class="evidence-card" style="background:var(--bg-surface-2); border:1px solid var(--border-light); border-radius:16px; padding:8px; transition:transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 10px 20px rgba(0,0,0,0.05)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
                                         <a href="${a.url}" target="_blank" style="display:block; position:relative; padding-top:100%; overflow:hidden; border-radius:12px; background:var(--bg-surface);">
                                             ${previewHtml}
@@ -1190,7 +1190,7 @@ window.openViewModal = function (id, showOriginal = false) {
                                         <div style="font-size:12px; color:var(--text-main); font-weight:600; margin-top:12px; padding:0 4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${a.name}</div>
                                     </div>
                                 `;
-                            }).join('')}
+        }).join('')}
                             ${(!leadData.attachments || leadData.attachments.length === 0) ? `
                                 <div style="padding:40px; background:var(--bg-surface-2); border:1px dashed var(--border-light); border-radius:16px; text-align:center; color:var(--text-muted); font-size:14px; font-weight:600; grid-column:1/-1;">
                                     No photos have been uploaded for this client yet.
@@ -1292,7 +1292,7 @@ window.openEditLeadModal = function (id) {
         if (['tenancy_on_name', 'tenancy_type', 'is_name_on_joint', 'other_tenant_name', 'actual_tenant_fullname'].includes(key)) {
             // We'll handle these separately below or wrap them
             if (key === 'tenancy_on_name') {
-                 html += `<div class="form-group" style="grid-column: span 2; background: var(--blue-light); padding: 15px; border-radius: 12px; border: 1px solid var(--blue); margin-bottom: 10px;">
+                html += `<div class="form-group" style="grid-column: span 2; background: var(--blue-light); padding: 15px; border-radius: 12px; border: 1px solid var(--blue); margin-bottom: 10px;">
                             <label style="font-size:11px; font-weight:800; color:var(--blue); text-transform:uppercase; margin-bottom:8px; display:block;">Tenancy Verification</label>
                             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
                                 ${createFieldHtml('tenancy_on_name', s.tenancy_on_name)}
@@ -1366,23 +1366,23 @@ window.openEditLeadModal = function (id) {
                     
                     <div id="attachmentList" class="thumbnail-grid">
                         ${(s.attachments || []).map((a, i) => {
-                            const ext = (a.url || '').split('.').pop().toLowerCase();
-                            const isImg = ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext);
-                            const isPdf = ext === 'pdf';
-                            const isVid = ['mp4', 'mov', 'webm'].includes(ext);
-                            
-                            let thumbContent = '';
-                            if (isImg) {
-                                thumbContent = `<img src="${a.url}" class="thumb-image">`;
-                            } else if (isPdf) {
-                                thumbContent = `<div style="width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#FFF1F1; color:#C53030; font-size:9px; font-weight:800;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg>PDF</div>`;
-                            } else if (isVid) {
-                                thumbContent = `<div style="width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#F0F7FF; color:#0066CC; font-size:9px; font-weight:800;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect></svg>VIDEO</div>`;
-                            } else {
-                                thumbContent = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#F8FAFC;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path></svg></div>`;
-                            }
+        const ext = (a.url || '').split('.').pop().toLowerCase();
+        const isImg = ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext);
+        const isPdf = ext === 'pdf';
+        const isVid = ['mp4', 'mov', 'webm'].includes(ext);
 
-                            return `
+        let thumbContent = '';
+        if (isImg) {
+            thumbContent = `<img src="${a.url}" class="thumb-image">`;
+        } else if (isPdf) {
+            thumbContent = `<div style="width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#FFF1F1; color:#C53030; font-size:9px; font-weight:800;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg>PDF</div>`;
+        } else if (isVid) {
+            thumbContent = `<div style="width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#F0F7FF; color:#0066CC; font-size:9px; font-weight:800;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect></svg>VIDEO</div>`;
+        } else {
+            thumbContent = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#F8FAFC;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path></svg></div>`;
+        }
+
+        return `
                                 <div class="thumb-item">
                                     <a href="${a.url}" target="_blank" style="display:block; width:100%; height:100%; text-decoration:none;">
                                         ${thumbContent}
@@ -1390,7 +1390,7 @@ window.openEditLeadModal = function (id) {
                                     <button class="remove-thumb-btn" onclick="window.deleteAttachment('${s.id}', ${i})" title="Remove File">&times;</button>
                                 </div>
                             `;
-                        }).join('')}
+    }).join('')}
                         ${(!s.attachments || s.attachments.length === 0) ? '<p style="font-size:13px; color:var(--label-4); font-style:italic; grid-column:1/-1; text-align:center; padding:30px 0; font-weight:600;">No pictures attached yet.</p>' : ''}
                     </div>
                 </div>
@@ -1408,7 +1408,7 @@ window.openEditLeadModal = function (id) {
     // Add Tenancy Logic Listeners
     const editTenancyOnName = document.querySelector('.edit-inp[data-field="tenancy_on_name"]');
     const editTenancyType = document.querySelector('.edit-inp[data-field="tenancy_type"]');
-    
+
     if (editTenancyOnName) {
         editTenancyOnName.addEventListener('change', (e) => {
             const isNo = e.target.value === 'No';
@@ -1702,7 +1702,7 @@ window.saveLeadEdits = async function (id) {
 
 // 📎 ATTACHMENT HANDLERS
 window._isUploadingCancelled = false;
-window._cancelUpload = function() {
+window._cancelUpload = function () {
     window._isUploadingCancelled = true;
 };
 
@@ -1713,7 +1713,7 @@ window.handleAttachmentUpload = async function (leadId, input) {
     window._isUploadingCancelled = false;
     const statusEl = document.getElementById('uploadStatusLine');
     const cancelBtn = document.getElementById('cancelUploadBtn');
-    
+
     if (cancelBtn) cancelBtn.style.display = 'inline-flex';
     let failCount = 0;
 
@@ -1774,13 +1774,13 @@ window.handleAttachmentUpload = async function (leadId, input) {
             const confirmRes = await fetch('/api/attachments?action=confirm-upload', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    leadId, 
-                    name: file.name, 
-                    url: publicUrl, 
-                    path: path, 
-                    type: file.type, 
-                    size: file.size 
+                body: JSON.stringify({
+                    leadId,
+                    name: file.name,
+                    url: publicUrl,
+                    path: path,
+                    type: file.type,
+                    size: file.size
                 })
             });
 
@@ -1840,7 +1840,7 @@ window.deleteAttachment = async function (leadId, index) {
     // State Sync & Deletion Guardrails
     const lead = submissionsData.find(s => String(s.id) === String(leadId));
     const attachments = (lead && lead.attachments) ? lead.attachments : [];
-    
+
     if (index < 0 || index >= attachments.length) {
         console.error('Invalid index');
         showToast('Error', 'Invalid attachment reference.', 'danger');
@@ -1862,7 +1862,7 @@ window.deleteAttachment = async function (leadId, index) {
             }
 
             const result = await res.json();
-            
+
             if (lead) lead.attachments = result.attachments;
 
             renderAttachmentList(leadId, result.attachments);
@@ -1978,7 +1978,7 @@ window.editNote = function (leadId, noteIndex) {
     if (!block || !textDiv) return;
 
     const currentHtml = textDiv.innerHTML;
-    
+
     const toolbarHtml = `
         <div class="rte-toolbar" style="margin-top:8px;">
             <button class="rte-btn" onclick="formatNote('bold')" title="Bold"><svg viewBox="0 0 24 24"><path d="M15.6 10.79c.97-.67 1.65-1.77 1.65-2.79 0-2.26-1.75-4-4-4H7v14h7.04c2.09 0 3.71-1.7 3.71-3.79 0-1.52-.86-2.82-2.15-3.42zM10 6.5h3c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-3v-3zm3.5 9H10v-3h3.5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5z"/></svg></button>
@@ -2809,11 +2809,11 @@ window.showConfirm = function (title, message, onConfirm, onCancel = null) {
         modalBox.style.borderRadius = originalBorderRadius;
     };
 
-    const close = () => { 
+    const close = () => {
         overlay.style.display = 'none';
         resetModal();
     };
-    
+
     document.getElementById('confirmClose').onclick = close;
     document.getElementById('confirmCancel').onclick = () => {
         close();
@@ -4622,7 +4622,7 @@ window.insertEmoji = function (emoji) {
 window.toggleSnippetPicker = function (event, folderId = null) {
     if (event) event.stopPropagation();
     var existing = document.getElementById('snippetFullPicker');
-    
+
     // If opening from scratch and picker exists, close it
     if (existing && folderId === null && event) {
         existing.remove();
@@ -4630,7 +4630,7 @@ window.toggleSnippetPicker = function (event, folderId = null) {
     }
 
     var store = window._snippetStore || { folders: [], snippets: [] };
-    
+
     // Ensure we have data
     if (store.snippets.length === 0 && store.folders.length === 0) {
         showNotification('No templates found. Go to Template Library to create one.', 'info');
@@ -4669,7 +4669,7 @@ window.toggleSnippetPicker = function (event, folderId = null) {
                 </div>
             `;
         });
-        
+
         // Show snippets with no folder
         var noFolderSnippets = store.snippets.filter(s => !(s.folder_id || s.folderId));
         noFolderSnippets.forEach(function (s) {
@@ -4697,7 +4697,7 @@ window.toggleSnippetPicker = function (event, folderId = null) {
                     </div>
                 </div>`;
         });
-        
+
         if (folderSnippets.length === 0) {
             html += '<div style="padding:40px 20px; text-align:center; color:var(--text-muted); font-size:13px;">This folder is empty.</div>';
         }
@@ -4718,7 +4718,7 @@ window.insertSnippet = function (text) {
     if (input) {
         // Automatically parse variables before insertion
         var parsed = window._parseLiquidTags(text);
-        
+
         var start = input.selectionStart || input.value.length;
         var end = input.selectionEnd || input.value.length;
         var before = input.value.substring(0, start);
@@ -4727,13 +4727,13 @@ window.insertSnippet = function (text) {
         input.focus();
         var newPos = start + parsed.length;
         input.setSelectionRange(newPos, newPos);
-        
+
         if (window.autoExpandCommInput) {
             window.autoExpandCommInput(input);
         }
 
         if (parsed.includes('{{')) {
-             showNotification('Note: Some variables could not be mapped.', 'warning');
+            showNotification('Note: Some variables could not be mapped.', 'warning');
         }
     }
     var picker = document.getElementById('snippetFullPicker');
@@ -4841,7 +4841,7 @@ document.addEventListener('keydown', (e) => {
 // ═══════════════════════════════════════
 // RICH TEXT EDITOR HELPERS
 // ═══════════════════════════════════════
-window.formatNote = function(cmd, val = null) {
+window.formatNote = function (cmd, val = null) {
     document.execCommand(cmd, false, val);
 };
 
