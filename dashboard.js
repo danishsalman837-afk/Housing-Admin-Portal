@@ -343,58 +343,82 @@ window.calculateAgentPerformance = function () {
     const selectedMonth = parseInt(document.getElementById('performanceMonth')?.value ?? now.getMonth());
     const selectedYear = parseInt(document.getElementById('performanceYear')?.value ?? now.getFullYear());
 
-    // Filter leads by month and year
-    const filteredLeads = submissionsData.filter(s => {
-        if (!s.timestamp) return false;
-        const d = new Date(s.timestamp);
-        return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
-    });
-
-    // Aggregate by Agent
-    const agentMap = {};
-    filteredLeads.forEach(s => {
+    // Process ALL leads to find matches for the selected month/year
+    submissionsData.forEach(s => {
         const rawName = (s.agentName || 'Unknown Agent').trim();
         const agentKey = rawName.toUpperCase();
 
-        if (!agentMap[agentKey]) {
-            agentMap[agentKey] = {
-                displayName: rawName, // Keep original casing of first encounter
-                name: rawName,
-                total: 0,
-                accepted: 0,
-                rejected: 0,
-                leads: []
-            };
+        const ensureAgent = () => {
+            if (!agentMap[agentKey]) {
+                agentMap[agentKey] = {
+                    displayName: rawName,
+                    name: rawName,
+                    total: 0,
+                    accepted: 0,
+                    rejected: 0,
+                    leads: []
+                };
+            }
+        };
+
+        // 1. Check CREATION (Total Leads)
+        if (s.timestamp) {
+            const d = new Date(s.timestamp);
+            if (d.getMonth() === selectedMonth && d.getFullYear() === selectedYear) {
+                ensureAgent();
+                agentMap[agentKey].total++;
+                agentMap[agentKey].leads.push(s);
+            }
         }
-        agentMap[agentKey].total++;
-        agentMap[agentKey].leads.push(s);
 
         const status = (s.leadStatus || '').toLowerCase().trim();
         const acceptedStatuses = ['accepted', 'invoice raised', 'not yet invoiced', 'paid'];
 
-        if (acceptedStatuses.includes(status)) {
-            agentMap[agentKey].accepted++;
-        } else if (status === 'rejected' || status === 'closed') {
-            agentMap[agentKey].rejected++;
+        // 2. Check ACCEPTANCE (Successful Leads)
+        if (s.accepted_at) {
+            const d = new Date(s.accepted_at);
+            if (d.getMonth() === selectedMonth && d.getFullYear() === selectedYear) {
+                ensureAgent();
+                agentMap[agentKey].accepted++;
+                // Avoid duplicates in the 'leads' drill-down if already added by creation
+                if (!agentMap[agentKey].leads.includes(s)) agentMap[agentKey].leads.push(s);
+            }
+        } else if (acceptedStatuses.includes(status) && s.timestamp) {
+            // Fallback for leads marked accepted before the timestamp system was in place
+            const d = new Date(s.timestamp);
+            if (d.getMonth() === selectedMonth && d.getFullYear() === selectedYear) {
+                ensureAgent();
+                agentMap[agentKey].accepted++;
+            }
+        }
+
+        // 3. Check REJECTION
+        if (s.rejected_at) {
+            const d = new Date(s.rejected_at);
+            if (d.getMonth() === selectedMonth && d.getFullYear() === selectedYear) {
+                ensureAgent();
+                agentMap[agentKey].rejected++;
+                if (!agentMap[agentKey].leads.includes(s)) agentMap[agentKey].leads.push(s);
+            }
+        } else if ((status === 'rejected' || status === 'closed') && s.timestamp) {
+             const d = new Date(s.timestamp);
+             if (d.getMonth() === selectedMonth && d.getFullYear() === selectedYear) {
+                ensureAgent();
+                agentMap[agentKey].rejected++;
+             }
         }
     });
 
-    const performanceData = Object.values(agentMap).sort((a, b) => b.total - a.total);
+    const performanceData = Object.values(agentMap).sort((a, b) => b.accepted - a.accepted || b.total - a.total);
     renderPerformanceTable(performanceData);
 
     // Update performance summary stats
-    const acceptedStatuses = ['accepted', 'invoice raised', 'not yet invoiced', 'paid'];
+    const totalAccepted = performanceData.reduce((sum, a) => sum + a.accepted, 0);
+    const totalRejected = performanceData.reduce((sum, a) => sum + a.rejected, 0);
 
     document.getElementById('perfTotalAgents').innerText = performanceData.length;
-    document.getElementById('perfTotalAccepted').innerText = filteredLeads.filter(s => {
-        const ls = (s.leadStatus || '').toLowerCase().trim();
-        return acceptedStatuses.includes(ls);
-    }).length;
-
-    document.getElementById('perfTotalRejected').innerText = filteredLeads.filter(s => {
-        const ls = (s.leadStatus || '').toLowerCase().trim();
-        return ls === 'rejected' || ls === 'closed';
-    }).length;
+    document.getElementById('perfTotalAccepted').innerText = totalAccepted;
+    document.getElementById('perfTotalRejected').innerText = totalRejected;
 };
 
 function renderPerformanceTable(data) {
@@ -2122,7 +2146,17 @@ window.initDashboard = async function () {
         if (resMembers.ok) membersData = JSON.parse(await resMembers.text());
 
         const resActivity = await fetch('/api/solicitor?route=activity');
-        if (resActivity.ok) activityData = JSON.parse(await resActivity.text());
+        if (resActivity.ok) {
+            activityData = JSON.parse(await resActivity.text());
+            // Sync timestamps to submissionsData
+            activityData.forEach(act => {
+                const lead = submissionsData.find(s => String(s.id) === String(act.lead_id));
+                if (lead) {
+                    lead.accepted_at = act.accepted_at;
+                    lead.rejected_at = act.rejected_at;
+                }
+            });
+        }
 
     } catch (e) {
         console.error("Setup running locally:", e);
@@ -2730,6 +2764,12 @@ function initRealtimeSubscription() {
                         existing.sent_at = fresh.sent_at;
                         existing.accepted_at = fresh.accepted_at;
                         existing.rejected_at = fresh.rejected_at;
+
+                        // Also sync to the lead object for performance reporting
+                        if (lead) {
+                            lead.accepted_at = fresh.accepted_at;
+                            lead.rejected_at = fresh.rejected_at;
+                        }
 
                         // Local UI refresh
                         if (document.getElementById('leadsView')?.classList.contains('active')) renderFilteredLeads();
