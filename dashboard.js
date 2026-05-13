@@ -378,7 +378,8 @@ window.calculateAgentPerformance = function () {
 
         // 2. Check ACCEPTANCE (Successful Leads)
         // Primary: use the accepted_at timestamp (most accurate)
-        if (s.accepted_at) {
+        // Guard: also verify current status is still accepted (not CLOSED/re-opened after acceptance)
+        if (s.accepted_at && acceptedStatuses.includes(status)) {
             const d = new Date(s.accepted_at);
             if (d.getMonth() === selectedMonth && d.getFullYear() === selectedYear) {
                 ensureAgent();
@@ -386,7 +387,7 @@ window.calculateAgentPerformance = function () {
                 // Avoid duplicates in the 'leads' drill-down if already added by creation
                 if (!agentMap[agentKey].leads.includes(s)) agentMap[agentKey].leads.push(s);
             }
-        } else if (status === 'accepted' && s.timestamp) {
+        } else if (!s.accepted_at && status === 'accepted' && s.timestamp) {
             // Fallback ONLY for exact 'Accepted' status with no timestamp yet.
             // Deliberately excludes Invoice Raised/Paid to avoid inflation.
             const d = new Date(s.timestamp);
