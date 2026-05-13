@@ -274,7 +274,7 @@ function populateSettings() {
 
 function calculateDashboardStats() {
     const total = submissionsData.length;
-    const acceptedCount = submissionsData.filter(s => ['Accepted', 'Invoice Raised', 'Not Yet Invoiced', 'Paid'].includes(s.leadStatus)).length;
+    const acceptedCount = submissionsData.filter(s => ['Accepted', 'Invoice Raised', 'Not Yet Invoiced'].includes(s.leadStatus)).length;
     const paidCount = submissionsData.filter(s => s.leadStatus === 'Paid').length;
     const rejectedCount = submissionsData.filter(s => ['Rejected', 'Closed'].includes(s.leadStatus)).length;
 
