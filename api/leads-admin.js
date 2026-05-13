@@ -76,6 +76,19 @@ module.exports = async function handler(req, res) {
 
       const { data, error } = await supabase.from('submissions').update(updates).eq('id', id).select();
       
+      if (!error && updates.leadStatus) {
+          const status = updates.leadStatus;
+          if (status === 'Accepted' || status === 'Rejected') {
+              const actUpdate = { status };
+              if (status === 'Accepted') actUpdate.accepted_at = new Date().toISOString();
+              if (status === 'Rejected') actUpdate.rejected_at = new Date().toISOString();
+              
+              await supabase.from('solicitor_activity')
+                .update(actUpdate)
+                .eq('lead_id', id);
+          }
+      }
+      
       if (error) {
           console.error("Update Error:", error);
           return res.status(500).json({ error: error.message, details: error.hint });

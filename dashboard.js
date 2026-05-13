@@ -828,8 +828,15 @@ window.handleFieldUpdate = async function (id, fieldName, value) {
                 lead['assigned_solicitor_id'] = null;
             }
             if (fieldName === 'leadStatus' && sanitizedValue === 'New Lead') {
+                lead.accepted_at = null;
+                lead.rejected_at = null;
                 lead['assigned_company_id'] = null;
                 lead['assigned_solicitor_id'] = null;
+            }
+            if (fieldName === 'leadStatus' && (sanitizedValue === 'Accepted' || sanitizedValue === 'Rejected')) {
+                const now = new Date().toISOString();
+                if (sanitizedValue === 'Accepted') lead.accepted_at = now;
+                if (sanitizedValue === 'Rejected') lead.rejected_at = now;
             }
         }
 
