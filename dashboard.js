@@ -274,9 +274,9 @@ function populateSettings() {
 
 function calculateDashboardStats() {
     const total = submissionsData.length;
-    const acceptedCount = submissionsData.filter(s => s.leadStatus === 'Accepted').length;
+    const acceptedCount = submissionsData.filter(s => ['Accepted', 'Invoice Raised', 'Not Yet Invoiced', 'Paid'].includes(s.leadStatus)).length;
     const paidCount = submissionsData.filter(s => s.leadStatus === 'Paid').length;
-    const rejectedCount = submissionsData.filter(s => s.leadStatus === 'Rejected').length;
+    const rejectedCount = submissionsData.filter(s => ['Rejected', 'Closed'].includes(s.leadStatus)).length;
 
     // Update text references
     const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
